@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0001}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BE</RootNamespace>
+    <AssemblyName>BE</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BEAjusteStock.cs" />
+    <Compile Include="BEAlerta.cs" />
+    <Compile Include="BEConsumoVenta.cs" />
+    <Compile Include="BEDetalleOrdenCompra.cs" />
+    <Compile Include="BEDetalleReceta.cs" />
+    <Compile Include="BEEvento.cs" />
+    <Compile Include="BEGastoProveedor.cs" />
+    <Compile Include="BEInsumo.cs" />
+    <Compile Include="BEOrdenCompra.cs" />
+    <Compile Include="BEProveedor.cs" />
+    <Compile Include="BEReceta.cs" />
+    <Compile Include="BEReporte.cs" />
+    <Compile Include="BERol.cs" />
+    <Compile Include="BESensor.cs" />
+    <Compile Include="BESugerenciaCompra.cs" />
+    <Compile Include="BESuscripcion.cs" />
+    <Compile Include="BETokenRecuperacion.cs" />
+    <Compile Include="BEUsuario.cs" />
+    <Compile Include="BEVenta.cs" />
+    <Compile Include="Componente.cs" />
+    <Compile Include="Familia.cs" />
+    <Compile Include="Inconsistencia.cs" />
+    <Compile Include="ObjetoDV.cs" />
+    <Compile Include="Patente.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- Copia la biblioteca al Bin del sitio web para que el Web Site la tome. -->
+  <Target Name="CopiarAlSitioWeb" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ProjectDir)..\IntelligentStock\Bin\" SkipUnchangedFiles="true" Condition="Exists('$(ProjectDir)..\IntelligentStock\Bin')" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(ProjectDir)..\IntelligentStock\Bin\" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)$(TargetName).pdb') And Exists('$(ProjectDir)..\IntelligentStock\Bin')" />
+  </Target>
+</Project>

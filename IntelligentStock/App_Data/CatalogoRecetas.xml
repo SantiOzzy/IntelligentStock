@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CatalogoRecetas generado="2026-10-12T19:27:36">
+  <Receta>
+    <IdReceta>2</IdReceta>
+    <Nombre>Pizza</Nombre>
+    <Estado>Activa</Estado>
+    <DetalleInsumos>
+      <Insumo idInsumo="3" cantidad="1.00" unidad="kg">Masa</Insumo>
+    </DetalleInsumos>
+  </Receta>
+  <Receta>
+    <IdReceta>1</IdReceta>
+    <Nombre>Pizza de salame</Nombre>
+    <Estado>Activa</Estado>
+    <DetalleInsumos>
+      <Insumo idInsumo="3" cantidad="1.00" unidad="kg">Masa</Insumo>
+      <Insumo idInsumo="2" cantidad="0.30" unidad="kg">Queso</Insumo>
+      <Insumo idInsumo="1" cantidad="0.02" unidad="kg">Salame</Insumo>
+    </DetalleInsumos>
+  </Receta>
+</CatalogoRecetas>

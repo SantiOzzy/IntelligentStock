@@ -1,0 +1,176 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Site.master.cs" Inherits="SiteMaster" %>
+
+<!DOCTYPE html>
+
+<html lang="es">
+<head runat="server">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%: Page.Title %> - IntelligentStock</title>
+
+    <asp:PlaceHolder runat="server">
+        <%: Scripts.Render("~/bundles/modernizr") %>
+    </asp:PlaceHolder>
+    <webopt:bundlereference runat="server" path="~/Content/css" />
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+</head>
+<body>
+    <form runat="server">
+        <asp:ScriptManager runat="server">
+            <Scripts>
+                <asp:ScriptReference Name="MsAjaxBundle" />
+                <asp:ScriptReference Name="jquery" />
+                <asp:ScriptReference Name="bootstrap" />
+                <asp:ScriptReference Name="WebForms.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebForms.js" />
+                <asp:ScriptReference Name="WebUIValidation.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebUIValidation.js" />
+                <asp:ScriptReference Name="MenuStandards.js" Assembly="System.Web" Path="~/Scripts/WebForms/MenuStandards.js" />
+                <asp:ScriptReference Name="GridView.js" Assembly="System.Web" Path="~/Scripts/WebForms/GridView.js" />
+                <asp:ScriptReference Name="DetailsView.js" Assembly="System.Web" Path="~/Scripts/WebForms/DetailsView.js" />
+                <asp:ScriptReference Name="TreeView.js" Assembly="System.Web" Path="~/Scripts/WebForms/TreeView.js" />
+                <asp:ScriptReference Name="WebParts.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebParts.js" />
+                <asp:ScriptReference Name="Focus.js" Assembly="System.Web" Path="~/Scripts/WebForms/Focus.js" />
+                <asp:ScriptReference Name="WebFormsBundle" />
+            </Scripts>
+        </asp:ScriptManager>
+
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse" title="mas opciones">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" runat="server" href="~/IniciarSesion.aspx" id="lnkInicio">IntelligentStock</a>
+                </div>
+                <div class="navbar-collapse collapse">
+                    <asp:Literal ID="litMenu" runat="server" Mode="PassThrough"></asp:Literal>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <!--
+                                Multi-idioma resuelto en el propio programa (Servicios.Traductor +
+                                PaginaBase), no con una funcionalidad del navegador: este selector
+                                solo agrega "?idioma=xx" a la URL actual, PaginaBase la guarda en
+                                una cookie y traduce los controles del lado del servidor.
+                            -->
+                            <%-- translate="no": cada idioma figura con su propio nombre y no se
+                                 traduce (si no, en italiano "Español" aparecía como "Italiano"). --%>
+                            <select id="selectorIdioma" class="form-control input-sm" translate="no"
+                                style="width: auto; display: inline-block; margin-top: 8px;">
+                                <option value="es">Español</option>
+                                <option value="en">English</option>
+                                <option value="pt">Português</option>
+                                <option value="fr">Français</option>
+                                <option value="it">Italiano</option>
+                            </select>
+                        </li>
+                    </ul>
+                    <asp:Literal ID="litUsuario" runat="server" Mode="PassThrough"></asp:Literal>
+                </div>
+            </div>
+        </div>
+
+        <div class="container body-content">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server">
+            </asp:ContentPlaceHolder>
+            <hr />
+            <footer>
+                <p>&copy; <%: DateTime.Now.Year %> - IntelligentStock</p>
+            </footer>
+        </div>
+    </form>
+
+    <script type="text/javascript">
+        // Le agrega un botón de "mostrar/ocultar" a todos los campos de contraseña
+        // del sitio, sin tener que tocar cada .aspx por separado.
+        $(function () {
+            $("input[type='password']").each(function () {
+                var $clave = $(this);
+                if ($clave.parent().hasClass("input-group")) {
+                    return;
+                }
+
+                $clave.wrap('<div class="input-group"></div>');
+                var $boton = $('<span class="input-group-btn"><button class="btn btn-default" ' +
+                    'type="button" tabindex="-1" title="Mostrar/ocultar contraseña">' +
+                    '<span class="glyphicon glyphicon-eye-open"></span></button></span>');
+                $clave.after($boton);
+
+                $boton.find("button").on("click", function () {
+                    var oculta = $clave.attr("type") === "password";
+                    $clave.attr("type", oculta ? "text" : "password");
+                    $(this).find("span").toggleClass("glyphicon-eye-open glyphicon-eye-close");
+                });
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+        // La barra de navegación es fixed-top, así que no ocupa lugar en la
+        // página: el contenido arranca abajo gracias al padding-top del body.
+        // Ese padding estaba fijo en 50px (la altura de la barra con una sola
+        // línea de opciones), pero cuando el menú no entra a lo ancho la barra
+        // pasa a dos líneas y tapa el título de la pantalla. Acá se le da al
+        // body exactamente el alto que tiene la barra en cada momento.
+        (function () {
+            function acomodarContenido() {
+                var barra = document.querySelector(".navbar-fixed-top");
+                if (barra) {
+                    document.body.style.paddingTop = barra.offsetHeight + "px";
+                }
+            }
+
+            acomodarContenido();
+            window.addEventListener("load", acomodarContenido);
+            window.addEventListener("resize", acomodarContenido);
+            // El menú desplegable de pantallas angostas también cambia el alto.
+            $(document).on("shown.bs.collapse hidden.bs.collapse", ".navbar-collapse",
+                           acomodarContenido);
+        })();
+    </script>
+
+    <script type="text/javascript">
+        // Las pantallas con pestañas (administración de familias) hacen postback
+        // al tocar un control de la pestaña "Roles". Sin esto, al volver del
+        // servidor la página se dibuja de nuevo con la primera pestaña activa y
+        // parece que la pestaña no funciona: acá se recuerda cuál estaba abierta.
+        $(function () {
+            var pestanas = $('.nav-tabs a[data-toggle="tab"]');
+            if (!pestanas.length) {
+                return;
+            }
+
+            var clave = "pestana:" + window.location.pathname;
+            var guardada = null;
+            try { guardada = sessionStorage.getItem(clave); } catch (e) { }
+
+            if (guardada && $('.nav-tabs a[href="' + guardada + '"]').length) {
+                $('.nav-tabs a[href="' + guardada + '"]').tab("show");
+            }
+
+            pestanas.on("shown.bs.tab", function (e) {
+                try { sessionStorage.setItem(clave, $(e.target).attr("href")); } catch (e2) { }
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+        // Multi-idioma: al elegir un idioma, se vuelve a pedir la misma
+        // página con "?idioma=xx". PaginaBase.OnPreInit guarda ese valor en
+        // una cookie y OnPreRender traduce los controles de la página con
+        // Servicios.Traductor (API de MyMemory) antes de dibujarla.
+        (function () {
+            var selector = document.getElementById("selectorIdioma");
+            var idiomaActual = "<%: Servicios.PreferenciaIdioma.Actual %>";
+            selector.value = idiomaActual;
+
+            selector.addEventListener("change", function () {
+                var url = new URL(window.location.href);
+                url.searchParams.set("idioma", this.value);
+                window.location.href = url.toString();
+            });
+        })();
+    </script>
+</body>
+</html>

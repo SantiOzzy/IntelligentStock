@@ -1,0 +1,187 @@
+﻿/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set widths on the form inputs since otherwise they're 100% wide */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+/* Responsive: Portrait tablets and up */
+@media screen and (min-width: 768px) {
+    .jumbotron {
+        margin-top: 20px;
+    }
+    .body-content {
+        padding: 0;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   IntelligentStock
+   La plantilla base limita todos los inputs a 280px y eso rompe los formularios
+   que usan la grilla de Bootstrap, asi que se anula para los .form-control.
+   --------------------------------------------------------------------------- */
+input.form-control,
+select.form-control,
+textarea.form-control {
+    max-width: 100%;
+    width: 100%;
+}
+
+/* asp:Label se renderiza como <span>, que es inline. Sin esto los mensajes
+   con las clases .alert de Bootstrap se ven como una linea de color pegada
+   al texto en vez de como un cuadro. */
+span.alert {
+    display: block;
+    margin-bottom: 15px;
+}
+
+/* La barra de navegacion es fixed-top: hay que despegar el contenido. */
+.body-content {
+    padding-top: 15px;
+}
+
+.page-header {
+    margin-top: 10px;
+}
+
+/* Separacion entre los botones que van uno al lado del otro al pie del form. */
+.btn + .btn {
+    margin-left: 6px;
+}
+
+/* Las grillas de las pantallas de seguridad suelen tener muchas columnas. */
+.table-condensed td,
+.table-condensed th {
+    vertical-align: middle;
+}
+
+/* ---------------------------------------------------------------------------
+   Estética: mismo Bootstrap 3, mismos controles y la misma funcionalidad,
+   solo se le da una paleta propia (el guinda del escudo de la UAI) en vez
+   del gris/negro de la plantilla por defecto, y un poco más de aire entre
+   los bloques. No se toca ningún .aspx ni ningún .cs para esto.
+   --------------------------------------------------------------------------- */
+
+:root {
+    --is-guinda: #7a1f2b;
+    --is-guinda-oscuro: #5a1620;
+    --is-guinda-claro: #f4e9ea;
+    --is-gris-fondo: #f5f6f8;
+}
+
+html, body {
+    background-color: var(--is-gris-fondo);
+}
+
+body {
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #333;
+}
+
+/* Barra de navegación con el color institucional en vez del negro por defecto. */
+.navbar-inverse {
+    background-color: var(--is-guinda);
+    border-color: var(--is-guinda-oscuro);
+}
+
+.navbar-inverse .navbar-brand,
+.navbar-inverse .navbar-nav > li > a {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.navbar-inverse .navbar-brand:hover,
+.navbar-inverse .navbar-nav > li > a:hover,
+.navbar-inverse .navbar-nav > .active > a {
+    color: #fff;
+    background-color: var(--is-guinda-oscuro);
+}
+
+.navbar-inverse .navbar-toggle {
+    border-color: var(--is-guinda-oscuro);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+/* Encabezado de cada pantalla: una línea de acento en vez del borde gris. */
+.page-header {
+    border-bottom: 2px solid var(--is-guinda);
+    padding-bottom: 8px;
+}
+
+/* Tarjetas (paneles): un poco de sombra y el título con el color institucional. */
+.panel {
+    border-color: #e3e3e8;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.panel-default > .panel-heading {
+    background-color: var(--is-guinda-claro);
+    border-color: #e7d3d5;
+    color: var(--is-guinda-oscuro);
+    font-weight: 600;
+}
+
+/* Botones: mismo componente de Bootstrap, con el color institucional. */
+.btn-primary {
+    background-color: var(--is-guinda);
+    border-color: var(--is-guinda-oscuro);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--is-guinda-oscuro);
+    border-color: var(--is-guinda-oscuro);
+}
+
+.btn, .form-control {
+    border-radius: 4px;
+}
+
+.form-control:focus {
+    border-color: var(--is-guinda);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 6px rgba(122, 31, 43, 0.35);
+}
+
+/* Enlaces con el mismo color institucional en vez del azul por defecto. */
+a {
+    color: var(--is-guinda);
+}
+
+a:hover,
+a:focus {
+    color: var(--is-guinda-oscuro);
+}
+
+/* Encabezados de tabla: un gris muy suave en vez de blanco liso. */
+.table > thead > tr > th {
+    background-color: #f0f1f4;
+    border-bottom-width: 1px;
+}
+
+/* Las tarjetas del panel principal (menú de opciones habilitadas). */
+.list-group-item:hover {
+    background-color: var(--is-guinda-claro);
+}
+
+footer {
+    color: #888;
+    font-size: 12px;
+}

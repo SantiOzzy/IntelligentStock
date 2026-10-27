@@ -1,0 +1,18 @@
+﻿.vs/
+bin/
+obj/
+packages/
+_buildcheck/
+_program files_git/
+*.user
+*.suo
+
+# Bin del sitio web: solo se suben los .refresh (NuGet trae el resto)
+IntelligentStock/Bin/*
+!IntelligentStock/Bin/*.refresh
+
+# Archivos que genera el sistema
+IntelligentStock/App_Data/Traducciones/
+IntelligentStock/App_Data/Reportes/
+IntelligentStock/App_Data/*.mdf
+IntelligentStock/App_Data/*.ldf
