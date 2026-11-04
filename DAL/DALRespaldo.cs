@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Security.AccessControl;
+using System.Security.Principal;
 
 namespace DAL
 {
@@ -38,6 +42,98 @@ namespace DAL
             }
 
             return string.Empty;
+        }
+
+        /// Cuentas con las que suele correr el servicio de SQL Server cuando no
+        /// se puede preguntar cuál es (instancia por defecto y SQL Express).
+        private static readonly string[] CuentasHabituales =
+        {
+            @"NT Service\MSSQL$SQLEXPRESS", @"NT Service\MSSQLSERVER"
+        };
+
+        /// Cuenta de Windows con la que corre el servicio del motor (por ejemplo
+        /// NT Service\MSSQL$SQLEXPRESS). Vacío si no se puede averiguar.
+        public string ObtenerCuentaDelServicio()
+        {
+            try
+            {
+                DataTable tabla = dalCon.ConsultaEnMaster(
+                    "SELECT TOP 1 service_account FROM sys.dm_server_services " +
+                    "WHERE servicename LIKE 'SQL Server (%' ORDER BY servicename");
+                if (tabla.Rows.Count > 0 && tabla.Rows[0][0] != DBNull.Value)
+                {
+                    return Convert.ToString(tabla.Rows[0][0]);
+                }
+            }
+            catch (Exception)
+            {
+                // Sin permiso VIEW SERVER STATE no se puede consultar.
+            }
+            return string.Empty;
+        }
+
+        /// El BACKUP y el RESTORE los hace el motor con la cuenta de su servicio,
+        /// no la aplicación. Si la carpeta está dentro del perfil del usuario
+        /// (Escritorio, Documentos), Windows no deja que esa cuenta la lea ni la
+        /// escriba y el motor responde "Operating system error 5 (Acceso
+        /// denegado)". Acá se crea la carpeta (si hace falta) y se le da permiso
+        /// de modificación a la cuenta del servicio, heredable a los archivos.
+        /// Devuelve false si no se pudo dar el permiso (por ejemplo, porque la
+        /// carpeta es de otro usuario).
+        public bool PrepararCarpetaParaElMotor(string carpeta)
+        {
+            if (!Directory.Exists(carpeta))
+            {
+                Directory.CreateDirectory(carpeta);
+            }
+
+            List<string> cuentas = new List<string>();
+            string delMotor = ObtenerCuentaDelServicio();
+            if (!string.IsNullOrEmpty(delMotor))
+            {
+                // LocalSystem ya puede leer y escribir en cualquier carpeta.
+                if (delMotor.Equals("LocalSystem", StringComparison.OrdinalIgnoreCase) ||
+                    delMotor.EndsWith(@"\SYSTEM", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+                cuentas.Add(delMotor);
+            }
+            cuentas.AddRange(CuentasHabituales);
+
+            bool alguna = false;
+            try
+            {
+                DirectorySecurity seguridad = Directory.GetAccessControl(carpeta);
+                foreach (string cuenta in cuentas)
+                {
+                    try
+                    {
+                        IdentityReference identidad = new NTAccount(cuenta).Translate(typeof(SecurityIdentifier));
+                        seguridad.AddAccessRule(new FileSystemAccessRule(identidad, FileSystemRights.Modify,
+                            InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit,
+                            PropagationFlags.None, AccessControlType.Allow));
+                        alguna = true;
+                    }
+                    catch (IdentityNotMappedException)
+                    {
+                        // Esa cuenta no existe en este equipo (otra instancia).
+                    }
+                }
+                if (alguna)
+                {
+                    Directory.SetAccessControl(carpeta, seguridad);
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+            return alguna;
         }
 
         /// Restaura la base a partir de un archivo .bak. Se conecta a master,

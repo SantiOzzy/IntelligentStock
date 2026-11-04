@@ -30,10 +30,10 @@
                     ValidationGroup="Clave" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="Ingrese la contraseña nueva."></asp:RequiredFieldValidator>
                 <asp:RegularExpressionValidator ID="revNueva" runat="server" ControlToValidate="txtNueva"
-                    ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$" ValidationGroup="Clave"
+                    ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s]).{8,}$" ValidationGroup="Clave"
                     Display="Dynamic" CssClass="text-danger"
-                    ErrorMessage="La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula y un número."></asp:RegularExpressionValidator>
-                <span class="help-block">Mínimo 8 caracteres, con mayúscula, minúscula y número.</span>
+                    ErrorMessage="La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula, un número y un carácter especial (por ejemplo !, #, $, %, * o @)."></asp:RegularExpressionValidator>
+                <span class="help-block">Mínimo 8 caracteres, con mayúscula, minúscula, número y un carácter especial (por ejemplo !, #, $, %, * o @).</span>
             </div>
 
             <div class="form-group">

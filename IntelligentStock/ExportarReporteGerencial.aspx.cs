@@ -21,6 +21,9 @@ public partial class ExportarReporteGerencial : PaginaBase
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        ValidadorDeRango.CargarFechas(rvDesde, new DateTime(2000, 1, 1), DateTime.Today);
+        ValidadorDeRango.CargarFechas(rvHasta, new DateTime(2000, 1, 1), DateTime.Today);
+
         if (!IsPostBack)
         {
             txtDesde.Text = DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd");
@@ -30,6 +33,11 @@ public partial class ExportarReporteGerencial : PaginaBase
 
     protected void btnAceptar_Click(object sender, EventArgs e)
     {
+        if (!IsValid)
+        {
+            return;
+        }
+
         DateTime? desde = LeerFecha(txtDesde.Text);
         DateTime? hasta = LeerFecha(txtHasta.Text);
         if ((!string.IsNullOrEmpty(txtDesde.Text) && !desde.HasValue) ||

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Web;
 using System.Web.UI.WebControls;
 using BE;
 using BLL;
@@ -32,8 +33,14 @@ public partial class ConsultarOrdenCompra : PaginaBase
 
     protected void btnAceptar_Click(object sender, EventArgs e)
     {
+        if (!IsValid)
+        {
+            return;
+        }
+
         OcultarMensaje(lblMensaje);
         pnlItems.Visible = false;
+        gvDetalle.SelectedIndex = -1;
         Buscar();
     }
 
@@ -61,8 +68,10 @@ public partial class ConsultarOrdenCompra : PaginaBase
                 return;
             }
 
-            lblOrden.Text = "Orden " + orden.Numero + " del " + orden.FechaTexto + " - " + orden.ProveedorTexto +
-                            " - " + orden.Estado + ". Importe estimado: " + orden.ImporteEstimado.ToString("C") + ".";
+            gvDetalle.SelectedIndex = fila;
+            litTituloOrden.Text = HttpUtility.HtmlEncode("Detalle de la orden " + orden.Numero);
+            litDatosOrden.Text = HttpUtility.HtmlEncode(orden.FechaTexto + " · " + orden.ProveedorTexto + " · " + orden.Estado +
+                                                        " · importe estimado " + orden.ImporteEstimado.ToString("C"));
             gvItems.DataSource = orden.Detalles;
             gvItems.DataBind();
             pnlItems.Visible = true;
@@ -110,18 +119,51 @@ public partial class ConsultarOrdenCompra : PaginaBase
             List<BEOrdenCompra> ordenes = bllOrden.Filtrar(ddlProveedor.SelectedValue, ddlEstado.SelectedValue, desde, hasta);
             gvDetalle.DataSource = ordenes;
             gvDetalle.DataBind();
+            MostrarIndicadores(ordenes);
 
-            if (ordenes.Count == 0 && IsPostBack)
+            if (IsPostBack)
             {
-                MostrarError(lblMensaje, "ERR013");
+                if (ordenes.Count == 0)
+                {
+                    MostrarError(lblMensaje, "ERR013");
+                }
+                else
+                {
+                    // Paso 6 del caso de uso: se informa la cantidad de registros obtenidos.
+                    MostrarMensaje(lblMensaje, "Se " + (ordenes.Count == 1 ? "encontró " : "encontraron ") +
+                        Textos.Contar(ordenes.Count, "orden de compra", "órdenes de compra") + ".", false);
+                }
             }
         }
         catch (Exception ex)
         {
             gvDetalle.DataSource = null;
             gvDetalle.DataBind();
+            litIndicadores.Text = string.Empty;
             MostrarMensaje(lblMensaje, ex.Message, true);
         }
+    }
+
+    /// Cuántas órdenes hay en el resultado y cuántas de cada estado.
+    private void MostrarIndicadores(List<BEOrdenCompra> ordenes)
+    {
+        int pendientes = 0, recibidas = 0, anuladas = 0;
+        foreach (BEOrdenCompra orden in ordenes)
+        {
+            switch (orden.EstadoBase)
+            {
+                case BEOrdenCompra.EstadoPendiente: pendientes++; break;
+                case BEOrdenCompra.EstadoRecibida: recibidas++; break;
+                default: anuladas++; break;
+            }
+        }
+
+        litIndicadores.Text = new Indicadores()
+            .Agregar("Órdenes encontradas", ordenes.Count.ToString(), "destacado")
+            .Agregar("Pendientes", pendientes.ToString(), pendientes > 0 ? "aviso" : null)
+            .Agregar("Recibidas", recibidas.ToString(), recibidas > 0 ? "exito" : null)
+            .Agregar("Anuladas", anuladas.ToString())
+            .ToString();
     }
 
     /// Fecha vacía: sin filtro. Devuelve false si el texto no es una fecha.

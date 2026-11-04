@@ -27,13 +27,15 @@
 
         <div class="col-md-6">
             <div class="panel panel-default">
-                <div class="panel-heading"><strong>Permisos por rol</strong></div>
+                <div class="panel-heading"><strong>Permisos por perfil (rol)</strong></div>
                 <div class="panel-body">
+                    <p class="help-block">
+                        Solo para consultar: los permisos de un perfil se asignan en Modificación de familia.
+                    </p>
                     <div class="form-group">
                         <asp:DropDownList ID="ddlRoles" runat="server" CssClass="form-control"
                             AutoPostBack="true" OnSelectedIndexChanged="ddlRoles_SelectedIndexChanged"></asp:DropDownList>
                     </div>
-                    <p><strong>Estructura asignada</strong></p>
                     <asp:Literal ID="litArbolRol" runat="server" Mode="PassThrough"></asp:Literal>
                     <hr />
                     <p><strong>Patentes efectivas</strong></p>

@@ -12,7 +12,8 @@ namespace DAL
     /// La tabla auxiliar DVH_Fila guarda el digito horizontal de cada registro
     /// y DVV_Columna el digito vertical de cada columna, lo que permite
     /// determinar la fila y la columna exacta donde esta la inconsistencia.
-    /// La tabla Usuario ademas conserva su propio DVH en la columna homonima.
+    /// Las tablas controladas no tienen columnas de dígitos propias: todos los
+    /// dígitos están en estas tres tablas.
     public class DALDigitoVerificador
     {
         private readonly DALConexion dalCon = new DALConexion();

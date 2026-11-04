@@ -64,10 +64,63 @@ public abstract class PaginaBase : Page
             return;
         }
 
+        MarcarDatosSinTraducir(this);
+
         StringWriter texto = new StringWriter();
         base.Render(new HtmlTextWriter(texto));
 
         writer.Write(Traductor.TraducirHtml(texto.ToString(), idioma));
+    }
+
+    /// Columnas de las grillas con datos que carga la gente (nombres de
+    /// usuario, correos, descripciones de la bitácora...). No se traducen:
+    /// la API cambiaba nombres propios ("Policia" por "Police") y gastaba el
+    /// cupo diario con textos que no se repiten nunca.
+    private static readonly HashSet<string> ColumnasDeDatos = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Usuario", "Apellido y nombre", "Correo", "Nombre de usuario", "Descripción", "CUIT", "Razón social",
+        "MAC", "Modelo", "Motivo", "Motivo del bloqueo", "Comprobante / motivo", "Observaciones", "Proveedor",
+        "Clave del registro"
+    };
+
+    private static void MarcarDatosSinTraducir(Control control)
+    {
+        GridView grilla = control as GridView;
+        if (grilla != null && grilla.HeaderRow != null)
+        {
+            List<int> columnas = new List<int>();
+            for (int i = 0; i < grilla.HeaderRow.Cells.Count; i++)
+            {
+                string titulo = HttpUtility.HtmlDecode(grilla.HeaderRow.Cells[i].Text ?? string.Empty).Trim();
+                if (ColumnasDeDatos.Contains(titulo))
+                {
+                    columnas.Add(i);
+                }
+            }
+
+            foreach (GridViewRow fila in grilla.Rows)
+            {
+                foreach (int i in columnas)
+                {
+                    if (i < fila.Cells.Count)
+                    {
+                        fila.Cells[i].Attributes["translate"] = "no";
+                    }
+                }
+            }
+        }
+
+        // Las listas para elegir un usuario muestran nombres de usuario.
+        DropDownList lista = control as DropDownList;
+        if (lista != null && (lista.ID == "ddlUsuario" || lista.ID == "ddlUsuarios"))
+        {
+            lista.Attributes["translate"] = "no";
+        }
+
+        foreach (Control hijo in control.Controls)
+        {
+            MarcarDatosSinTraducir(hijo);
+        }
     }
 
     private void Autorizar()
@@ -143,8 +196,11 @@ public abstract class PaginaBase : Page
 
     /// Vuelve a leer la cuenta de la base. Devuelve el motivo para cortar la
     /// sesión ("cuenta" si ya no existe o está dada de baja, "bloqueo" si la
-    /// bloqueó un administrador) o null si puede seguir. Si cambió el rol,
-    /// recarga sus permisos en la sesión. Si la base no responde no se corta la
+    /// bloqueó un administrador) o null si puede seguir. Si le cambiaron el rol,
+    /// o si cambió la estructura de permisos (por ejemplo, se le agregó una
+    /// familia a su rol o una patente a una de sus familias), recarga sus
+    /// permisos en la sesión: el menú y los accesos cambian en este mismo
+    /// pedido, sin volver a iniciar sesión. Si la base no responde no se corta la
     /// sesión por eso: el error lo va a informar la operación que se intente.
     ///
     /// El bloqueo por intentos fallidos no corta la sesión abierta: cualquiera
@@ -181,12 +237,21 @@ public abstract class PaginaBase : Page
             return MotivoCierreBloqueo;
         }
 
-        if (actual.IdRol != usuario.IdRol)
+        long version = BLLPermiso.VersionPermisos;
+        if (!SessionManager.VersionPermisos.HasValue)
+        {
+            // Primer pedido después de iniciar sesión: los permisos se
+            // acaban de cargar.
+            SessionManager.VersionPermisos = version;
+        }
+
+        if (actual.IdRol != usuario.IdRol || SessionManager.VersionPermisos.Value != version)
         {
             try
             {
                 bllUsuario.CargarRol(actual);
                 SessionManager.UsuarioActual = actual;
+                SessionManager.VersionPermisos = version;
             }
             catch (Exception)
             {

@@ -47,11 +47,14 @@
     <Compile Include="Encriptacion.cs" />
     <Compile Include="EnviadorCorreo.cs" />
     <Compile Include="ExportadorReporte.cs" />
+    <Compile Include="FacturacionElectronica.cs" />
+    <Compile Include="GeneradorFactura.cs" />
     <Compile Include="LimitadorDeEventos.cs" />
     <Compile Include="MenuSistema.cs" />
     <Compile Include="PasarelaPagos.cs" />
     <Compile Include="PreferenciaIdioma.cs" />
     <Compile Include="SessionManager.cs" />
+    <Compile Include="TarjetaCredito.cs" />
     <Compile Include="Traductor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

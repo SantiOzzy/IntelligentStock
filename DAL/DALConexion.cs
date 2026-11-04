@@ -206,6 +206,30 @@ namespace DAL
             }
         }
 
+        /// Consulta sobre la base master. Sirve aunque la base del sistema no
+        /// exista (por ejemplo, para preparar un restore).
+        public DataTable ConsultaEnMaster(string consulta)
+        {
+            DataTable tabla = new DataTable();
+            try
+            {
+                using (SqlConnection con = new SqlConnection(CadenaConexionMaster))
+                using (SqlCommand command = new SqlCommand(consulta, con))
+                {
+                    con.Open();
+                    using (SqlDataAdapter adapter = new SqlDataAdapter(command))
+                    {
+                        adapter.Fill(tabla);
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw Traducir(ex);
+            }
+            return tabla;
+        }
+
         /// Ejecuta varios lotes (los de un script separado por GO) uno detrás de
         /// otro sobre una misma conexión a master.
         public void EjecutarLotesEnMaster(List<string> lotes)

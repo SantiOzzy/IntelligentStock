@@ -258,8 +258,11 @@ public partial class IniciarSesion : PaginaBase
         pnlPanel.Visible = true;
         Page.Title = "Panel principal";
 
-        litBienvenida.Text = "Bienvenido, " + HttpUtility.HtmlEncode(usuario.Nombre) +
-                             " (" + HttpUtility.HtmlEncode(usuario.NombreRol) + ")";
+        // El nombre va aparte y marcado para no traducirse (es un nombre
+        // propio); el perfil, en su propia etiqueta para que se traduzca solo.
+        litBienvenida.Text = "Hola, <span translate=\"no\">" + HttpUtility.HtmlEncode(usuario.Nombre) + "</span>.";
+        litSubtitulo.Text = "Ingresó como <span class=\"saludo-rol\">" + HttpUtility.HtmlEncode(usuario.NombreRol) +
+                            "</span>; sus tareas están en el menú de la izquierda.";
 
         List<ModuloMenu> modulos = MenuSistema.ObtenerMenuDe(usuario);
 
@@ -271,39 +274,14 @@ public partial class IniciarSesion : PaginaBase
             return;
         }
 
-        litOpciones.Text = ArmarTarjetas(modulos);
+        litOpciones.Text = string.Empty;
     }
 
-    // Dibuja un panel por modulo con la lista de opciones adentro. Sale de la
-    // misma definicion que usa la barra de navegacion, asi no se duplica el menu.
-    private string ArmarTarjetas(List<ModuloMenu> modulos)
+    /// Abono mensual del plan para la sección Planes de la bienvenida. Sale de
+    /// la lista fija de BLLSuscripcion (no consulta la base de datos).
+    protected string PrecioDelPlan(string plan)
     {
-        StringBuilder html = new StringBuilder();
-        html.Append("<div class=\"row\">");
-
-        foreach (ModuloMenu modulo in modulos)
-        {
-            html.Append("<div class=\"col-md-4\">");
-            html.Append("<div class=\"panel panel-default\">");
-            html.Append("<div class=\"panel-heading\"><strong>");
-            html.Append(HttpUtility.HtmlEncode(modulo.Titulo));
-            html.Append("</strong></div>");
-            html.Append("<ul class=\"list-group\">");
-
-            foreach (OpcionMenu opcion in modulo.Opciones)
-            {
-                html.Append("<li class=\"list-group-item\"><a href=\"");
-                html.Append(ResolveUrl(opcion.Url));
-                html.Append("\">");
-                html.Append(HttpUtility.HtmlEncode(opcion.Texto));
-                html.Append("</a></li>");
-            }
-
-            html.Append("</ul></div></div>");
-        }
-
-        html.Append("</div>");
-        return html.ToString();
+        return "$ " + BLLSuscripcion.PrecioDelPlan(plan).ToString("N0");
     }
 
     private void AvisarSiVieneDeUnAccesoDenegado()

@@ -19,7 +19,7 @@
             <asp:Label ID="lblBusqueda" runat="server" AssociatedControlID="txtBusqueda"
                 CssClass="control-label" Text="Buscar por nombre o Id"></asp:Label>
             <div class="input-group">
-                <asp:TextBox ID="txtBusqueda" runat="server" CssClass="form-control"></asp:TextBox>
+                <asp:TextBox ID="txtBusqueda" runat="server" CssClass="form-control" MaxLength="100"></asp:TextBox>
                 <span class="input-group-btn">
                     <asp:Button ID="btnBuscar" runat="server" Text="Buscar" CssClass="btn btn-primary"
                         OnClick="btnBuscar_Click" />

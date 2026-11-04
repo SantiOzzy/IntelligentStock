@@ -13,6 +13,9 @@ namespace Servicios
         /// Identificador de la operación en la pasarela (solo si se aprobó).
         public string CodigoTransaccion { get; set; }
 
+        /// Token que reemplaza a la tarjeta (solo en Tokenizar).
+        public string Token { get; set; }
+
         /// Motivo del rechazo (solo si no se aprobó).
         public string Motivo { get; set; }
 
@@ -30,6 +33,11 @@ namespace Servicios
     ///   - si el token contiene la palabra "rechaz" la pasarela rechaza el
     ///     cobro (sirve para probar el error #ERR024);
     ///   - en cualquier otro caso el cobro se aprueba.
+    ///
+    /// Tarjetas de prueba para Tokenizar: cualquier Visa, Mastercard o American
+    /// Express con el dígito de control correcto se aprueba (por ejemplo
+    /// 4111 1111 1111 1111 o 5555 5555 5555 4444). La 4000 0000 0000 0002 da
+    /// un token que la pasarela rechaza al cobrar.
     public static class PasarelaPagos
     {
         /// La pasarela simulada responde desde el propio servidor.
@@ -61,6 +69,59 @@ namespace Servicios
             }
 
             return Aprobacion();
+        }
+
+        /// Tarjetas de prueba que la entidad emisora rechaza.
+        private static readonly string[] TarjetasRechazadas = new string[] { "4000000000000002" };
+
+        /// Recibe los datos de la tarjeta y devuelve un token que la representa.
+        /// El sistema guarda solo el token (encriptado): el número y el código
+        /// de seguridad no se guardan en ningún lado. En producción el formulario
+        /// mandaría la tarjeta directo a la pasarela, sin pasar por el servidor.
+        public static RespuestaPasarela Tokenizar(string numero, int mesVencimiento, int anioVencimiento,
+                                                  string codigoSeguridad, string titular)
+        {
+            numero = TarjetaCredito.Normalizar(numero);
+            string marca = TarjetaCredito.Marca(numero);
+
+            if (marca == null || !TarjetaCredito.PasaLuhn(numero))
+            {
+                return Rechazo("El número de tarjeta no es válido.");
+            }
+            if (TarjetaCredito.EstaVencida(mesVencimiento, anioVencimiento, DateTime.Today))
+            {
+                return Rechazo("La tarjeta está vencida.");
+            }
+            if (!TarjetaCredito.CodigoSeguridadValido(codigoSeguridad, marca))
+            {
+                return Rechazo("El código de seguridad no es válido.");
+            }
+            if (string.IsNullOrEmpty(titular) || titular.Trim().Length == 0)
+            {
+                return Rechazo("Falta el nombre del titular.");
+            }
+
+            bool rechazada = Array.IndexOf(TarjetasRechazadas, numero) >= 0;
+
+            RespuestaPasarela respuesta = Aprobacion();
+            respuesta.Token = "tok_" + (rechazada ? "rechazada" + Azar(15) : Azar(24));
+            return respuesta;
+        }
+
+        private static string Azar(int largo)
+        {
+            const string letras = "abcdefghijklmnopqrstuvwxyz0123456789";
+            byte[] bytes = new byte[largo];
+            using (RandomNumberGenerator generador = RandomNumberGenerator.Create())
+            {
+                generador.GetBytes(bytes);
+            }
+            char[] salida = new char[largo];
+            for (int i = 0; i < largo; i++)
+            {
+                salida[i] = letras[bytes[i] % letras.Length];
+            }
+            return new string(salida);
         }
 
         /// Detiene los cobros futuros asociados al token.

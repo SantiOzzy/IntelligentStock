@@ -49,6 +49,19 @@ namespace BLL
             ResultadoLogin contingencia = IntentarLoginDeContingencia(nombreUsuario, clave);
             if (contingencia != null)
             {
+                // Si la base responde se controla igual el dígito verificador:
+                // con una tabla alterada (por ejemplo, si borraron los usuarios)
+                // la primera pantalla es Reparar dígito verificador, porque
+                // hasta recalcularlo no se puede dar de alta ninguna cuenta. Si
+                // no responde, entra igual para poder hacer el Restore.
+                try
+                {
+                    contingencia.Inconsistencias = bllDV.VerificarIntegridad();
+                }
+                catch (Exception)
+                {
+                    contingencia.Inconsistencias = new List<Inconsistencia>();
+                }
                 return contingencia;
             }
 
@@ -114,6 +127,7 @@ namespace BLL
                     "Se detectaron " + inconsistencias.Count +
                     " inconsistencias de dígito verificador durante el inicio de sesión. [#ERR007]",
                     CriticidadEvento.Grave);
+                RegistrarDetalleDeInconsistencias(usuario.DNI, inconsistencias);
                 return resultado;
             }
 
@@ -129,12 +143,83 @@ namespace BLL
             return resultado;
         }
 
+        /// Deja en la bitácora en qué tabla y en qué registros está cada
+        /// inconsistencia: un evento por tabla, para que quede el detalle aunque
+        /// después se recalculen los dígitos o se restaure la base.
+        private void RegistrarDetalleDeInconsistencias(int dni, List<Inconsistencia> inconsistencias)
+        {
+            List<string> tablas = new List<string>();
+            Dictionary<string, List<string>> porTabla = new Dictionary<string, List<string>>();
+            foreach (Inconsistencia inconsistencia in inconsistencias)
+            {
+                List<string> detalles;
+                if (!porTabla.TryGetValue(inconsistencia.Tabla, out detalles))
+                {
+                    detalles = new List<string>();
+                    porTabla[inconsistencia.Tabla] = detalles;
+                    tablas.Add(inconsistencia.Tabla);
+                }
+                detalles.Add(DetalleCorto(inconsistencia));
+            }
+
+            foreach (string tabla in tablas)
+            {
+                List<string> detalles = porTabla[tabla];
+                string texto = "Tabla " + tabla + " (" + detalles.Count +
+                               (detalles.Count == 1 ? " inconsistencia): " : " inconsistencias): ") +
+                               string.Join("; ", detalles.ToArray()) + ".";
+                if (texto.Length > 500)
+                {
+                    texto = texto.Substring(0, 497) + "...";
+                }
+                bllEvento.Registrar(dni, "Inconsistencia en la base de datos", texto, CriticidadEvento.Grave);
+            }
+        }
+
+        /// Por ejemplo: "registro [id_insumo = 3], columna stock: celda alterada".
+        private static string DetalleCorto(Inconsistencia inconsistencia)
+        {
+            string tipo = inconsistencia.TipoTexto.ToLowerInvariant();
+            if (string.IsNullOrEmpty(inconsistencia.ClaveFila))
+            {
+                return tipo;
+            }
+
+            return "registro [" + inconsistencia.ClaveFila + "]" +
+                   (string.IsNullOrEmpty(inconsistencia.Columna) ? string.Empty : ", columna " + inconsistencia.Columna) +
+                   ": " + tipo;
+        }
+
+        /// DNI con el que queda en la sesión el usuario de contingencia. No
+        /// existe en la tabla Usuario: los eventos que registra quedan sin
+        /// usuario y con el prefijo "(usuario de contingencia)".
+        public const int DniContingencia = 0;
+
+        /// Patentes del usuario de contingencia: todas las de seguridad
+        /// (usuarios, perfiles y administración del sistema). Con ellas se puede
+        /// recuperar el acceso aunque hayan borrado o alterado la tabla Usuario:
+        /// restaurar un backup, reparar el dígito verificador y volver a crear
+        /// las cuentas. No tiene CambiarContraseña porque su clave está en el
+        /// Web.config, ni patentes del negocio (insumos, compras, ventas).
+        public static readonly string[] PatentesDeContingencia = new string[]
+        {
+            "AltaUsuario", "ModificacionUsuario", "BajaUsuario", "ConsultaUsuario",
+            "BloquearUsuario", "DesbloquearUsuario",
+            "AltaFamilia", "ModificacionFamilia", "BajaFamilia", "ConsultaFamilia", "ConsultaPatente",
+            "BitacoraEventos", "BackUp", "Restore", "ReparacionDV"
+        };
+
+        public static bool EsUsuarioDeContingencia(BEUsuario usuario)
+        {
+            return usuario != null && usuario.DNI == DniContingencia;
+        }
+
         /// Usuario hardcodeado en el Web.config (claves "UsuarioContingencia" /
         /// "ClaveContingenciaSHA256") para poder entrar cuando la base de datos
-        /// no existe o el motor no responde. Solo trae las patentes mínimas
-        /// para llegar a BackUp/Restore/ReparacionDV (que no dependen de que
-        /// exista la base IntelligentStock) y a la bitácora. No se registra
-        /// nada en la bitácora: para eso también hace falta la base.
+        /// no existe, el motor no responde o no queda ninguna cuenta con la que
+        /// entrar. Tiene todas las funciones de seguridad (PatentesDeContingencia):
+        /// BackUp, Restore y la reparación del dígito verificador no dependen de
+        /// que exista la base IntelligentStock; el resto (usuarios y perfiles) sí.
         private static ResultadoLogin IntentarLoginDeContingencia(string nombreUsuario, string clave)
         {
             string usuarioConfigurado = ConfigurationManager.AppSettings["UsuarioContingencia"];
@@ -156,13 +241,13 @@ namespace BLL
             }
 
             BERol rol = new BERol(0, "Contingencia");
-            rol.Agregar(new Patente(0, "BackUp"));
-            rol.Agregar(new Patente(0, "Restore"));
-            rol.Agregar(new Patente(0, "ReparacionDV"));
-            rol.Agregar(new Patente(0, "BitacoraEventos"));
+            foreach (string patente in PatentesDeContingencia)
+            {
+                rol.Agregar(new Patente(0, patente));
+            }
 
             BEUsuario usuario = new BEUsuario();
-            usuario.DNI = 0;
+            usuario.DNI = DniContingencia;
             usuario.NombreUsuario = usuarioConfigurado;
             usuario.Nombre = "Usuario de contingencia";
             usuario.Apellido = string.Empty;
@@ -182,7 +267,7 @@ namespace BLL
             // DNI 0 es el usuario de contingencia: no tiene fila en la tabla
             // Usuario y puede estar operando justamente porque la base no
             // está disponible, así que no se intenta escribir la bitácora.
-            if (usuario != null && usuario.DNI != 0)
+            if (usuario != null && !EsUsuarioDeContingencia(usuario))
             {
                 bllEvento.Registrar(usuario.DNI, "Cierre de sesión",
                     "El usuario " + usuario.NombreUsuario + " cerró su sesión.");
@@ -518,14 +603,13 @@ namespace BLL
 
             // El contador en cero es lo que marca el bloqueo como manual (ver
             // BEUsuario.BloqueadoManualmente).
+            // Los enlaces de recuperación que estuvieran pendientes no sirven más.
             bllDV.EjecutarControlado(delegate
             {
                 dalUsuario.ModificarBloqueo(dni, true);
                 dalUsuario.ModificarContFallido(usuario.NombreUsuario, 0);
-            }, "Usuario");
-
-            // Los enlaces de recuperación que estuvieran pendientes no sirven más.
-            dalUsuario.InvalidarTokensDeUsuario(dni);
+                dalUsuario.InvalidarTokensDeUsuario(dni);
+            }, "Usuario", "TokenRecuperacion");
 
             bllEvento.RegistrarDelUsuarioActual("Bloqueo de usuario",
                 (estabaBloqueadoPorIntentos
@@ -725,16 +809,34 @@ namespace BLL
                 return;
             }
 
-            // Un enlace nuevo deja sin efecto los anteriores.
-            dalUsuario.InvalidarTokensDeUsuario(usuario.DNI);
-
             string token = Encriptacion.GenerarTokenAleatorio();
 
             BETokenRecuperacion registro = new BETokenRecuperacion();
             registro.TokenHash = Encriptacion.EncriptarSHA256(token);
             registro.DniUsuario = usuario.DNI;
             registro.FechaExpiracion = DateTime.Now.AddMinutes(MinutosVigenciaEnlaceRecuperacion);
-            dalUsuario.CrearTokenRecuperacion(registro);
+
+            // Un enlace nuevo deja sin efecto los anteriores. La tabla de
+            // enlaces tiene dígito verificador: si alguien insertó un enlace por
+            // fuera del sistema, acá se detecta y no se crea el nuevo. A quien
+            // lo pidió no se le muestra nada distinto (no se revela si la cuenta
+            // existe); la operación detenida ya quedó en la bitácora.
+            try
+            {
+                bllDV.EjecutarControlado(delegate
+                {
+                    dalUsuario.InvalidarTokensDeUsuario(usuario.DNI);
+                    dalUsuario.CrearTokenRecuperacion(registro);
+                }, "TokenRecuperacion");
+            }
+            catch (ApplicationException ex)
+            {
+                if (AdministradorErrores.CodigoDelMensaje(ex.Message) == "ERR007")
+                {
+                    return;
+                }
+                throw;
+            }
 
             bllEvento.Registrar(usuario.DNI, "Recuperación de contraseña",
                 "Se envió un enlace de recuperación de contraseña al correo del usuario " +
@@ -823,7 +925,13 @@ namespace BLL
                         dalUsuario.ModificarBloqueo(actual.DNI, false);
                     }
                     dalUsuario.ModificarContFallido(actual.NombreUsuario, 0);
-                }, "Usuario");
+
+                    // El enlace sirve una sola vez. Se marca en la misma
+                    // operación que el cambio de clave, que antes verifica la
+                    // tabla de enlaces: un enlace insertado por fuera del
+                    // sistema la deja inconsistente y el cambio se detiene.
+                    dalUsuario.MarcarTokenRecuperacionUsado(Encriptacion.EncriptarSHA256(token.Trim()));
+                }, "Usuario", "TokenRecuperacion");
             }
             catch (ApplicationException ex)
             {
@@ -836,7 +944,6 @@ namespace BLL
                 }
                 throw;
             }
-            dalUsuario.MarcarTokenRecuperacionUsado(Encriptacion.EncriptarSHA256(token.Trim()));
             bllEvento.Registrar(usuario.DNI, "Cambio de contraseña",
                 "El usuario " + usuario.NombreUsuario +
                 " definió una contraseña nueva con el enlace de recuperación enviado a su correo.",
@@ -1020,6 +1127,16 @@ namespace BLL
             rolDestino = roles.Find(delegate(BERol r) { return r.Id == idRol; });
 
             BEUsuario actor = SessionManager.UsuarioActual;
+
+            // El usuario de contingencia existe para reconstruir el acceso
+            // cuando no queda ninguna cuenta que sirva (por ejemplo, si
+            // borraron la tabla Usuario): tiene que poder crear un WebMaster
+            // aunque él mismo no tenga las patentes del negocio.
+            if (EsUsuarioDeContingencia(actor))
+            {
+                return null;
+            }
+
             BERol rolActor = actor == null ? null : roles.Find(delegate(BERol r) { return r.Id == actor.IdRol; });
 
             if (rolDestino == null)
@@ -1157,17 +1274,22 @@ namespace BLL
             }
         }
 
-        /// Mínimo 8 caracteres, con al menos una mayúscula, una minúscula y un número.
-        private static readonly Regex RegexComplejidadClave =
-            new Regex(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$");
+        /// Mínimo 8 caracteres, con al menos una mayúscula, una minúscula, un
+        /// número y un carácter especial (cualquiera que no sea letra, número ni
+        /// espacio). La misma expresión usan los RegularExpressionValidator de
+        /// las pantallas de alta de usuario, cambio y recuperación de contraseña.
+        public const string ExpresionComplejidadClave =
+            @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s]).{8,}$";
+
+        private static readonly Regex RegexComplejidadClave = new Regex(ExpresionComplejidadClave);
 
         public static void ValidarComplejidadClave(string clave)
         {
             if (string.IsNullOrEmpty(clave) || !RegexComplejidadClave.IsMatch(clave))
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
-                    "La contraseña debe tener al menos 8 caracteres, con una mayúscula, " +
-                    "una minúscula y un número."));
+                    "La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula, " +
+                    "un número y un carácter especial (por ejemplo !, #, $, %, * o @)."));
             }
         }
 

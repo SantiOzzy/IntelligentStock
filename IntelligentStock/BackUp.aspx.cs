@@ -19,9 +19,10 @@ public partial class BackUp : PaginaBase
     {
         if (!IsPostBack)
         {
-            // Se propone la carpeta de backups del propio motor: el archivo lo
-            // escribe SQL Server y sobre esa ruta ya tiene permisos.
-            txtCarpeta.Text = bllRespaldo.RutaPorDefecto(Server.MapPath("~/App_Data/Backups"));
+            // Se propone App_Data\Respaldos: la aplicación le da permiso a la
+            // cuenta del servicio de SQL Server (que es quien escribe el archivo)
+            // y después puede descargarlo.
+            txtCarpeta.Text = bllRespaldo.RutaPorDefecto();
         }
     }
 

@@ -14,7 +14,7 @@
     </ul>
 
     <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active" id="tabFamilias" style="padding-top: 15px">
+    <div role="tabpanel" class="tab-pane active pestana-contenido" id="tabFamilias">
 
     <div class="panel panel-default">
         <div class="panel-heading"><strong>Familia a modificar</strong></div>
@@ -63,7 +63,7 @@
                             Rows="14" SelectionMode="Multiple"></asp:ListBox>
                     </div>
 
-                    <div class="col-md-2 text-center" style="padding-top: 90px">
+                    <div class="col-md-2 text-center columna-flechas">
                         <asp:Button ID="btnAgregar" runat="server" Text="Agregar &gt;&gt;"
                             CssClass="btn btn-success btn-block" OnClick="btnAgregar_Click" CausesValidation="false" />
                         <br />
@@ -145,7 +145,7 @@
                             Rows="14" SelectionMode="Multiple"></asp:ListBox>
                     </div>
 
-                    <div class="col-md-2 text-center" style="padding-top: 90px">
+                    <div class="col-md-2 text-center columna-flechas">
                         <asp:Button ID="btnAgregarRolMod" runat="server" Text="Agregar &gt;&gt;"
                             CssClass="btn btn-success btn-block" OnClick="btnAgregarRolMod_Click" CausesValidation="false" />
                         <br />

@@ -7,11 +7,16 @@ using Servicios;
 
 // CU-003-016 Consultar bitacora.
 //
-// Al abrir se muestran los 200 eventos mas recientes. Los filtros son opcionales
-// y se combinan entre si.
+// Al abrir se muestran los 200 eventos activos mas recientes. Los filtros son
+// opcionales y se combinan entre si. Los eventos de más de 30 días están
+// eliminados (eliminación lógica): se ven tildando "Incluir eventos
+// eliminados", y cada mes archivado se puede descargar como XML.
 public partial class BitacoraEventos : PaginaBase
 {
     private const string ClaveEventos = "EventosBitacora";
+
+    /// Posición de la columna Estado en la grilla.
+    private const int ColumnaEstado = 6;
 
     private BLLEvento bllEvento = new BLLEvento();
     private BLLUsuario bllUsuario = new BLLUsuario();
@@ -28,8 +33,33 @@ public partial class BitacoraEventos : PaginaBase
             return;
         }
 
+        litPolitica.Text = "Los eventos de los últimos " + BLLEvento.DiasActivos +
+                           " días están activos. Los anteriores pasan a eliminados (no se borran) " +
+                           "después de archivarse en el XML de su mes.";
+
         CargarUsuarios();
+        CargarArchivos();
         MostrarUltimosEventos();
+    }
+
+    private void CargarArchivos()
+    {
+        ddlArchivo.Items.Clear();
+
+        try
+        {
+            foreach (string nombre in bllEvento.ListarArchivos())
+            {
+                ddlArchivo.Items.Add(new ListItem(nombre, nombre));
+            }
+        }
+        catch (Exception ex)
+        {
+            MostrarMensaje(lblMensaje, ex.Message, true);
+        }
+
+        pnlArchivos.Visible = ddlArchivo.Items.Count > 0;
+        lblSinArchivos.Visible = ddlArchivo.Items.Count == 0;
     }
 
     private void CargarUsuarios()
@@ -54,10 +84,12 @@ public partial class BitacoraEventos : PaginaBase
     {
         try
         {
-            List<BEEvento> eventos = bllEvento.TraerUltimos(BLLEvento.CantidadInicial);
+            bool incluirEliminados = chkIncluirEliminados.Checked;
+            List<BEEvento> eventos = bllEvento.TraerUltimos(BLLEvento.CantidadInicial, incluirEliminados);
             Enlazar(eventos);
             litResumen.Text = "Mostrando los últimos " + BLLEvento.CantidadInicial +
-                              " eventos registrados (" + eventos.Count + " encontrados).";
+                              (incluirEliminados ? " eventos registrados, activos y eliminados (" : " eventos activos (") +
+                              eventos.Count + " encontrados).";
         }
         catch (Exception ex)
         {
@@ -67,6 +99,11 @@ public partial class BitacoraEventos : PaginaBase
 
     protected void btnFiltrar_Click(object sender, EventArgs e)
     {
+        if (!IsValid)
+        {
+            return;
+        }
+
         OcultarMensaje(lblMensaje);
 
         DateTime desde;
@@ -99,7 +136,7 @@ public partial class BitacoraEventos : PaginaBase
         try
         {
             List<BEEvento> eventos = bllEvento.Filtrar(desde, hasta,
-                ddlUsuario.SelectedValue, txtTexto.Text, criticidad);
+                ddlUsuario.SelectedValue, txtTexto.Text, criticidad, chkIncluirEliminados.Checked);
 
             Enlazar(eventos);
 
@@ -126,6 +163,7 @@ public partial class BitacoraEventos : PaginaBase
         txtTexto.Text = string.Empty;
         ddlUsuario.SelectedIndex = 0;
         ddlCriticidad.SelectedIndex = 0;
+        chkIncluirEliminados.Checked = false;
 
         OcultarMensaje(lblMensaje);
         MostrarUltimosEventos();
@@ -138,9 +176,53 @@ public partial class BitacoraEventos : PaginaBase
         gvEventos.DataBind();
     }
 
+    // Los eventos eliminados se ven atenuados.
+    protected void gvEventos_RowDataBound(object sender, GridViewRowEventArgs e)
+    {
+        BEEvento evento = e.Row.DataItem as BEEvento;
+        if (e.Row.RowType == DataControlRowType.DataRow && evento != null && !evento.Activo)
+        {
+            e.Row.CssClass = "evento-eliminado";
+        }
+    }
+
+    protected void btnDescargarArchivo_Click(object sender, EventArgs e)
+    {
+        string nombre = ddlArchivo.SelectedValue;
+        byte[] contenido = null;
+        try
+        {
+            contenido = bllEvento.LeerArchivo(nombre);
+        }
+        catch (Exception ex)
+        {
+            MostrarMensaje(lblMensaje, ex.Message, true);
+            return;
+        }
+
+        if (contenido == null)
+        {
+            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR013", "No se encontró el archivo " + nombre + "."), true);
+            CargarArchivos();
+            return;
+        }
+
+        bllEvento.RegistrarDelUsuarioActual("Descarga de bitácora archivada",
+            "Se descargó el archivo histórico " + nombre + ".");
+
+        Response.Clear();
+        Response.ContentType = "application/xml";
+        Response.AppendHeader("Content-Disposition", "attachment; filename=" + nombre);
+        Response.BinaryWrite(contenido);
+        Response.Flush();
+        Response.SuppressContent = true;
+        Context.ApplicationInstance.CompleteRequest();
+    }
+
     // La lista queda en sesion para poder paginar sin volver a pegarle a la base.
     private void Enlazar(List<BEEvento> eventos)
     {
+        gvEventos.Columns[ColumnaEstado].Visible = chkIncluirEliminados.Checked;
         Session[ClaveEventos] = eventos;
         gvEventos.PageIndex = 0;
         gvEventos.DataSource = eventos;

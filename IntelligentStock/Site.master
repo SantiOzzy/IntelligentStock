@@ -15,7 +15,7 @@
     <webopt:bundlereference runat="server" path="~/Content/css" />
     <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
 </head>
-<body>
+<body class="<%: ClaseDelCuerpo %>">
     <form runat="server">
         <asp:ScriptManager runat="server">
             <Scripts>
@@ -34,51 +34,100 @@
             </Scripts>
         </asp:ScriptManager>
 
-        <div class="navbar navbar-inverse navbar-fixed-top">
-            <div class="container">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse" title="mas opciones">
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
+        <a class="saltar-al-contenido" href="#contenido">Ir al contenido</a>
+
+        <div class="app">
+            <%-- Menú lateral: lo arma Site.master.cs con las opciones que habilita el rol. --%>
+            <aside class="app-lateral" id="menuLateral" aria-label="Menú principal">
+                <a class="marca" runat="server" href="~/IniciarSesion.aspx" id="lnkInicio">
+                    <span class="marca-icono" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span class="marca-nombre">IntelligentStock</span>
+                </a>
+                <asp:Literal ID="litMenu" runat="server" Mode="PassThrough"></asp:Literal>
+            </aside>
+
+            <div class="app-principal">
+                <header class="app-barra">
+                    <button type="button" class="boton-menu" aria-controls="menuLateral" aria-expanded="false">
+                        <span class="boton-menu-icono" aria-hidden="true"><i></i><i></i><i></i></span>
+                        <span class="sr-only">Abrir el menú</span>
                     </button>
-                    <a class="navbar-brand" runat="server" href="~/IniciarSesion.aspx" id="lnkInicio">IntelligentStock</a>
-                </div>
-                <div class="navbar-collapse collapse">
-                    <asp:Literal ID="litMenu" runat="server" Mode="PassThrough"></asp:Literal>
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <!--
-                                Multi-idioma resuelto en el propio programa (Servicios.Traductor +
-                                PaginaBase), no con una funcionalidad del navegador: este selector
-                                solo agrega "?idioma=xx" a la URL actual, PaginaBase la guarda en
-                                una cookie y traduce los controles del lado del servidor.
-                            -->
-                            <%-- translate="no": cada idioma figura con su propio nombre y no se
-                                 traduce (si no, en italiano "Español" aparecía como "Italiano"). --%>
-                            <select id="selectorIdioma" class="form-control input-sm" translate="no"
-                                style="width: auto; display: inline-block; margin-top: 8px;">
-                                <option value="es">Español</option>
-                                <option value="en">English</option>
-                                <option value="pt">Português</option>
-                                <option value="fr">Français</option>
-                                <option value="it">Italiano</option>
-                            </select>
-                        </li>
-                    </ul>
-                    <asp:Literal ID="litUsuario" runat="server" Mode="PassThrough"></asp:Literal>
+
+                    <a class="marca marca-compacta" href="<%: ResolveUrl("~/IniciarSesion.aspx") %>">
+                        <span class="marca-icono" aria-hidden="true"><i></i><i></i><i></i></span>
+                        <span class="marca-nombre">IntelligentStock</span>
+                    </a>
+
+                    <asp:Literal ID="litMigas" runat="server" Mode="PassThrough"></asp:Literal>
+
+                    <div class="app-barra-derecha">
+                        <%-- Usuario (iniciales, nombre y perfil), después el idioma y al final "Cerrar sesión". --%>
+                        <asp:Literal ID="litUsuario" runat="server" Mode="PassThrough"></asp:Literal>
+                        <!--
+                            Multi-idioma resuelto en el propio programa (Servicios.Traductor +
+                            PaginaBase), no con una funcionalidad del navegador: este selector
+                            solo agrega "?idioma=xx" a la URL actual, PaginaBase la guarda en
+                            una cookie y traduce los controles del lado del servidor.
+                        -->
+                        <label class="sr-only" for="selectorIdioma">Idioma</label>
+                        <%-- translate="no": cada idioma figura con su propio nombre y no se
+                             traduce (si no, en italiano "Español" aparecía como "Italiano"). --%>
+                        <select id="selectorIdioma" class="selector-idioma" translate="no">
+                            <option value="es">Español</option>
+                            <option value="en">English</option>
+                            <option value="pt">Português</option>
+                            <option value="fr">Français</option>
+                            <option value="it">Italiano</option>
+                        </select>
+                        <asp:Literal ID="litSalir" runat="server" Mode="PassThrough"></asp:Literal>
+                    </div>
+                </header>
+
+                <main id="contenido" class="app-contenido" tabindex="-1">
+                    <div class="hoja">
+                        <%-- Lo usa el script de la interfaz si la pantalla tiene datos obligatorios.
+                             Está acá (y no armado en JavaScript) para que también se traduzca. --%>
+                        <p class="leyenda-obligatorios" id="leyendaObligatorios" hidden="hidden">
+                            <abbr class="obligatorio" title="Obligatorio">*</abbr> Dato obligatorio
+                        </p>
+                        <asp:ContentPlaceHolder ID="MainContent" runat="server">
+                        </asp:ContentPlaceHolder>
+                    </div>
+                </main>
+
+                <footer class="app-pie">
+                    &copy; <%: DateTime.Now.Year %> IntelligentStock
+                </footer>
+            </div>
+        </div>
+
+        <%-- En pantallas angostas el menú se abre encima del contenido; tocar afuera lo cierra. --%>
+        <div class="velo-menu" aria-hidden="true"></div>
+
+        <%-- Diálogo propio para las confirmaciones: reemplaza la ventanita del
+             navegador que abría confirm(). Está escrito acá, y no armado en
+             JavaScript, para que el Traductor también lo traduzca. --%>
+        <div class="modal fade dialogo-confirmar" id="dialogoConfirmar" tabindex="-1" role="dialog"
+             aria-labelledby="dialogoConfirmarTitulo" aria-describedby="dialogoConfirmarTexto">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="dialogo-icono" aria-hidden="true"><span class="glyphicon glyphicon-question-sign"></span></span>
+                        <h4 class="modal-title" id="dialogoConfirmarTitulo">Confirmar la operación</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p id="dialogoConfirmarTexto"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Volver</button>
+                        <button type="button" class="btn btn-primary" id="dialogoConfirmarAceptar">Confirmar</button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="container body-content">
-            <asp:ContentPlaceHolder ID="MainContent" runat="server">
-            </asp:ContentPlaceHolder>
-            <hr />
-            <footer>
-                <p>&copy; <%: DateTime.Now.Year %> - IntelligentStock</p>
-            </footer>
-        </div>
+        <%-- Texto que toma el botón mientras el servidor procesa la operación. --%>
+        <span id="textoProcesando" hidden="hidden">Procesando...</span>
     </form>
 
     <script type="text/javascript">
@@ -107,30 +156,6 @@
     </script>
 
     <script type="text/javascript">
-        // La barra de navegación es fixed-top, así que no ocupa lugar en la
-        // página: el contenido arranca abajo gracias al padding-top del body.
-        // Ese padding estaba fijo en 50px (la altura de la barra con una sola
-        // línea de opciones), pero cuando el menú no entra a lo ancho la barra
-        // pasa a dos líneas y tapa el título de la pantalla. Acá se le da al
-        // body exactamente el alto que tiene la barra en cada momento.
-        (function () {
-            function acomodarContenido() {
-                var barra = document.querySelector(".navbar-fixed-top");
-                if (barra) {
-                    document.body.style.paddingTop = barra.offsetHeight + "px";
-                }
-            }
-
-            acomodarContenido();
-            window.addEventListener("load", acomodarContenido);
-            window.addEventListener("resize", acomodarContenido);
-            // El menú desplegable de pantallas angostas también cambia el alto.
-            $(document).on("shown.bs.collapse hidden.bs.collapse", ".navbar-collapse",
-                           acomodarContenido);
-        })();
-    </script>
-
-    <script type="text/javascript">
         // Las pantallas con pestañas (administración de familias) hacen postback
         // al tocar un control de la pestaña "Roles". Sin esto, al volver del
         // servidor la página se dibuja de nuevo con la primera pestaña activa y
@@ -151,6 +176,269 @@
 
             pestanas.on("shown.bs.tab", function (e) {
                 try { sessionStorage.setItem(clave, $(e.target).attr("href")); } catch (e2) { }
+            });
+        });
+    </script>
+
+    <script type="text/javascript">
+        // Comportamiento de la interfaz común a todas las pantallas.
+        $(function () {
+            var $body = $("body");
+
+            // Menú lateral en pantallas angostas: se abre con el botón y se
+            // cierra tocando afuera o con Escape.
+            function abrirMenu(abrir) {
+                $body.toggleClass("menu-abierto", abrir);
+                $(".boton-menu").attr("aria-expanded", abrir ? "true" : "false");
+            }
+            $(".boton-menu").on("click", function () { abrirMenu(!$body.hasClass("menu-abierto")); });
+            $(".velo-menu").on("click", function () { abrirMenu(false); });
+            $(document).on("keydown", function (e) {
+                if (e.key === "Escape" && $body.hasClass("menu-abierto")) { abrirMenu(false); }
+            });
+
+            // Grupos del menú: se abren y cierran, y se recuerda cuáles quedaron abiertos.
+            var claveGrupos = "menu-grupos-abiertos";
+            var abiertos = [];
+            try { abiertos = JSON.parse(localStorage.getItem(claveGrupos) || "[]"); } catch (e) { abiertos = []; }
+            $(".menu-grupo").each(function () {
+                var $grupo = $(this), nombre = $grupo.data("grupo");
+                if (!$grupo.hasClass("abierto") && $.inArray(nombre, abiertos) >= 0) {
+                    $grupo.addClass("abierto");
+                    $grupo.children(".menu-grupo-titulo").attr("aria-expanded", "true");
+                }
+            });
+            $(".menu-grupo-titulo").on("click", function () {
+                var $grupo = $(this).parent(), abrir = !$grupo.hasClass("abierto");
+                $grupo.toggleClass("abierto", abrir);
+                $(this).attr("aria-expanded", abrir ? "true" : "false");
+                abiertos = $(".menu-grupo.abierto").map(function () { return $(this).data("grupo"); }).get();
+                try { localStorage.setItem(claveGrupos, JSON.stringify(abiertos)); } catch (e) { }
+            });
+
+            // Las grillas anchas se desplazan de costado en vez de romper la página.
+            $(".hoja table.table").each(function () {
+                if (!$(this).parent().hasClass("table-responsive")) {
+                    $(this).wrap('<div class="table-responsive"></div>');
+                }
+            });
+
+            // Campos obligatorios: el "(*)" de las etiquetas pasa a ser un asterisco
+            // y se explica una sola vez arriba del formulario.
+            var $leyenda = $("#leyendaObligatorios");
+            var $asterisco = $leyenda.find("abbr.obligatorio");
+            var hayObligatorios = false;
+            $(".hoja label").each(function () {
+                var html = $(this).html();
+                if (/\(\*\)\s*$/.test(html)) {
+                    $(this).html(html.replace(/\s*\(\*\)\s*$/, "") + " ").append($asterisco.clone());
+                    hayObligatorios = true;
+                }
+            });
+            if (hayObligatorios && $(".hoja .page-header").length) {
+                $leyenda.removeAttr("hidden").appendTo($(".hoja .page-header").first());
+            }
+
+            // Después de un postback, el mensaje del resultado puede quedar
+            // fuera de la vista: se lo lleva a pantalla y se lo anuncia.
+            var $mensaje = $(".hoja span.alert:visible, .hoja div.alert:visible").first();
+            if ($mensaje.length) {
+                $mensaje.attr({ role: $mensaje.hasClass("alert-success") ? "status" : "alert", tabindex: "-1" });
+                var arriba = $mensaje.offset().top, alto = $(window).height();
+                if (arriba < $(window).scrollTop() || arriba > $(window).scrollTop() + alto - 80) {
+                    $("html, body").scrollTop(Math.max(arriba - 90, 0));
+                }
+            }
+        });
+    </script>
+
+    <script type="text/javascript">
+        // Detalles de la interfaz que valen para todas las pantallas, sin tener
+        // que tocar cada .aspx: encabezado, mensajes, confirmaciones, botones
+        // mientras el servidor procesa y grillas.
+        $(function () {
+            var $hoja = $(".hoja");
+
+            // Encabezado: el ícono del módulo al costado del título y el texto
+            // de ayuda de la pantalla debajo.
+            var $cabecera = $hoja.children(".page-header").first();
+            if ($cabecera.length) {
+                var $ayuda = $cabecera.nextAll("p.help-block").first();
+                if ($ayuda.length && $ayuda.prevUntil($cabecera).not("span").length === 0) {
+                    $ayuda.insertAfter($cabecera.children("h2").first());
+                }
+                var $icono = $(".menu-grupo.abierto .menu-icono").first();
+                if ($icono.length) {
+                    $("<span class='cabecera-icono' aria-hidden='true'></span>")
+                        .append($icono.clone().removeClass("menu-icono"))
+                        .prependTo($cabecera.addClass("con-icono"));
+                }
+            }
+
+            // Los mensajes de resultado se pueden cerrar.
+            $hoja.find("span.alert:visible, div.alert:visible").each(function () {
+                var $alerta = $(this);
+                $("<button type='button' class='alerta-cerrar' aria-label='Cerrar'><span aria-hidden='true'>&times;</span></button>")
+                    .on("click", function () { $alerta.slideUp(150); })
+                    .appendTo($alerta);
+            });
+
+            // Confirmaciones: las pantallas las piden con OnClientClick="return
+            // confirm('...')" (así el Traductor traduce el texto). Acá ese texto
+            // se muestra en el diálogo propio en vez de la ventana del navegador.
+            var $dialogo = $("#dialogoConfirmar"), alConfirmar = null;
+            $hoja.find(":submit[onclick*='confirm(']").each(function () {
+                var codigo = $(this).attr("onclick") || "";
+                var partes = /confirm\((['"])([\s\S]*?)\1\)/.exec(codigo);
+                if (!partes) {
+                    return;
+                }
+                // Lo que la pantalla controla antes de preguntar (por ejemplo,
+                // los validadores de un grupo) se sigue haciendo antes del diálogo.
+                var previo = codigo.substring(0, partes.index).replace(/return\s*$/, "");
+                var antes = null;
+                if ($.trim(previo)) {
+                    try { antes = new Function(previo + "\nreturn true;"); } catch (err) { antes = null; }
+                }
+                // ASP.NET agrega después del confirm la llamada que valida el
+                // grupo del botón; como el onclick se reemplaza, los validadores
+                // de la pantalla se ejecutan acá, antes de mostrar el diálogo.
+                var opciones = /WebForm_PostBackOptions\(\s*"[^"]*"\s*,\s*"[^"]*"\s*,\s*true\s*,\s*"([^"]*)"/
+                    .exec(codigo.substring(partes.index + partes[0].length));
+                var grupo = opciones ? opciones[1] : null;
+                var verificar = null;
+                if (antes || grupo !== null) {
+                    verificar = function () {
+                        if (antes && antes.call(this) === false) {
+                            return false;
+                        }
+                        if (grupo !== null && typeof Page_ClientValidate === "function" && !Page_ClientValidate(grupo)) {
+                            return false;
+                        }
+                        return true;
+                    };
+                }
+                this.onclick = null;
+                $(this).removeAttr("onclick").data("verificar", verificar)
+                    .attr("data-confirmar", partes[2].replace(/\\(['"\\])/g, "$1"));
+            });
+            $hoja.on("click", "[data-confirmar]", function (e) {
+                var $boton = $(this);
+                if ($boton.data("confirmado")) {
+                    $boton.removeData("confirmado");
+                    return true;
+                }
+                e.preventDefault();
+                var verificar = $boton.data("verificar");
+                if (verificar && verificar.call(this) === false) {
+                    return false;
+                }
+                $("#dialogoConfirmarTexto").text($boton.attr("data-confirmar"));
+                alConfirmar = function () {
+                    $boton.data("confirmado", true);
+                    $boton[0].click();
+                };
+                $dialogo.modal("show");
+                return false;
+            });
+            $("#dialogoConfirmarAceptar").on("click", function () {
+                var accion = alConfirmar;
+                alConfirmar = null;
+                $dialogo.modal("hide");
+                if (accion) {
+                    accion();
+                }
+            });
+            $dialogo.on("shown.bs.modal", function () { $("#dialogoConfirmarAceptar").trigger("focus"); });
+
+            // Mientras el servidor procesa: el botón tocado muestra "Procesando..."
+            // y no se puede volver a enviar el formulario (un doble clic no
+            // registra dos veces la misma venta u orden).
+            var enviando = false, ultimoBoton = null;
+            function liberar() {
+                enviando = false;
+                $("body").removeClass("cargando");
+                $(".procesando").each(function () {
+                    var $b = $(this);
+                    $b.removeClass("procesando").removeAttr("aria-busy");
+                    if ($b.data("textoOriginal")) {
+                        $b.val($b.data("textoOriginal"));
+                    }
+                });
+            }
+            $(document).on("click", ":submit", function () { ultimoBoton = this; });
+            $("form").first().on("submit", function (e) {
+                if (e.isDefaultPrevented()) {
+                    return;
+                }
+                if (enviando) {
+                    e.preventDefault();
+                    return false;
+                }
+                enviando = true;
+                $("body").addClass("cargando");
+                var boton = ultimoBoton;
+                ultimoBoton = null;
+                if (boton && $(boton).is(".btn") && $(boton).closest(".hoja").length) {
+                    // Después de que el navegador armó los datos a enviar.
+                    setTimeout(function () {
+                        var $b = $(boton).addClass("procesando").attr("aria-busy", "true");
+                        if ($b.is("input")) {
+                            $b.data("textoOriginal", $b.val()).val($.trim($("#textoProcesando").text()) || "...");
+                        }
+                    }, 0);
+                }
+                // Si la respuesta es una descarga, la página no se recarga.
+                setTimeout(liberar, 6000);
+            });
+            if (typeof window.__doPostBack === "function") {
+                var postBackOriginal = window.__doPostBack;
+                window.__doPostBack = function () {
+                    $("body").addClass("cargando");
+                    return postBackOriginal.apply(this, arguments);
+                };
+            }
+            $(window).on("pageshow", function (e) {
+                if (e.originalEvent && e.originalEvent.persisted) {
+                    liberar();
+                }
+            });
+
+            // Grillas: el estado se muestra como etiqueta de color, los números
+            // se alinean a la derecha y la grilla vacía se ve como tal.
+            var colores = {
+                pendiente: "aviso", recibida: "exito", anulada: "neutro",
+                pending: "aviso", received: "exito", canceled: "neutro", active: "exito", inactive: "neutro",
+                blocked: "peligro", resolved: "exito", dismissed: "neutro",
+                activo: "exito", activa: "exito", inactivo: "neutro", inactiva: "neutro",
+                bloqueado: "peligro", bloqueada: "peligro", procesada: "exito", resuelta: "exito",
+                cancelada: "neutro", vencida: "peligro", "sí": "exito", si: "exito", no: "neutro"
+            };
+            $hoja.find("table.table").each(function () {
+                var $tabla = $(this), $filas = $tabla.find("tr");
+                $filas.first().children("th").each(function (i) {
+                    var titulo = $.trim($(this).text()).toLowerCase();
+                    var $celdas = $filas.slice(1).children("td:nth-child(" + (i + 1) + ")").not("[colspan]");
+                    if (/^(estado|activo|activa|status|stato|état)$/.test(titulo)) {
+                        $celdas.each(function () {
+                            var $td = $(this), texto = $.trim($td.text());
+                            if (!texto || $td.children().length) {
+                                return;
+                            }
+                            var clave = texto.split(/[\s:]/)[0].toLowerCase();
+                            $td.empty().append($("<span class='estado'></span>")
+                                .addClass("estado-" + (colores[clave] || "neutro")).text(texto));
+                        });
+                    } else if (/(cantidad|stock|importe|precio|consumo|total|temperatura|ítems|items|unidades|promedio|monto|pedido|quantity|amount|price|consumption|temperature|units|average|ordered)/.test(titulo)) {
+                        $(this).addClass("num");
+                        $celdas.addClass("num");
+                    }
+                });
+                var $vacia = $filas.eq(1);
+                if ($filas.length === 2 && $vacia.children().length === 1 && $vacia.children("td[colspan]").length &&
+                    !$vacia.find("a, input, table").length) {
+                    $vacia.addClass("fila-vacia");
+                }
             });
         });
     </script>

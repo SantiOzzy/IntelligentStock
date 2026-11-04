@@ -23,7 +23,34 @@ namespace DAL
 
             string ruta = Path.Combine(carpeta, Path.GetFileName(nombreArchivo));
             File.WriteAllBytes(ruta, contenido);
+            BorrarViejos(carpeta);
             return ruta;
+        }
+
+        /// Días que se guardan los reportes generados. Ya se descargaron al
+        /// generarlos: no hace falta que la carpeta crezca para siempre.
+        public const int DiasDeRetencion = 30;
+
+        private static void BorrarViejos(string carpeta)
+        {
+            DateTime limite = DateTime.Now.AddDays(-DiasDeRetencion);
+            foreach (string archivo in Directory.GetFiles(carpeta))
+            {
+                try
+                {
+                    if (File.GetLastWriteTime(archivo) < limite)
+                    {
+                        File.Delete(archivo);
+                    }
+                }
+                catch (IOException)
+                {
+                    // Si un archivo está en uso se borra la próxima vez.
+                }
+                catch (UnauthorizedAccessException)
+                {
+                }
+            }
         }
     }
 }

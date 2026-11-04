@@ -31,10 +31,17 @@
             <div class="form-group">
                 <asp:Label ID="lblCantidad" runat="server" AssociatedControlID="txtCantidad"
                     CssClass="control-label" Text="Cantidad (*)"></asp:Label>
-                <asp:TextBox ID="txtCantidad" runat="server" CssClass="form-control" TextMode="Number" min="0.01" step="0.01"></asp:TextBox>
+                <asp:TextBox ID="txtCantidad" runat="server" CssClass="form-control" TextMode="Number" min="0.01" step="0.01" max="99999999.99"></asp:TextBox>
                 <asp:RequiredFieldValidator ID="rfvCantidad" runat="server" ControlToValidate="txtCantidad"
                     ValidationGroup="Ajuste" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="La cantidad es obligatoria."></asp:RequiredFieldValidator>
+                <asp:RangeValidator ID="rvCantidad" runat="server" ControlToValidate="txtCantidad"
+                    Type="Double" MinimumValue="0.01" MaximumValue="99999999.99" CultureInvariantValues="true"
+                    ValidationGroup="Ajuste" Display="Dynamic" CssClass="text-danger"
+                    ErrorMessage="La cantidad tiene que estar entre 0,01 y 99.999.999,99."></asp:RangeValidator>
+                <asp:RegularExpressionValidator ID="revDecimalesCantidad" runat="server" ControlToValidate="txtCantidad"
+                    ValidationExpression="^\d+([.,]\d{1,2})?$" ValidationGroup="Ajuste" Display="Dynamic"
+                    CssClass="text-danger" ErrorMessage="La cantidad admite hasta dos decimales."></asp:RegularExpressionValidator>
             </div>
             <div class="form-group">
                 <asp:Label ID="lblMotivo" runat="server" AssociatedControlID="txtMotivo"
@@ -44,6 +51,9 @@
                 <asp:RequiredFieldValidator ID="rfvMotivo" runat="server" ControlToValidate="txtMotivo"
                     ValidationGroup="Ajuste" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="El motivo es obligatorio."></asp:RequiredFieldValidator>
+                <asp:RegularExpressionValidator ID="revLargoMotivo" runat="server" ControlToValidate="txtMotivo"
+                    ValidationExpression="^[\s\S]{0,200}$" ValidationGroup="Ajuste" Display="Dynamic"
+                    CssClass="text-danger" ErrorMessage="El motivo no puede superar los 200 caracteres."></asp:RegularExpressionValidator>
             </div>
         </div>
     </div>

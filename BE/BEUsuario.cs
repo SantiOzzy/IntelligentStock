@@ -49,9 +49,6 @@ namespace BE
 
         public int IntentosFallidos { get; set; }
 
-        /// Dígito verificador horizontal del registro.
-        public string DVH { get; set; }
-
         public BERol Rol { get; set; }
 
         public string NombreCompleto

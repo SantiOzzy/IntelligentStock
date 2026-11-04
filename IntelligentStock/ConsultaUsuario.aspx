@@ -15,7 +15,7 @@
                 <div class="col-md-4 form-group">
                     <asp:Label ID="lblBusqueda" runat="server" AssociatedControlID="txtBusqueda"
                         CssClass="control-label" Text="DNI, usuario, nombre o correo"></asp:Label>
-                    <asp:TextBox ID="txtBusqueda" runat="server" CssClass="form-control"></asp:TextBox>
+                    <asp:TextBox ID="txtBusqueda" runat="server" CssClass="form-control" MaxLength="100"></asp:TextBox>
                 </div>
                 <div class="col-md-3 form-group">
                     <asp:Label ID="lblRol" runat="server" AssociatedControlID="ddlRol"

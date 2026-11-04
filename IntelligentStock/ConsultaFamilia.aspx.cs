@@ -123,7 +123,7 @@ public partial class ConsultaFamilia : PaginaBase
                     continue;
                 }
 
-                litArbolRol.Text = RenderPermisos.ArbolDelRol(rol);
+                litArbolRol.Text = RenderPermisos.ResumenDelPerfil(rol);
                 litPatentesRol.Text = RenderPermisos.PatentesEfectivas(rol);
                 return;
             }

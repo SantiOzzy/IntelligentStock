@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
@@ -49,6 +49,9 @@ namespace Servicios
         private const int MilisegundosPorPagina = 3000;
 
         private const int MinutosDePausaSiFallaLaApi = 10;
+
+        /// Largo máximo de un texto que se le pide a la API.
+        private const int LargoMaximoParaLaApi = 300;
         private const int MinutosParaReintentarUnTexto = 30;
 
         private static readonly Dictionary<string, Dictionary<string, string>> cache =
@@ -90,15 +93,16 @@ namespace Servicios
         // Un texto de la página es lo que hay entre dos etiquetas. Los bloques
         // de script, de estilo, los comentarios y el contenido de un textarea
         // se saltean enteros: ahí no hay nada para traducir y tocarlo rompería
-        // la página. También los select y span marcados con translate="no"
+        // la página. También los select, span y td marcados con translate="no"
         // (el atributo estándar de HTML para "no traducir"), como el selector
-        // de idioma, donde cada idioma va con su propio nombre. Las etiquetas
+        // de idioma, donde cada idioma va con su propio nombre, o las celdas
+        // de las grillas con datos cargados por la gente (ver PaginaBase). Las etiquetas
         // de apertura se capturan aparte, para traducir los textos que viven
         // en atributos (ver TraducirEtiqueta).
         private static readonly Regex Segmentos = new Regex(
             @"<script\b[^>]*>.*?</script>|<style\b[^>]*>.*?</style>|" +
             @"<textarea\b[^>]*>.*?</textarea>|<!--.*?-->|" +
-            @"<(?<sinTraducir>select|span)\b[^>]*\btranslate\s*=\s*[""']no[""'][^>]*>.*?</\k<sinTraducir>\s*>|" +
+            @"<(?<sinTraducir>select|span|td)\b[^>]*\btranslate\s*=\s*[""']no[""'][^>]*>.*?</\k<sinTraducir>\s*>|" +
             @"(?<etiqueta><[a-zA-Z][^<>]*>)|" +
             @"(?<=>)(?<texto>[^<>]+)(?=<)",
             RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -360,7 +364,7 @@ namespace Servicios
         private static bool EsTraducible(string texto)
         {
             return !string.IsNullOrEmpty(texto) &&
-                   texto.Length >= 2 && texto.Length <= 300 &&
+                   texto.Length >= 2 && texto.Length <= 2000 &&
                    ConLetras.IsMatch(texto);
         }
 
@@ -382,24 +386,52 @@ namespace Servicios
             List<string> faltantes = new List<string>();
             DateTime ahora = DateTime.Now;
 
+            // La caché se busca por el texto con los espacios normalizados: en
+            // el HTML un mismo texto puede venir partido en varias líneas y con
+            // sangría, y en pantalla se ve igual. Cada clave recuerda con qué
+            // textos originales se pidió, para devolver la traducción de cada uno.
+            Dictionary<string, List<string>> originales = new Dictionary<string, List<string>>();
+
             lock (candado)
             {
                 foreach (string texto in textos)
                 {
+                    if (texto == null || resultado.ContainsKey(texto))
+                    {
+                        continue;
+                    }
+
+                    string clave = Normalizar(texto);
                     string traducido;
                     DateTime reintentarDesde;
-                    if (diccionario.TryGetValue(texto, out traducido))
+
+                    string fija = TraduccionFija(clave, idiomaDestino);
+                    if (fija != null)
+                    {
+                        resultado[texto] = fija;
+                    }
+                    else if ((traducido = BuscarEnLaCache(clave, diccionario, 0)) != null)
                     {
                         resultado[texto] = traducido;
                     }
-                    else if (!resultado.ContainsKey(texto))
+                    else
                     {
                         resultado[texto] = texto;
-                        if (!sinTraduccion.TryGetValue(idiomaDestino + "\n" + texto, out reintentarDesde) ||
-                            reintentarDesde <= ahora)
+                        List<string> lista;
+                        if (!originales.TryGetValue(clave, out lista))
                         {
-                            faltantes.Add(texto);
+                            lista = new List<string>();
+                            originales[clave] = lista;
+                            // Un texto largo puede estar en la caché revisada, pero no
+                            // se le pide a la API: acepta hasta 500 bytes por pedido.
+                            if (clave.Length <= LargoMaximoParaLaApi &&
+                                (!sinTraduccion.TryGetValue(idiomaDestino + "\n" + clave, out reintentarDesde) ||
+                                 reintentarDesde <= ahora))
+                            {
+                                faltantes.Add(clave);
+                            }
                         }
+                        lista.Add(texto);
                     }
                 }
 
@@ -451,7 +483,10 @@ namespace Servicios
                         continue;
                     }
                     diccionario[faltantes[i]] = nuevos[i];
-                    resultado[faltantes[i]] = nuevos[i];
+                    foreach (string original in originales[faltantes[i]])
+                    {
+                        resultado[original] = nuevos[i];
+                    }
                     paraGuardar.Add(Escapar(faltantes[i]) + "\t" + Escapar(nuevos[i]));
                 }
             }
@@ -492,7 +527,31 @@ namespace Servicios
             }
         }
 
+        /// Marca de dato obligatorio de las etiquetas. Se saca antes de pedir la
+        /// traducción y se vuelve a poner después: la API a veces la borraba y,
+        /// sin ella, la pantalla dejaba de mostrar el asterisco.
+        private const string MarcaObligatorio = "(*)";
+
         private static string TraducirConMyMemory(string texto, string idiomaDestino)
+        {
+            string sufijo = string.Empty;
+            if (texto.Length > MarcaObligatorio.Length && texto.EndsWith(MarcaObligatorio, StringComparison.Ordinal))
+            {
+                texto = texto.Substring(0, texto.Length - MarcaObligatorio.Length).TrimEnd();
+                sufijo = " " + MarcaObligatorio;
+            }
+
+            string traducido = PedirAMyMemory(texto, idiomaDestino);
+            if (string.IsNullOrEmpty(traducido))
+            {
+                return null;
+            }
+
+            traducido = Pulir(texto, traducido);
+            return string.IsNullOrEmpty(traducido) ? null : traducido + sufijo;
+        }
+
+        private static string PedirAMyMemory(string texto, string idiomaDestino)
         {
             string url = "https://api.mymemory.translated.net/get?q=" +
                          Uri.EscapeDataString(texto) +
@@ -528,9 +587,272 @@ namespace Servicios
                     return null;
                 }
 
-                return traducido;
+                // La respuesta principal sale de la memoria de traducciones que
+                // carga la gente, y en textos cortos a veces trae cualquier cosa
+                // ("Seguridad" -> "quickly."). Si entre las coincidencias está la
+                // traducción automática del motor, se usa esa.
+                string automatica = ExtraerTraduccionAutomatica(json);
+                return string.IsNullOrEmpty(automatica) ? traducido : automatica;
             }
         }
+
+        /// Arregla los defectos típicos de lo que devuelve la API: restos como
+        /// "input_key||Accept", un punto o un signo de exclamación que el
+        /// original no tenía, todo en mayúsculas, o la primera letra en
+        /// minúscula cuando el original empieza en mayúscula (y al revés).
+        private static string Pulir(string original, string traducido)
+        {
+            int corte = traducido.LastIndexOf("||", StringComparison.Ordinal);
+            if (corte >= 0)
+            {
+                traducido = traducido.Substring(corte + 2);
+            }
+
+            traducido = Normalizar(traducido);
+            if (traducido.Length == 0 || original.Length == 0)
+            {
+                return traducido;
+            }
+
+            char finalOriginal = original[original.Length - 1];
+            if (".!?:;".IndexOf(finalOriginal) < 0 && !traducido.EndsWith("...", StringComparison.Ordinal))
+            {
+                traducido = traducido.TrimEnd('.', '!').TrimEnd();
+                if (traducido.Length == 0)
+                {
+                    return null;
+                }
+            }
+
+            if (TodoEnMayusculas(traducido) && !TodoEnMayusculas(original) && CantidadDeLetras(traducido) > 3)
+            {
+                traducido = traducido.Substring(0, 1) + traducido.Substring(1).ToLowerInvariant();
+            }
+
+            int letraOriginal = PrimeraLetra(original);
+            int letraTraducida = PrimeraLetra(traducido);
+            if (letraOriginal >= 0 && letraTraducida >= 0)
+            {
+                char o = original[letraOriginal];
+                char t = traducido[letraTraducida];
+                if (char.IsUpper(o) && char.IsLower(t))
+                {
+                    traducido = traducido.Substring(0, letraTraducida) + char.ToUpper(t) + traducido.Substring(letraTraducida + 1);
+                }
+                else if (char.IsLower(o) && char.IsUpper(t) && !EmpiezaConSigla(traducido, letraTraducida))
+                {
+                    traducido = traducido.Substring(0, letraTraducida) + char.ToLower(t) + traducido.Substring(letraTraducida + 1);
+                }
+            }
+
+            return traducido;
+        }
+
+        private static int PrimeraLetra(string texto)
+        {
+            for (int i = 0; i < texto.Length; i++)
+            {
+                if (char.IsLetter(texto[i]))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private static int CantidadDeLetras(string texto)
+        {
+            int cantidad = 0;
+            foreach (char c in texto)
+            {
+                if (char.IsLetter(c))
+                {
+                    cantidad++;
+                }
+            }
+            return cantidad;
+        }
+
+        private static bool TodoEnMayusculas(string texto)
+        {
+            bool hayLetras = false;
+            foreach (char c in texto)
+            {
+                if (char.IsLower(c))
+                {
+                    return false;
+                }
+                if (char.IsLetter(c))
+                {
+                    hayLetras = true;
+                }
+            }
+            return hayLetras;
+        }
+
+        /// La primera palabra es una sigla (IoT, PDF, ML.NET): no se le cambia la mayúscula.
+        private static bool EmpiezaConSigla(string texto, int desde)
+        {
+            int fin = desde;
+            while (fin < texto.Length && !char.IsWhiteSpace(texto[fin]))
+            {
+                fin++;
+            }
+            string palabra = texto.Substring(desde, fin - desde);
+            int mayusculas = 0;
+            foreach (char c in palabra)
+            {
+                if (char.IsUpper(c))
+                {
+                    mayusculas++;
+                }
+            }
+            return mayusculas > 1;
+        }
+
+        #region Textos que no se traducen
+
+        // Nombres técnicos: las patentes (AltaInsumo, ReparacionDV), la marca
+        // (IntelligentStock), etc. Son una sola palabra con mayúsculas en el
+        // medio. Traducirlas no tiene sentido y la API las inventaba.
+        private static readonly Regex Identificador = new Regex(
+            @"^[A-Za-zÁÉÍÓÚáéíóúÑñ]*[a-záéíóúñ][A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚáéíóúÑñ]*$", RegexOptions.Compiled);
+
+        // Código de error del catálogo al final de un mensaje: "... [#ERR013]".
+        private static readonly Regex CodigoDeError = new Regex(
+            @"^(?<texto>.+?)\s*(?<codigo>\[#ERR\d+\])$", RegexOptions.Compiled);
+
+        // Números de un texto (cantidades, importes, fechas y horas), para
+        // buscarlo en la caché como plantilla: "{0} eventos encontrados.".
+        private static readonly Regex Numero = new Regex(@"\d+(?:[.,:/]\d+)*", RegexOptions.Compiled);
+
+        private static readonly Regex MarcaDePlantilla = new Regex(@"\{(?<n>\d+)\}", RegexOptions.Compiled);
+
+        // Fin de oración: un punto (o dos puntos, signo de exclamación o de
+        // pregunta) seguido de un espacio y de una oración que empieza en mayúscula.
+        private static readonly Regex FinDeOracion = new Regex(
+            @"(?<=[.:!?])\s+(?=[¿¡(\[A-ZÁÉÍÓÚÑ])", RegexOptions.Compiled);
+
+        /// Busca la traducción de un texto en la caché. Si no está tal cual,
+        /// intenta armarla con lo que ya está guardado, sin pedir nada a la API
+        /// (así la pantalla se traduce aunque no haya internet):
+        ///   1. el código de error del final ("... [#ERR013]") queda igual y se
+        ///      traduce el resto;
+        ///   2. un texto con números se busca como plantilla: "192 eventos
+        ///      encontrados." se busca como "{0} eventos encontrados." y en la
+        ///      traducción se vuelven a poner los números;
+        ///   3. un texto de varias oraciones se traduce oración por oración,
+        ///      siempre que estén todas guardadas.
+        /// Devuelve null si no se puede, y entonces el texto se le pide a la API.
+        private static string BuscarEnLaCache(string clave, Dictionary<string, string> diccionario, int nivel)
+        {
+            string traducido;
+            if (diccionario.TryGetValue(clave, out traducido))
+            {
+                return traducido;
+            }
+
+            if (nivel > 2)
+            {
+                return null;
+            }
+
+            Match error = CodigoDeError.Match(clave);
+            if (error.Success)
+            {
+                string mensaje = BuscarEnLaCache(error.Groups["texto"].Value, diccionario, nivel + 1);
+                return mensaje == null ? null : mensaje + " " + error.Groups["codigo"].Value;
+            }
+
+            List<string> numeros = new List<string>();
+            string plantilla = Numero.Replace(clave, delegate(Match m)
+            {
+                numeros.Add(m.Value);
+                return "{" + (numeros.Count - 1) + "}";
+            });
+            if (numeros.Count > 0 && diccionario.TryGetValue(plantilla, out traducido))
+            {
+                return MarcaDePlantilla.Replace(traducido, delegate(Match m)
+                {
+                    int i = int.Parse(m.Groups["n"].Value);
+                    return i < numeros.Count ? numeros[i] : m.Value;
+                });
+            }
+
+            string[] oraciones = FinDeOracion.Split(clave);
+            if (oraciones.Length < 2)
+            {
+                return null;
+            }
+
+            List<string> partes = new List<string>();
+            foreach (string oracion in oraciones)
+            {
+                string parte = BuscarEnLaCache(oracion, diccionario, nivel + 1);
+                if (parte == null)
+                {
+                    return null;
+                }
+                partes.Add(parte);
+            }
+            return string.Join(" ", partes.ToArray());
+        }
+
+        // Las patentes y familias en las listas de permisos: "[P] AltaInsumo",
+        // "[Patente] AltaInsumo", "[F] ..." o "[Familia] ...".
+        private static readonly Regex ConPrefijoTecnico = new Regex(
+            @"^\[(?<prefijo>P|F|Patente|Familia)\] (?<resto>.+)$", RegexOptions.Compiled);
+
+        /// Traducción que no pasa por la API, o null si el texto hay que traducirlo.
+        private static string TraduccionFija(string clave, string idioma)
+        {
+            if (Identificador.IsMatch(clave))
+            {
+                return clave;
+            }
+
+            Match m = ConPrefijoTecnico.Match(clave);
+            if (m.Success && Identificador.IsMatch(m.Groups["resto"].Value))
+            {
+                return "[" + TraducirPrefijo(m.Groups["prefijo"].Value, idioma) + "] " + m.Groups["resto"].Value;
+            }
+
+            return null;
+        }
+
+        private static string TraducirPrefijo(string prefijo, string idioma)
+        {
+            if (prefijo == "Patente")
+            {
+                switch (idioma)
+                {
+                    case "en": return "Permission";
+                    case "pt": return "Permissão";
+                    case "fr": return "Permission";
+                    case "it": return "Permesso";
+                }
+            }
+            else if (prefijo == "Familia")
+            {
+                switch (idioma)
+                {
+                    case "en": return "Family";
+                    case "pt": return "Família";
+                    case "fr": return "Famille";
+                    case "it": return "Famiglia";
+                }
+            }
+            return prefijo;
+        }
+
+        /// Espacios, saltos de línea y sangrías seguidos cuentan como un solo
+        /// espacio, igual que cuando el navegador muestra el texto.
+        private static string Normalizar(string texto)
+        {
+            return texto == null ? string.Empty : Regex.Replace(texto, @"\s+", " ").Trim();
+        }
+
+        #endregion
 
         /// WebClient no deja configurar el tiempo de espera: se hereda para
         /// poder hacerlo y que una API lenta no deje la pantalla colgada.
@@ -558,6 +880,24 @@ namespace Servicios
             }
 
             Match m = Regex.Match(json, "\"translatedText\"\\s*:\\s*\"(.*?)(?<!\\\\)\"");
+            return m.Success ? DesescaparJson(m.Groups[1].Value) : null;
+        }
+
+        // Cada coincidencia de "matches" es un objeto plano: la traducción y,
+        // más adelante en el mismo objeto, quién la hizo ("MT!" = motor de
+        // traducción automática).
+        private static readonly Regex CoincidenciaAutomatica = new Regex(
+            "\"translation\"\\s*:\\s*\"((?:[^\"\\\\]|\\\\.)*)\"[^{}]*?\"created-by\"\\s*:\\s*\"MT!\"",
+            RegexOptions.Compiled);
+
+        private static string ExtraerTraduccionAutomatica(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+            {
+                return null;
+            }
+
+            Match m = CoincidenciaAutomatica.Match(json);
             return m.Success ? DesescaparJson(m.Groups[1].Value) : null;
         }
 
@@ -688,7 +1028,7 @@ namespace Servicios
                     {
                         continue;
                     }
-                    diccionario[Desescapar(linea.Substring(0, corte))] =
+                    diccionario[Normalizar(Desescapar(linea.Substring(0, corte)))] =
                         Desescapar(linea.Substring(corte + 1));
                 }
             }

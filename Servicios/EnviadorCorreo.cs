@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.IO;
 using System.Net;
 using System.Net.Mail;
 
@@ -28,6 +29,15 @@ namespace Servicios
 
         public static void Enviar(string destinatario, string asunto, string cuerpo)
         {
+            Enviar(destinatario, asunto, cuerpo, null, null, null);
+        }
+
+        /// Igual que el anterior, con un archivo adjunto (por ejemplo, la
+        /// factura en PDF). Si el servidor de correo no responde o no hay
+        /// conexión, lanza SmtpException: quien lo llama decide qué mostrar.
+        public static void Enviar(string destinatario, string asunto, string cuerpo,
+                                  byte[] adjunto, string nombreAdjunto, string tipoAdjunto)
+        {
             string host = ConfigurationManager.AppSettings["SmtpHost"];
             string remitente = ConfigurationManager.AppSettings["SmtpRemitente"];
 
@@ -50,7 +60,9 @@ namespace Servicios
             }
 
             string usuario = ConfigurationManager.AppSettings["SmtpUsuario"];
-            string clave = ConfigurationManager.AppSettings["SmtpClave"];
+            // Google muestra la contraseña de aplicación en grupos de 4 letras
+            // separados por espacios: se aceptan escritos así.
+            string clave = (ConfigurationManager.AppSettings["SmtpClave"] ?? string.Empty).Replace(" ", string.Empty);
 
             using (SmtpClient cliente = new SmtpClient(host, puerto))
             {
@@ -63,6 +75,11 @@ namespace Servicios
 
                 using (MailMessage mensaje = new MailMessage(remitente, destinatario, asunto, cuerpo))
                 {
+                    if (adjunto != null)
+                    {
+                        mensaje.Attachments.Add(new Attachment(new MemoryStream(adjunto), nombreAdjunto,
+                            tipoAdjunto ?? "application/octet-stream"));
+                    }
                     cliente.Send(mensaje);
                 }
             }

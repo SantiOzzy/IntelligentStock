@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using BE;
 using DAL;
 using Servicios;
@@ -10,15 +11,57 @@ namespace BLL
     /// R4 - Registrar en bitacora de eventos.
     /// Toda accion relevante del sistema pasa por aca: se guarda el usuario
     /// que la ejecuto, la fecha y hora, la accion, un detalle y la criticidad.
+    ///
+    /// Política de la bitácora (CU-003-016):
+    ///   - Los eventos de los últimos 30 días (Web.config, "DiasEventosActivos")
+    ///     están activos: son los que muestra la bitácora.
+    ///   - Los anteriores pasan a eliminados con eliminación lógica (columna
+    ///     activo = 0): no se borran de la tabla. Siguen disponibles para lo que
+    ///     el sistema vuelve a leer de la bitácora (las ventas de la predicción
+    ///     de demanda y del reporte gerencial, las altas y bajas de suscripción,
+    ///     los ajustes de stock) y se ven en la pantalla tildando "Incluir
+    ///     eventos eliminados".
+    ///   - Antes de marcarlos se archivan en un XML por mes
+    ///     (App_Data\Bitacora\Bitacora_AAAA-MM.xml, ver DALArchivoBitacora),
+    ///     que se descarga desde la bitácora.
     public class BLLEvento
     {
         /// Cantidad de eventos que se muestran al abrir la bitacora.
         public const int CantidadInicial = 200;
 
-        /// Cuantos registros conserva la bitácora si no se configura otro valor.
-        private const int CantidadARetenerPorDefecto = 5000;
+        /// Días que un evento queda activo si no se configura otro valor.
+        public const int DiasActivosPorDefecto = 30;
+
+        public const string AccionMantenimiento = "Mantenimiento de bitácora";
+
+        private static readonly object candadoMantenimiento = new object();
+
+        /// Día en que se hizo el último mantenimiento. Los eventos vencen por
+        /// fecha, así que alcanza con revisarlos una vez por día.
+        private static DateTime ultimoMantenimiento = DateTime.MinValue;
 
         private readonly DALEvento dalEvento = new DALEvento();
+        private readonly DALArchivoBitacora dalArchivo = new DALArchivoBitacora();
+
+        /// Cantidad de días que los eventos quedan activos.
+        public static int DiasActivos
+        {
+            get
+            {
+                int dias;
+                if (!int.TryParse(ConfigurationManager.AppSettings["DiasEventosActivos"], out dias) || dias <= 0)
+                {
+                    dias = DiasActivosPorDefecto;
+                }
+                return dias;
+            }
+        }
+
+        /// Desde qué fecha los eventos están activos: los de antes pasan a eliminados.
+        public static DateTime InicioVentanaActiva
+        {
+            get { return DateTime.Today.AddDays(-DiasActivos); }
+        }
 
         public void Registrar(int? dniUsuario, string accion, string descripcion)
         {
@@ -38,7 +81,7 @@ namespace BLL
             try
             {
                 dalEvento.RegistrarEvento(new BEEvento(dniUsuario, accion, descripcion, criticidad));
-                AplicarRetencion();
+                AplicarPolitica();
             }
             catch (Exception)
             {
@@ -58,37 +101,89 @@ namespace BLL
             Registrar(SessionManager.DniActual, accion, descripcion, criticidad);
         }
 
-        /// Política de retención: la bitácora conserva solo los últimos N
-        /// eventos (configurable en Web.config, clave "CantidadEventosARetener").
-        /// Se controla despues de cada alta para no necesitar un job aparte.
-        private void AplicarRetencion()
+        /// Se controla al registrar un evento, para no necesitar un proceso
+        /// aparte, pero una sola vez por día.
+        private void AplicarPolitica()
         {
-            int cantidadARetener;
-            if (!int.TryParse(ConfigurationManager.AppSettings["CantidadEventosARetener"], out cantidadARetener) ||
-                cantidadARetener <= 0)
+            if (ultimoMantenimiento == DateTime.Today)
             {
-                cantidadARetener = CantidadARetenerPorDefecto;
+                return;
             }
 
-            if (dalEvento.ContarEventos() > cantidadARetener)
+            lock (candadoMantenimiento)
             {
-                dalEvento.PurgarEventosAntiguos(cantidadARetener);
+                if (ultimoMantenimiento == DateTime.Today)
+                {
+                    return;
+                }
+
+                // Se anota antes de empezar: el mantenimiento registra su propio
+                // evento (y así no vuelve a entrar acá), y si algo falla se
+                // reintenta al día siguiente y no en cada evento.
+                ultimoMantenimiento = DateTime.Today;
+                EliminarEventosVencidos();
             }
         }
 
-        /// Los N eventos mas recientes. Es la vista inicial de la bitacora.
+        /// Pasa a eliminados (eliminación lógica) los eventos de más de
+        /// DiasActivos días, después de archivarlos en el XML de su mes.
+        /// Devuelve cuántos eventos se marcaron.
+        public int EliminarEventosVencidos()
+        {
+            DateTime limite = InicioVentanaActiva;
+            List<BEEvento> vencidos = dalEvento.TraerEventosVencidos(limite);
+            if (vencidos.Count == 0)
+            {
+                return 0;
+            }
+
+            // Primero el archivo: si no se puede escribir, los eventos siguen
+            // activos y no se pierde nada.
+            List<string> archivos = dalArchivo.Archivar(vencidos);
+
+            int hastaId = 0;
+            foreach (BEEvento evento in vencidos)
+            {
+                hastaId = Math.Max(hastaId, evento.IdEvento);
+            }
+
+            int marcados = dalEvento.EliminarEventosLogicamente(limite, hastaId);
+
+            string destino = archivos.Count <= 3
+                ? string.Join(", ", archivos)
+                : archivos[0] + " a " + archivos[archivos.Count - 1] + " (" + archivos.Count + " archivos)";
+
+            Registrar(null, AccionMantenimiento,
+                (marcados == 1 ? "1 evento anterior" : marcados + " eventos anteriores") + " al " +
+                limite.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture) +
+                (marcados == 1 ? " pasó" : " pasaron") + " a eliminados (eliminación lógica, " +
+                DiasActivos + " días activos) después de archivarse en " + destino + ".");
+
+            return marcados;
+        }
+
+        /// Los N eventos activos mas recientes. Es la vista inicial de la bitacora.
         public List<BEEvento> TraerUltimos(int cantidad)
         {
-            return dalEvento.TraerUltimosEventos(cantidad);
+            return TraerUltimos(cantidad, false);
         }
 
-        /// Los N eventos mas recientes de una acción determinada.
+        /// Los N eventos mas recientes; con incluirEliminados, también los que
+        /// ya salieron de la ventana de días activos.
+        public List<BEEvento> TraerUltimos(int cantidad, bool incluirEliminados)
+        {
+            return dalEvento.TraerUltimosEventos(cantidad, incluirEliminados);
+        }
+
+        /// Los N eventos mas recientes de una acción determinada, activos o
+        /// eliminados: son datos que el sistema vuelve a leer.
         public List<BEEvento> TraerUltimosPorAccion(string accion, int cantidad)
         {
             return dalEvento.TraerUltimosEventosPorAccion(accion, cantidad);
         }
 
-        /// Eventos de una acción desde una fecha, del más viejo al más nuevo.
+        /// Eventos de una acción desde una fecha, del más viejo al más nuevo,
+        /// activos o eliminados.
         public List<BEEvento> TraerEventosPorAccion(string accion, DateTime desde)
         {
             return dalEvento.TraerEventosPorAccionDesde(accion, desde);
@@ -108,7 +203,14 @@ namespace BLL
         public List<BEEvento> Filtrar(DateTime fechaInicio, DateTime fechaFin, string nombreUsuario, string texto,
             CriticidadEvento? criticidad)
         {
-            List<BEEvento> eventos = dalEvento.FiltrarEventos(fechaInicio.Date, fechaFin.Date.AddDays(1).AddSeconds(-1));
+            return Filtrar(fechaInicio, fechaFin, nombreUsuario, texto, criticidad, false);
+        }
+
+        public List<BEEvento> Filtrar(DateTime fechaInicio, DateTime fechaFin, string nombreUsuario, string texto,
+            CriticidadEvento? criticidad, bool incluirEliminados)
+        {
+            List<BEEvento> eventos = dalEvento.FiltrarEventos(fechaInicio.Date,
+                fechaFin.Date.AddDays(1).AddSeconds(-1), incluirEliminados);
 
             if (!string.IsNullOrEmpty(nombreUsuario))
             {
@@ -134,6 +236,18 @@ namespace BLL
             }
 
             return eventos;
+        }
+
+        /// Archivos XML mensuales de la bitácora, del más nuevo al más viejo.
+        public List<string> ListarArchivos()
+        {
+            return dalArchivo.Listar();
+        }
+
+        /// Contenido de un archivo mensual, o null si no existe.
+        public byte[] LeerArchivo(string nombreArchivo)
+        {
+            return dalArchivo.Leer(nombreArchivo);
         }
 
         private static bool Contiene(string valor, string busqueda)

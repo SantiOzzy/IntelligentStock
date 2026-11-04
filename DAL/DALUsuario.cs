@@ -210,18 +210,6 @@ namespace DAL
             dalCon.EjecutarProcAlmacenado("InvalidarTokensDeUsuario", parametros);
         }
 
-        /// Persiste el dígito verificador horizontal del registro del usuario.
-        public void ActualizarDVH(int dni, string dvh)
-        {
-            SqlParameter[] parametros = new SqlParameter[]
-            {
-                new SqlParameter("@DNI", dni),
-                new SqlParameter("@DVH", dvh)
-            };
-
-            dalCon.EjecutarProcAlmacenado("ActualizarDVHUsuario", parametros);
-        }
-
         private static BEUsuario Mapear(DataRow fila)
         {
             BEUsuario usuario = new BEUsuario();

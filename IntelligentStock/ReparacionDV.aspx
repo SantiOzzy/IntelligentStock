@@ -42,7 +42,7 @@
         <asp:Button ID="btnRestore" runat="server" Text="Restaurar la base de datos"
             CssClass="btn btn-danger" OnClick="btnRestore_Click" CausesValidation="false" />
 
-        <div class="well well-sm" style="margin-top: 15px">
+        <div class="well well-sm bloque-separado">
             <small>
                 <strong>Cancelar:</strong> cierra la sesión y vuelve al inicio de sesión sin tocar nada.<br />
                 <strong>Recalcular:</strong> vuelve a calcular los dígitos sobre los datos actuales. El sistema

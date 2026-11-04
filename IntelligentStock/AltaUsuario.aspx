@@ -21,6 +21,10 @@
                 <asp:RegularExpressionValidator ID="revDni" runat="server" ControlToValidate="txtDni"
                     ValidationExpression="\d{7,8}" ValidationGroup="Alta" Display="Dynamic"
                     CssClass="text-danger" ErrorMessage="El DNI debe tener 7 u 8 dígitos, sin puntos."></asp:RegularExpressionValidator>
+                <asp:RangeValidator ID="rvDni" runat="server" ControlToValidate="txtDni"
+                    Type="Integer" MinimumValue="1000000" MaximumValue="99999999" ValidationGroup="Alta"
+                    Display="Dynamic" CssClass="text-danger"
+                    ErrorMessage="El DNI tiene que estar entre 1.000.000 y 99.999.999."></asp:RangeValidator>
             </div>
 
             <div class="form-group">
@@ -30,6 +34,10 @@
                 <asp:RequiredFieldValidator ID="rfvNombre" runat="server" ControlToValidate="txtNombre"
                     ValidationGroup="Alta" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="El nombre es obligatorio."></asp:RequiredFieldValidator>
+                <asp:RegularExpressionValidator ID="revNombre" runat="server" ControlToValidate="txtNombre"
+                    ValidationExpression="^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .\-]+$" ValidationGroup="Alta"
+                    Display="Dynamic" CssClass="text-danger"
+                    ErrorMessage="El nombre solo puede tener letras, espacios, apóstrofos y guiones."></asp:RegularExpressionValidator>
             </div>
 
             <div class="form-group">
@@ -39,6 +47,10 @@
                 <asp:RequiredFieldValidator ID="rfvApellido" runat="server" ControlToValidate="txtApellido"
                     ValidationGroup="Alta" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="El apellido es obligatorio."></asp:RequiredFieldValidator>
+                <asp:RegularExpressionValidator ID="revApellido" runat="server" ControlToValidate="txtApellido"
+                    ValidationExpression="^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' .\-]+$" ValidationGroup="Alta"
+                    Display="Dynamic" CssClass="text-danger"
+                    ErrorMessage="El apellido solo puede tener letras, espacios, apóstrofos y guiones."></asp:RegularExpressionValidator>
             </div>
 
             <div class="form-group">
@@ -48,6 +60,9 @@
                 <asp:RequiredFieldValidator ID="rfvFechaNacimiento" runat="server" ControlToValidate="txtFechaNacimiento"
                     ValidationGroup="Alta" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="La fecha de nacimiento es obligatoria."></asp:RequiredFieldValidator>
+                <asp:RangeValidator ID="rvFechaNacimiento" runat="server" ControlToValidate="txtFechaNacimiento"
+                    Type="Date" ValidationGroup="Alta" Display="Dynamic" CssClass="text-danger"
+                    ErrorMessage="La fecha de nacimiento tiene que corresponder a una edad de entre 18 y 100 años."></asp:RangeValidator>
             </div>
 
         </div>
@@ -71,6 +86,13 @@
                 <asp:Label ID="lblTelefono" runat="server" AssociatedControlID="txtTelefono"
                     CssClass="control-label" Text="Teléfono"></asp:Label>
                 <asp:TextBox ID="txtTelefono" runat="server" CssClass="form-control" MaxLength="20"></asp:TextBox>
+                <asp:RegularExpressionValidator ID="revTelefono" runat="server" ControlToValidate="txtTelefono"
+                    ValidationExpression="[0-9 ()+\-]+" ValidationGroup="Alta" Display="Dynamic"
+                    CssClass="text-danger"
+                    ErrorMessage="El teléfono solo puede contener números, espacios, guiones, paréntesis y el signo +."></asp:RegularExpressionValidator>
+                <asp:RegularExpressionValidator ID="revTelefonoDigitos" runat="server" ControlToValidate="txtTelefono"
+                    ValidationExpression="(\D*\d){6,}\D*" ValidationGroup="Alta" Display="Dynamic"
+                    CssClass="text-danger" ErrorMessage="El teléfono debe tener al menos 6 números."></asp:RegularExpressionValidator>
             </div>
 
             <div class="form-group">
@@ -88,6 +110,10 @@
                 <asp:RequiredFieldValidator ID="rfvUsuario" runat="server" ControlToValidate="txtUsuario"
                     ValidationGroup="Alta" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="El nombre de usuario es obligatorio."></asp:RequiredFieldValidator>
+                <asp:RegularExpressionValidator ID="revUsuario" runat="server" ControlToValidate="txtUsuario"
+                    ValidationExpression="^\S{4,50}$" ValidationGroup="Alta" Display="Dynamic"
+                    CssClass="text-danger"
+                    ErrorMessage="El nombre de usuario tiene que tener entre 4 y 50 caracteres, sin espacios."></asp:RegularExpressionValidator>
             </div>
 
             <div class="form-group">
@@ -99,10 +125,10 @@
                     ValidationGroup="Alta" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="La contraseña es obligatoria."></asp:RequiredFieldValidator>
                 <asp:RegularExpressionValidator ID="revClave" runat="server" ControlToValidate="txtClave"
-                    ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$" ValidationGroup="Alta"
+                    ValidationExpression="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9ÁÉÍÓÚÜÑáéíóúüñ\s]).{8,}$" ValidationGroup="Alta"
                     Display="Dynamic" CssClass="text-danger"
-                    ErrorMessage="La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula y un número."></asp:RegularExpressionValidator>
-                <span class="help-block">Mínimo 8 caracteres, con mayúscula, minúscula y número.</span>
+                    ErrorMessage="La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula, un número y un carácter especial (por ejemplo !, #, $, %, * o @)."></asp:RegularExpressionValidator>
+                <span class="help-block">Mínimo 8 caracteres, con mayúscula, minúscula, número y un carácter especial (por ejemplo !, #, $, %, * o @).</span>
             </div>
 
             <div class="form-group">
@@ -122,7 +148,7 @@
     </div>
 
     <div class="panel panel-default">
-        <div class="panel-heading"><strong>Permisos que otorga el rol seleccionado</strong></div>
+        <div class="panel-heading"><strong>Permisos que otorga el perfil seleccionado</strong></div>
         <div class="panel-body">
             <asp:Literal ID="litPermisos" runat="server" Mode="PassThrough"></asp:Literal>
         </div>

@@ -26,6 +26,8 @@ public partial class AltaUsuario : PaginaBase
             DateTime.Today.AddYears(-BLLUsuario.EdadMinima).ToString("yyyy-MM-dd");
         txtFechaNacimiento.Attributes["min"] =
             DateTime.Today.AddYears(-BLLUsuario.EdadMaxima).ToString("yyyy-MM-dd");
+        ValidadorDeRango.CargarFechas(rvFechaNacimiento,
+            DateTime.Today.AddYears(-BLLUsuario.EdadMaxima), DateTime.Today.AddYears(-BLLUsuario.EdadMinima));
 
         if (!IsPostBack)
         {
@@ -134,7 +136,7 @@ public partial class AltaUsuario : PaginaBase
             {
                 if (rol.Id == idRol)
                 {
-                    litPermisos.Text = RenderPermisos.ArbolDelRol(rol);
+                    litPermisos.Text = RenderPermisos.ResumenDelPerfil(rol);
                     return;
                 }
             }

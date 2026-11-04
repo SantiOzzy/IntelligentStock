@@ -26,6 +26,8 @@ public partial class GenerarOrdenCompra : PaginaBase
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        ValidadorDeRango.CargarFechas(rvFecha, DateTime.Today, DateTime.Today.AddDays(60));
+
         if (!IsPostBack)
         {
             txtFecha.Text = DateTime.Today.ToString("yyyy-MM-dd");
@@ -36,17 +38,24 @@ public partial class GenerarOrdenCompra : PaginaBase
 
     protected void btnAceptar_Click(object sender, EventArgs e)
     {
-        DateTime? fecha = null;
-        DateTime valor;
-        if (DateTime.TryParseExact(txtFecha.Text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out valor))
+        if (!IsValid)
         {
-            fecha = valor;
+            return;
         }
-        else if (!string.IsNullOrEmpty(txtFecha.Text))
+
+        if (string.IsNullOrEmpty(ddlProveedor.SelectedValue) || string.IsNullOrEmpty(txtFecha.Text.Trim()))
+        {
+            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002", "Elija el proveedor y la fecha de la orden."), true);
+            return;
+        }
+
+        DateTime valor;
+        if (!DateTime.TryParseExact(txtFecha.Text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out valor))
         {
             MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025", "La fecha no es válida."), true);
             return;
         }
+        DateTime? fecha = valor;
 
         try
         {
@@ -57,6 +66,12 @@ public partial class GenerarOrdenCompra : PaginaBase
             gvDetalle.DataSource = sugerencias;
             gvDetalle.DataBind();
             MostrarPrediccion(prediccion);
+            litIndicadores.Text = new Indicadores()
+                .Agregar("Orden generada", orden.Numero, "destacado")
+                .Agregar("Insumos pedidos", orden.Detalles.Count.ToString())
+                .Agregar("Importe estimado", orden.ImporteEstimado.ToString("C"))
+                .Agregar("Estado", BEOrdenCompra.EstadoPendiente, "aviso")
+                .ToString();
 
             MostrarMensaje(lblMensaje,
                 "Se generó la orden de compra " + orden.Numero + " para " + orden.ProveedorTexto + " con " +
@@ -92,20 +107,36 @@ public partial class GenerarOrdenCompra : PaginaBase
         }
     }
 
-    /// Calcula la sugerencia para mostrarla antes de generar la orden.
+    /// Calcula la sugerencia para mostrarla antes de generar la orden. Si no
+    /// hay nada para pedir (o no se puede predecir) no se ofrece generarla.
     private void MostrarSugerencias()
     {
+        litPeriodo.Text = "próximos " + BLLOrdenCompra.DiasProyeccion + " días";
         try
         {
             ResultadoPrediccion prediccion;
-            gvDetalle.DataSource = bllOrden.CalcularSugerencias(BLLOrdenCompra.DiasProyeccion, out prediccion);
+            List<BESugerenciaCompra> sugerencias = bllOrden.CalcularSugerencias(BLLOrdenCompra.DiasProyeccion, out prediccion);
+            gvDetalle.DataSource = sugerencias;
             gvDetalle.DataBind();
             MostrarPrediccion(prediccion);
+
+            decimal importe = 0;
+            foreach (BESugerenciaCompra sugerencia in sugerencias)
+            {
+                importe += sugerencia.ImporteEstimado;
+            }
+            litIndicadores.Text = new Indicadores()
+                .Agregar("Insumos para pedir", sugerencias.Count.ToString(), "destacado")
+                .Agregar("Importe estimado", importe.ToString("C"))
+                .Agregar("Días proyectados", prediccion.DiasProyectados.ToString())
+                .Agregar("Días de ventas analizados", prediccion.DiasDeHistorial.ToString())
+                .ToString();
         }
         catch (Exception ex)
         {
             gvDetalle.DataSource = null;
             gvDetalle.DataBind();
+            btnAceptar.Enabled = false;
             if (!lblMensaje.Visible)
             {
                 MostrarMensaje(lblMensaje, ex.Message, true);
@@ -115,8 +146,8 @@ public partial class GenerarOrdenCompra : PaginaBase
 
     private void MostrarPrediccion(ResultadoPrediccion prediccion)
     {
-        lblPrediccion.Text = "Consumo previsto para los próximos " + prediccion.DiasProyectados + " días. " +
-                             prediccion.Descripcion;
+        litPeriodo.Text = "próximos " + prediccion.DiasProyectados + " días";
+        lblPrediccion.Text = prediccion.Descripcion;
         lblPrediccion.Visible = true;
     }
 }

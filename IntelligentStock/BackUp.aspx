@@ -16,13 +16,13 @@
                     <div class="form-group">
                         <asp:Label ID="lblCarpeta" runat="server" AssociatedControlID="txtCarpeta"
                             CssClass="control-label" Text="Carpeta de destino (*)"></asp:Label>
-                        <asp:TextBox ID="txtCarpeta" runat="server" CssClass="form-control"></asp:TextBox>
+                        <asp:TextBox ID="txtCarpeta" runat="server" CssClass="form-control" MaxLength="260"></asp:TextBox>
                         <asp:RequiredFieldValidator ID="rfvCarpeta" runat="server" ControlToValidate="txtCarpeta"
                             ValidationGroup="BackUp" Display="Dynamic" CssClass="text-danger"
                             ErrorMessage="La carpeta de destino es obligatoria."></asp:RequiredFieldValidator>
                         <span class="help-block">
-                            La escribe el motor de SQL Server, así que la cuenta del servicio
-                            necesita permiso de escritura sobre esa carpeta.
+                            El archivo lo escribe SQL Server. Se recomienda dejar la carpeta propuesta:
+                            el sistema le da permiso al servicio de SQL Server y después permite descargar la copia.
                         </span>
                     </div>
 

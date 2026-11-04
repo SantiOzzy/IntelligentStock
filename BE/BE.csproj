@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="BEAjusteStock.cs" />
     <Compile Include="BEAlerta.cs" />
+    <Compile Include="BECompraPlan.cs" />
     <Compile Include="BEConsumoVenta.cs" />
     <Compile Include="BEDetalleOrdenCompra.cs" />
     <Compile Include="BEDetalleReceta.cs" />

@@ -13,8 +13,7 @@ namespace BLL
     ///
     /// Esquema utilizado:
     ///   - DVH de fila: SHA-256 de la concatenacion de todas las columnas del
-    ///     registro (excepto las columnas de control). Se guarda en DVH_Fila y,
-    ///     para la tabla Usuario, tambien en su columna DVH.
+    ///     registro. Se guarda en DVH_Fila.
     ///   - DVV de columna: SHA-256 de la concatenacion de todos los valores de
     ///     esa columna. Se guarda en DVV_Columna.
     ///   - DV de la tabla: DVH = SHA-256 de la concatenacion de los DVH de las
@@ -23,6 +22,10 @@ namespace BLL
     ///
     /// Cruzando las filas con DVH incorrecto contra las columnas con DVV
     /// incorrecto se obtiene la celda exacta que fue alterada.
+    ///
+    /// Las tablas controladas no tienen columnas de dígitos propias: todo se
+    /// guarda en DV, DVH_Fila y DVV_Columna. Así cada dígito está en un solo
+    /// lugar y alterar un dato muestra una sola inconsistencia (la celda).
     ///
     /// Las operaciones del sistema escriben a través de EjecutarControlado:
     /// primero se verifica que las tablas que se van a tocar estén íntegras
@@ -36,24 +39,27 @@ namespace BLL
     /// administrador (CU-003-019) y el restore de la base (CU-003-018).
     public class BLLDigitoVerificador
     {
-        /// Columnas que no participan del calculo por ser de control.
-        private static readonly string[] ColumnasDeControl = new string[] { "DVH" };
-
         /// Tablas sometidas al control de integridad. La lista está fija acá y
         /// no se toma de las filas de la tabla DV: si alguien borrara la fila de
         /// una tabla en DV, esa tabla dejaría de controlarse sin que nadie se
-        /// entere. Evento, DV, DVH_Fila, DVV_Columna y TokenRecuperacion quedan
-        /// afuera a propósito: la bitácora y los enlaces de recuperación cambian
-        /// todo el tiempo, y las otras son justamente las tablas de control.
+        /// entere.
+        ///
+        /// TokenRecuperacion está incluida porque un enlace de recuperación
+        /// permite cambiar una contraseña: uno insertado por fuera del sistema
+        /// se detecta antes de usarlo. Quedan afuera a propósito Evento (la
+        /// bitácora se escribe en cada operación, también en los intentos
+        /// fallidos: si una fila alterada la bloqueara, el sistema dejaría de
+        /// registrar justamente los eventos de seguridad) y DV, DVH_Fila y
+        /// DVV_Columna, que son las tablas de control.
         private static readonly string[] TablasControladas = new string[]
         {
             "Usuario", "Rol", "Familia", "RolFamilia", "RelacionFamilia",
             "Proveedor", "Insumo", "OrdenCompra", "DetalleOrdenCompra",
-            "Receta", "DetalleReceta", "Sensor", "Alerta", "Suscripcion"
+            "Receta", "DetalleReceta", "Sensor", "Alerta", "Suscripcion",
+            "TokenRecuperacion"
         };
 
         private readonly DALDigitoVerificador dalDV = new DALDigitoVerificador();
-        private readonly DALUsuario dalUsuario = new DALUsuario();
 
         /// Un recálculo o una verificación por vez. Desde que existe el servicio
         /// web de telemetría puede haber escrituras simultáneas sin usuario de
@@ -93,12 +99,6 @@ namespace BLL
             dalDV.GuardarDVVColumnas(tabla, dvvColumnas);
             dalDV.GuardarDVHTabla(tabla, ConsolidarDVH(dvhFilas));
             dalDV.GuardarDVVTabla(tabla, ConsolidarDVV(contenido, dvvColumnas));
-
-            // La tabla Usuario conserva ademas el DVH dentro de cada registro.
-            if (string.Equals(tabla, "Usuario", StringComparison.OrdinalIgnoreCase))
-            {
-                GuardarDVHEnUsuarios(contenido, clavePrimaria, dvhFilas);
-            }
         }
 
         /// Recalcula los dígitos verificadores de todas las tablas controladas.
@@ -341,11 +341,6 @@ namespace BLL
             // ubicar la celda alterada cuando algo no coincide).
             if (tablaCoincide)
             {
-                if (string.Equals(tabla, "Usuario", StringComparison.OrdinalIgnoreCase))
-                {
-                    inconsistencias.AddRange(VerificarDVHDeUsuarios(contenido, clavePrimaria, dvhCalculados,
-                        NumerarFilas(contenido, clavePrimaria)));
-                }
                 return inconsistencias;
             }
 
@@ -370,16 +365,6 @@ namespace BLL
             }
 
             Dictionary<string, int> numerosDeFila = NumerarFilas(contenido, clavePrimaria);
-
-            // La tabla Usuario guarda su DVH dentro del propio registro. Se controla
-            // siempre, porque esa columna no participa del resto de los digitos.
-            if (string.Equals(tabla, "Usuario", StringComparison.OrdinalIgnoreCase))
-            {
-                inconsistencias.AddRange(
-                    VerificarDVHDeUsuarios(contenido, clavePrimaria, dvhCalculados, numerosDeFila));
-            }
-
-            int inconsistenciasPrevias = inconsistencias.Count;
 
             List<string> filasAlteradas = new List<string>();
             List<string> filasAgregadas = new List<string>();
@@ -472,7 +457,7 @@ namespace BLL
                 });
             }
 
-            if (inconsistencias.Count == inconsistenciasPrevias)
+            if (inconsistencias.Count == 0)
             {
                 inconsistencias.Add(new Inconsistencia
                 {
@@ -511,10 +496,6 @@ namespace BLL
 
             foreach (DataColumn columna in contenido.Columns)
             {
-                if (EsColumnaDeControl(columna.ColumnName))
-                {
-                    continue;
-                }
                 datos.Append(Normalizar(fila[columna]));
                 datos.Append('|');
             }
@@ -528,11 +509,6 @@ namespace BLL
 
             foreach (DataColumn columna in contenido.Columns)
             {
-                if (EsColumnaDeControl(columna.ColumnName))
-                {
-                    continue;
-                }
-
                 StringBuilder datos = new StringBuilder();
                 foreach (DataRow fila in contenido.Rows)
                 {
@@ -620,18 +596,6 @@ namespace BLL
             return Convert.ToString(valor, CultureInfo.InvariantCulture);
         }
 
-        private static bool EsColumnaDeControl(string columna)
-        {
-            foreach (string control in ColumnasDeControl)
-            {
-                if (string.Equals(columna, control, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         private static string ConstruirClave(DataTable contenido, DataRow fila, List<string> clavePrimaria, int indice)
         {
             if (clavePrimaria == null || clavePrimaria.Count == 0)
@@ -678,75 +642,6 @@ namespace BLL
         {
             bool dvVacio = dv == null || (string.IsNullOrEmpty(dv.DVH) && string.IsNullOrEmpty(dv.DVV));
             return dvVacio && dvhFilas.Count == 0 && dvvColumnas.Count == 0;
-        }
-
-        #endregion
-
-        #region Columna DVH de la tabla Usuario
-
-        private void GuardarDVHEnUsuarios(DataTable contenido, List<string> clavePrimaria, Dictionary<string, string> dvhFilas)
-        {
-            int indice = 0;
-            foreach (DataRow fila in contenido.Rows)
-            {
-                indice++;
-                string clave = ConstruirClave(contenido, fila, clavePrimaria, indice);
-                string dvh;
-
-                // Solo los usuarios cuyo dígito cambió (en una operación común,
-                // uno solo), en vez de reescribirlos todos.
-                if (dvhFilas.TryGetValue(clave, out dvh) &&
-                    (!contenido.Columns.Contains("DVH") || Normalizar(fila["DVH"]) != dvh))
-                {
-                    dalUsuario.ActualizarDVH(Convert.ToInt32(fila["dni"]), dvh);
-                }
-            }
-        }
-
-        private List<Inconsistencia> VerificarDVHDeUsuarios(
-            DataTable contenido,
-            List<string> clavePrimaria,
-            Dictionary<string, string> dvhCalculados,
-            Dictionary<string, int> numerosDeFila)
-        {
-            List<Inconsistencia> inconsistencias = new List<Inconsistencia>();
-
-            if (!contenido.Columns.Contains("DVH"))
-            {
-                return inconsistencias;
-            }
-
-            int indice = 0;
-            foreach (DataRow fila in contenido.Rows)
-            {
-                indice++;
-                string clave = ConstruirClave(contenido, fila, clavePrimaria, indice);
-
-                string calculado;
-                if (!dvhCalculados.TryGetValue(clave, out calculado))
-                {
-                    continue;
-                }
-
-                string almacenado = Normalizar(fila["DVH"]);
-                if (string.IsNullOrEmpty(almacenado) || almacenado == calculado)
-                {
-                    continue;
-                }
-
-                inconsistencias.Add(new Inconsistencia
-                {
-                    Tabla = "Usuario",
-                    ClaveFila = clave,
-                    NumeroFila = ObtenerNumero(numerosDeFila, clave),
-                    Columna = "DVH",
-                    Tipo = TipoInconsistencia.CeldaAlterada,
-                    DVEsperado = almacenado,
-                    DVCalculado = calculado
-                });
-            }
-
-            return inconsistencias;
         }
 
         #endregion

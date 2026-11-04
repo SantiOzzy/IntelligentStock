@@ -1,0 +1,392 @@
+﻿Panel principal - IntelligentStock	Home - IntelligentStock
+Panel principal	Home
+Base de datos	Database
+Bitácora de eventos	Registro eventi
+Español	Español
+English	English
+Português	Português
+Français	Français
+Italiano	Italiano
+UsuarioContingencia (Contingencia)	UsuarioContingencia (Emergenza)
+Cerrar sesión	Esci
+Bienvenido, Usuario de contingencia (Contingencia)	Benvenuto, utente di emergenza (Emergenza)
+© 2026 - IntelligentStock	© 2026 - IntelligentStock
+Cerrar sesión - IntelligentStock	Esci - IntelligentStock
+mas opciones	Altre opzioni
+Seguridad	Sicurezza
+Alta de usuario	Aggiungi utente
+Modificación de usuario	Modifica utente
+Baja de usuario	Disattiva utente
+Consultar usuario	Consulta utenti
+Bloquear usuario	Blocca utente
+Desbloquear usuario	Sblocca utente
+Cambiar contraseña	Cambia password
+Permisos	Permessi
+Alta de familia	Aggiungi famiglia
+Modificación de familia	Modifica famiglia
+Baja de familia	Elimina famiglia
+Consultar familia	Consulta famiglie
+Consultar patente	Consulta permessi
+Proveedores	Fornitori
+Alta de proveedor	Aggiungi fornitore
+Modificación de proveedor	Modifica fornitore
+Baja de proveedor	Disattiva fornitore
+Consultar proveedor	Consulta fornitori
+Insumos y recetas	Ingredienti e ricette
+Alta de insumo	Aggiungi ingrediente
+Modificación de insumo	Modifica ingrediente
+Baja de insumo	Disattiva ingrediente
+Consultar insumo	Consulta ingredienti
+Alta de receta	Aggiungi ricetta
+Modificación de receta	Modifica ricetta
+Baja de receta	Disattiva ricetta
+Consultar receta	Consulta ricette
+Registrar ajuste de stock	Registra rettifica di giacenza
+Operaciones	Operazioni
+Generar orden de compra	Genera ordine di acquisto
+Consultar orden de compra	Consulta ordini di acquisto
+Anular orden de compra	Annulla ordine di acquisto
+Registrar factura de proveedor	Registra fattura del fornitore
+Descontar stock por venta	Scarica giacenza per vendita
+Exportar reporte gerencial	Esporta report gestionale
+Telemetría IoT	Telemetria IoT
+Alta de sensor	Aggiungi sensore
+Modificación de sensor	Modifica sensore
+Baja de sensor	Disattiva sensore
+Consultar sensor	Consulta sensori
+Procesar alerta térmica	Gestisci allarme di temperatura
+Suscripción	Abbonamento
+Alta de suscripción	Nuovo abbonamento
+Baja de suscripción	Disdici abbonamento
+Admin (WebMaster)	Admin (WebMaster)
+¿Confirma que desea cerrar la sesión de	Vuoi chiudere la sessione di
+Admin	Admin
+Aceptar	Accetta
+Cancelar	Annulla
+Exportar reporte gerencial - IntelligentStock	Esporta report gestionale - IntelligentStock
+El archivo se genera en el servidor (carpeta App_Data\\Reportes) y se descarga al finalizar. El período no puede superar un año.	Il file viene generato sul server (cartella App_Data\\Reportes) e scaricato al termine. Il periodo non può superare un anno.
+Tipo de reporte (*)	Tipo di report (*)
+Consumo por insumo	Consumo per ingrediente
+Ventas por receta	Vendite per ricetta
+Órdenes por proveedor	Ordini per fornitore
+Alertas térmicas	Allarmi di temperatura
+Ajustes de stock	Rettifiche di giacenza
+Fecha desde (*)	Data iniziale (*)
+Fecha hasta (*)	Data finale (*)
+Formato	Formato
+PDF	PDF
+Excel	Excel
+CSV	CSV
+Exportar	Esporta
+Alta de suscripción - IntelligentStock	Nuovo abbonamento - IntelligentStock
+El token lo devuelve la pasarela de cobros externa. Los importes están expresados en pesos argentinos (ARS).	Il token viene restituito dal gateway di pagamento esterno. Gli importi sono in pesos argentini (ARS).
+Tipo de plan (*)	Tipo di piano (*)
+Básico (ARS 15.000 por mes)	Base (ARS 15.000 al mese)
+Profesional (ARS 30.000 por mes)	Professionale (ARS 30.000 al mese)
+Empresarial (ARS 60.000 por mes)	Business (ARS 60.000 al mese)
+Token de pago (*)	Token di pagamento (*)
+El token de pago es obligatorio.	Il token di pagamento è obbligatorio.
+Empieza con tok_ seguido de 16 a 60 letras o números.	Inizia con tok_ seguito da 16 a 60 lettere o numeri.
+Fecha de inicio	Data di inizio
+Si se deja vacía, la suscripción empieza hoy.	Se resta vuota, l'abbonamento inizia oggi.
+Activar suscripción	Attiva abbonamento
+Ir al contenido	Vai al contenuto
+Abrir el menú	Apri il menu
+Idioma	Lingua
+Hola, Admin.	Ciao, Admin.
+Ingresó como WebMaster; sus tareas están en el menú de la izquierda.	Hai effettuato l'accesso come WebMaster; le tue attività sono nel menu a sinistra.
+Inventario de insumos	Inventario degli ingredienti
+Stock, stock mínimo, vida útil y ajustes con su motivo, siempre al día.	Giacenza, scorta minima, durata di conservazione e rettifiche con il motivo, sempre aggiornate.
+Recetas y ventas	Ricette e vendite
+Cada plato vendido descuenta solo los insumos de su receta.	Ogni piatto venduto scarica solo gli ingredienti della sua ricetta.
+Cadena de frío	Catena del freddo
+Sensores de temperatura que avisan cuando una heladera o cámara se sale de rango.	Sensori di temperatura che avvisano quando un frigorifero o una cella esce dall'intervallo.
+Reportes gerenciales	Report gestionali
+Abono mensual en pesos, con todas las actualizaciones incluidas.	Canone mensile in pesos, con tutti gli aggiornamenti inclusi.
+Básico	Base
+por mes	al mese
+Aviso de stock mínimo por correo	Avviso di scorta minima via e-mail
+Soporte por correo electrónico	Assistenza via e-mail
+El más elegido	Il più scelto
+Proveedores y órdenes de compra	Fornitori e ordini di acquisto
+Compras sugeridas según la demanda	Acquisti suggeriti in base alla domanda
+Empresarial	Business
+Exportación de datos para auditoría	Esportazione dei dati per la revisione
+Soporte prioritario	Assistenza prioritaria
+Contacto	Contatti
+Obligatorio	Obbligatorio
+Dato obligatorio	Campo obbligatorio
+El stock de su cocina, bajo control	La giacenza della tua cucina, sotto controllo
+IntelligentStock es un sistema para bares, restaurantes y casas de comida: lleva el inventario de insumos, descuenta lo que se usa en cada plato vendido, sugiere qué comprar y vigila la temperatura de heladeras y cámaras.	IntelligentStock è un sistema per bar, ristoranti e locali: tiene l'inventario degli ingredienti, scarica ciò che usa ogni piatto venduto, suggerisce cosa comprare e controlla la temperatura di frigoriferi e celle.
+Quiénes somos	Chi siamo
+Qué ofrecemos	Cosa offriamo
+Compras inteligentes	Acquisti intelligenti
+Órdenes de compra sugeridas según la demanda prevista con aprendizaje automático.	Ordini di acquisto suggeriti in base alla domanda prevista con l'apprendimento automatico.
+Consumo, ventas, compras por proveedor y alertas, en PDF, Excel o CSV.	Consumi, vendite, acquisti per fornitore e allarmi, in PDF, Excel o CSV.
+Usuarios con roles y permisos, bitácora de eventos y control de integridad de los datos.	Utenti con ruoli e permessi, registro eventi e controllo dell'integrità dei dati.
+Planes	Piani
+Para locales chicos que quieren ordenar su stock.	Per locali piccoli che vogliono mettere ordine nella giacenza.
+Inventario de insumos y recetas	Inventario di ingredienti e ricette
+Descuento de stock por venta	Scarico della giacenza per vendita
+Profesional	Professionale
+Para restaurantes que compran seguido a sus proveedores.	Per ristoranti che acquistano spesso dai fornitori.
+Todo lo del plan Básico	Tutto il piano Base
+Para cocinas con cámaras de frío y varios turnos.	Per cucine con celle frigorifere e più turni.
+Todo lo del plan Profesional	Tutto il piano Professionale
+Sensores de temperatura y alertas de frío	Sensori di temperatura e allarmi del freddo
+¿Quiere sumar otro local o cambiar de plan? Escríbanos a	Vuoi aggiungere un altro locale o cambiare piano? Scrivici a
+contacto@intelligentstock.com.ar	contacto@intelligentstock.com.ar
+y le respondemos en el día. Estamos en Lomas de Zamora, provincia de Buenos Aires.	e ti rispondiamo in giornata. Siamo a Lomas de Zamora, provincia di Buenos Aires.
+© 2026 IntelligentStock	© 2026 IntelligentStock
+Inicio de sesión - IntelligentStock	Accesso - IntelligentStock
+Inicio de sesión	Accesso
+Stock, compras, recetas y alertas de frío del local, en un solo lugar.	Giacenze, acquisti, ricette e allarmi del freddo del locale, in un solo posto.
+Iniciar sesión	Accedi
+Nombre de usuario	Nome utente
+Debe ingresar el nombre de usuario.	Inserisci il nome utente.
+Contraseña	Password
+Debe ingresar la contraseña.	Inserisci la password.
+Ingresar	Accedi
+¿Olvidaste tu contraseña?	Hai dimenticato la password?
+Confirmar la operación	Conferma l'operazione
+Volver	Indietro
+Confirmar	Conferma
+Procesando...	Elaborazione...
+Consulta de familias - IntelligentStock	Consulta famiglie - IntelligentStock
+Consulta de familias	Consulta famiglie
+Estructura de permisos	Struttura dei permessi
+Se muestran las familias y patentes que no dependen de ninguna otra, con todo lo que contienen por debajo.	Vengono mostrati le famiglie e i permessi che non dipendono da nessun altro, con tutto ciò che contengono.
+Omitir vínculos de navegación.	Salta i link di navigazione.
+[F] Administración del Sistema	[F] Amministrazione del sistema
+[F] Gestión de Compras	[F] Gestione acquisti
+[F] Gestión de Insumos	[F] Gestione ingredienti
+[F] Gestión de Permisos	[F] Gestione permessi
+[F] Gestión de Proveedores	[F] Gestione fornitori
+[F] Gestión de Recetas	[F] Gestione ricette
+[F] Gestión de Sensores	[F] Gestione sensori
+[F] Gestión de Usuarios	[F] Gestione utenti
+[F] Reportes	[F] Report
+Permisos por rol	Permessi per ruolo
+Encargado	Responsabile
+Auditor	Revisore
+Tecnico	Tecnico
+Empleado	Dipendente
+Estructura asignada	Struttura assegnata
+Patente	Permesso
+Familia	Famiglia
+Gestión de Usuarios	Gestione utenti
+Gestión de Permisos	Gestione permessi
+Administración del Sistema	Amministrazione del sistema
+Gestión de Insumos	Gestione ingredienti
+Gestión de Proveedores	Gestione fornitori
+Gestión de Recetas	Gestione ricette
+Gestión de Sensores	Gestione sensori
+Gestión de Compras	Gestione acquisti
+Reportes	Report
+Patentes efectivas	Permessi effettivi
+Consultar una familia	Consulta una famiglia
+Estructura de la familia	Struttura della famiglia
+Listado de componentes	Elenco dei componenti
+Id	Id
+Nombre	Nome
+Tipo	Tipo
+Alta de sensor IoT - IntelligentStock	Aggiungi sensore IoT - IntelligentStock
+Alta de sensor IoT	Aggiungi sensore IoT
+La dirección MAC no se puede repetir entre dispositivos activos.	L'indirizzo MAC non può ripetersi tra i dispositivi attivi.
+Dirección MAC (*)	Indirizzo MAC (*)
+La dirección MAC es obligatoria.	L'indirizzo MAC è obbligatorio.
+La dirección MAC tiene que tener 12 dígitos hexadecimales, por ejemplo 00:1A:2B:3C:4D:5E.	L'indirizzo MAC deve avere 12 cifre esadecimali, per esempio 00:1A:2B:3C:4D:5E.
+Modelo	Modello
+Temperatura máxima permitida (°C) (*)	Temperatura massima consentita (°C) (*)
+La temperatura máxima permitida es obligatoria.	La temperatura massima consentita è obbligatoria.
+Por encima de este valor el sensor genera una alerta. En un freezer es negativa (por ejemplo, -15).	Sopra questo valore il sensore genera un allarme. In un congelatore è negativa (per esempio, -15).
+Procesar alerta térmica IoT - IntelligentStock	Gestisci allarme di temperatura IoT - IntelligentStock
+Procesar alerta térmica IoT	Gestisci allarme di temperatura IoT
+Las alertas las genera el sistema externo de telemetría; acá se resuelven.	Gli allarmi li genera il sistema esterno di telemetria; qui si risolvono.
+Alerta a procesar (*)	Allarme da gestire (*)
+(no hay alertas abiertas)	(nessun allarme aperto)
+Elija la alerta a procesar.	Scegli l'allarme da gestire.
+Nuevo estado (*)	Nuovo stato (*)
+Pendiente	In attesa
+En revisión	In revisione
+Resuelta	Risolto
+Descartada	Scartato
+Observaciones (*)	Note (*)
+Indique la acción correctiva realizada.	Indica l'azione correttiva eseguita.
+Alertas registradas	Allarmi registrati
+Código	Codice
+Sensor	Sensore
+Fecha y hora	Data e ora
+Temperatura alcanzada	Temperatura raggiunta
+Estado	Stato
+No hay registros para mostrar.	Non ci sono record da mostrare.
+Alta de usuario - IntelligentStock	Aggiungi utente - IntelligentStock
+DNI (*)	N. documento (*)
+El DNI es obligatorio.	Il numero del documento è obbligatorio.
+El DNI debe tener 7 u 8 dígitos, sin puntos.	Il documento deve avere 7 o 8 cifre, senza punti.
+Nombre (*)	Nome (*)
+El nombre es obligatorio.	Il nome è obbligatorio.
+Apellido (*)	Cognome (*)
+El apellido es obligatorio.	Il cognome è obbligatorio.
+Fecha de nacimiento (*)	Data di nascita (*)
+La fecha de nacimiento es obligatoria.	La data di nascita è obbligatoria.
+Correo electrónico (*)	E-mail (*)
+El correo electrónico es obligatorio.	L'e-mail è obbligatoria.
+El correo debe tener texto antes de la @, y texto con un punto (el dominio) después de la @.	L'e-mail deve avere del testo prima della @ e del testo con un punto (il dominio) dopo la @.
+Teléfono	Telefono
+Rol (*)	Ruolo (*)
+El rol define las familias y patentes que va a tener el usuario.	Il ruolo definisce le famiglie e i permessi che avrà l'utente.
+Nombre de usuario (*)	Nome utente (*)
+El nombre de usuario es obligatorio.	Il nome utente è obbligatorio.
+Contraseña (*)	Password (*)
+La contraseña es obligatoria.	La password è obbligatoria.
+La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula y un número.	La password deve avere almeno 8 caratteri, con una maiuscola, una minuscola e un numero.
+Mínimo 8 caracteres, con mayúscula, minúscula y número.	Almeno 8 caratteri, con maiuscola, minuscola e numero.
+Repetir contraseña (*)	Ripeti password (*)
+Debe repetir la contraseña.	Devi ripetere la password.
+Las contraseñas no coinciden.	Le password non coincidono.
+Permisos que otorga el rol seleccionado	Permessi concessi dal ruolo selezionato
+Bienvenido, Admin (WebMaster)	Benvenuto, Admin (WebMaster)
+Limpiar	Pulisci
+Consulta de usuarios - IntelligentStock	Consulta utenti - IntelligentStock
+Consulta de usuarios	Consulta utenti
+Filtros	Filtri
+DNI, usuario, nombre o correo	Documento, utente, nome o e-mail
+Rol	Ruolo
+(todos)	(tutti)
+Activo	Attivo
+Bloqueado	Bloccato
+Inactivo	Inattivo
+Buscar	Cerca
+1 usuario encontrado.	1 utente trovato.
+DNI	Documento
+Usuario	Utente
+Apellido y nombre	Cognome e nome
+Correo	E-mail
+Intentos fallidos	Tentativi falliti
+Sistema, Admin	Sistema, Admin
+admin@intelligentstock.com	admin@intelligentstock.com
+Alta de insumo - IntelligentStock	Aggiungi ingrediente - IntelligentStock
+Descripción	Descrizione
+Unidad de medida (*)	Unità di misura (*)
+La unidad de medida es obligatoria.	L'unità di misura è obbligatoria.
+Por ejemplo kg, g, lt, ml o unidad.	Per esempio kg, g, lt, ml o unità.
+Stock inicial (*)	Giacenza iniziale (*)
+El stock inicial es obligatorio (puede ser 0).	La giacenza iniziale è obbligatoria (può essere 0).
+Stock mínimo (*)	Scorta minima (*)
+El stock mínimo es obligatorio.	La scorta minima è obbligatoria.
+Precio unitario ($) (*)	Prezzo unitario ($) (*)
+El precio unitario es obligatorio.	Il prezzo unitario è obbligatorio.
+Costo de una unidad de medida (por ejemplo, de 1 kg).	Costo di un'unità di misura (per esempio, di 1 kg).
+Días de vida útil	Durata di conservazione (giorni)
+Generar orden de compra - IntelligentStock	Genera ordine di acquisto - IntelligentStock
+Falló la ejecución del servicio de predicción de ML.NET. Se han producido uno o varios errores. [#ERR005]	L'esecuzione del servizio di previsione di ML.NET non è riuscita. Si sono verificati uno o più errori. [#ERR005]
+La sugerencia de cantidades sale del módulo de predicción de demanda.	Le quantità suggerite provengono dal modulo di previsione della domanda.
+Proveedor (*)	Fornitore (*)
+(seleccione)	(seleziona)
+a (CUIT 12-34567890-3)	a (CUIT 12-34567890-3)
+Fecha de la orden	Data dell'ordine
+No hay cantidades sugeridas para mostrar.	Non ci sono quantità suggerite da mostrare.
+Generar orden	Genera ordine
+Alta de familia - IntelligentStock	Aggiungi famiglia - IntelligentStock
+Familias	Famiglie
+Roles	Ruoli
+Una	Una
+familia	famiglia
+agrupa patentes y otras familias. Las	raggruppa permessi e altre famiglie. I
+patentes	permessi
+son los permisos individuales sobre cada funcionalidad del sistema: vienen definidas con la instalación y no se dan de alta desde acá.	sono i diritti individuali su ogni funzionalità del sistema: sono definiti con l'installazione e non si creano da qui.
+Nombre de la familia (*)	Nome della famiglia (*)
+Componentes que va a contener	Componenti che conterrà
+[Familia] Administración del Sistema	[Famiglia] Amministrazione del sistema
+[Familia] Gestión de Compras	[Famiglia] Gestione acquisti
+[Familia] Gestión de Insumos	[Famiglia] Gestione ingredienti
+[Familia] Gestión de Permisos	[Famiglia] Gestione permessi
+[Familia] Gestión de Proveedores	[Famiglia] Gestione fornitori
+[Familia] Gestión de Recetas	[Famiglia] Gestione ricette
+[Familia] Gestión de Sensores	[Famiglia] Gestione sensori
+[Familia] Gestión de Usuarios	[Famiglia] Gestione utenti
+[Familia] Reportes	[Famiglia] Report
+Composición de la familia	Composizione della famiglia
+Todavía no se eligió ningún componente.	Non è stato ancora scelto nessun componente.
+Permisos efectivos	Permessi effettivi
+Sin permisos.	Nessun permesso.
+Un	Un
+rol	ruolo
+es un perfil del sistema (por ejemplo Encargado o Auditor). Se le asignan familias y patentes exactamente igual que a una familia: de ahí en más, cualquier usuario con ese rol tiene esos permisos.	è un profilo del sistema (per esempio Responsabile o Revisore). Gli si assegnano famiglie e permessi esattamente come a una famiglia: da lì in poi, ogni utente con quel ruolo ha quei permessi.
+Nombre del rol (*)	Nome del ruolo (*)
+Familias y patentes que va a otorgar	Famiglie e permessi che concederà
+Composición del rol	Composizione del ruolo
+Consulta de insumos - IntelligentStock	Consulta ingredienti - IntelligentStock
+Consulta de insumos	Consulta ingredienti
+Código, nombre o descripción	Codice, nome o descrizione
+Solo insumos en su stock mínimo o por debajo	Solo ingredienti alla scorta minima o sotto
+3 insumos encontrados.	3 ingredienti trovati.
+Unidad	Unità
+Stock	Giacenza
+Stock mínimo	Scorta minima
+Precio unitario	Prezzo unitario
+Vida útil	Durata di conservazione
+Masa	Impasto
+Una masa	Un impasto
+kg	kg
+PRECAUCIÓN	ATTENZIONE
+1000 días	1000 giorni
+Queso	Formaggio
+Queso para la pizza	Formaggio per la pizza
+1 días	1 giorni
+Salame rojo	Salame rosso
+Hola,	Ciao,
+Ingresó como	Hai effettuato l'accesso come
+; sus tareas están en el menú de la izquierda.	; le tue attività sono nel menu a sinistra.
+Baja de familia - IntelligentStock	Elimina famiglia - IntelligentStock
+(seleccione una familia)	(seleziona una famiglia)
+(seleccione un rol)	(seleziona un ruolo)
+Copia de seguridad - IntelligentStock	Backup - IntelligentStock
+Copia de seguridad	Backup
+Bitácora de eventos - IntelligentStock	Registro eventi - IntelligentStock
+Restore	Ripristino
+Informativa	Informativa
+Advertencia	Avviso
+Grave	Grave
+Acceso denegado	Accesso negato
+Acceso denegado a servicio web	Accesso negato al servizio web
+Ajuste de stock	Rettifica di giacenza
+Alerta térmica	Allarme di temperatura
+Alerta térmica no registrada	Allarme di temperatura non registrato
+Alta de rol	Ruolo aggiunto
+Anulación de orden de compra	Ordine di acquisto annullato
+Asignar permiso a rol	Permesso assegnato al ruolo
+BackUp de base de datos	Backup del database
+Baja de rol	Ruolo eliminato
+Baja de suscripción sin aviso a la pasarela	Abbonamento disdetto senza avvisare il gateway
+Bloqueo de usuario	Utente bloccato
+Cambio de contraseña	Password modificata
+Cambio de contraseña fallido	Modifica password non riuscita
+Cierre de sesión	Uscita
+Cierre de sesión forzado	Uscita forzata
+Desbloqueo de usuario	Utente sbloccato
+Exportación de alertas	Esportazione allarmi
+Exportación de reporte gerencial	Esportazione report gestionale
+Factura de proveedor	Fattura del fornitore
+Generación de orden de compra	Ordine di acquisto generato
+Inconsistencia en la base de datos	Incoerenza nel database
+Inicio de sesión fallido	Accesso non riuscito
+Lectura de sensor no registrado	Lettura di sensore non registrato
+Modificación de rol	Ruolo modificato
+Operación detenida por inconsistencia	Operazione interrotta per incoerenza
+Pago rechazado	Pagamento rifiutato
+Procesamiento de alerta térmica	Allarme di temperatura gestito
+Quitar permiso de rol	Permesso rimosso dal ruolo
+Reactivación de insumo	Ingrediente riattivato
+Reactivación de proveedor	Fornitore riattivato
+Reactivación de receta	Ricetta riattivata
+Reactivación de sensor	Sensore riattivato
+Reactivación de usuario	Utente riattivato
+Recuperación de contraseña	Recupero password
+Recálculo de dígito verificador	Ricalcolo delle cifre di controllo
+Recálculo de dígitos fallido	Ricalcolo delle cifre non riuscito
+Reparación de dígito verificador	Riparazione delle cifre di controllo
+Restore de base de datos	Ripristino del database
+Solicitud rechazada por servicio web	Richiesta rifiutata dal servizio web
+Venta	Vendita

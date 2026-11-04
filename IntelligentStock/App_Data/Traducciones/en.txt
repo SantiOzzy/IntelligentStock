@@ -1,0 +1,1332 @@
+﻿Panel principal - IntelligentStock	Home - IntelligentStock
+Panel principal	Home
+Base de datos	Database
+Bitácora de eventos	Event log
+Español	Español
+English	English
+Português	Português
+Français	Français
+Italiano	Italiano
+UsuarioContingencia (Contingencia)	UsuarioContingencia (Contingency)
+Cerrar sesión	Log out
+Bienvenido, Usuario de contingencia (Contingencia)	Welcome, contingency user (Contingency)
+© 2026 - IntelligentStock	© 2026 - IntelligentStock
+Cerrar sesión - IntelligentStock	Log out - IntelligentStock
+mas opciones	More options
+Seguridad	Security
+Alta de usuario	Add user
+Modificación de usuario	Edit user
+Baja de usuario	Deactivate user
+Consultar usuario	View users
+Bloquear usuario	Block user
+Desbloquear usuario	Unblock user
+Cambiar contraseña	Change password
+Permisos	Permissions
+Alta de familia	Add family
+Modificación de familia	Edit family
+Baja de familia	Delete family
+Consultar familia	View families
+Consultar patente	View permissions
+Proveedores	Suppliers
+Alta de proveedor	Add supplier
+Modificación de proveedor	Edit supplier
+Baja de proveedor	Deactivate supplier
+Consultar proveedor	View suppliers
+Insumos y recetas	Ingredients and recipes
+Alta de insumo	Add ingredient
+Modificación de insumo	Edit ingredient
+Baja de insumo	Deactivate ingredient
+Consultar insumo	View ingredients
+Alta de receta	Add recipe
+Modificación de receta	Edit recipe
+Baja de receta	Deactivate recipe
+Consultar receta	View recipes
+Registrar ajuste de stock	Record stock adjustment
+Operaciones	Operations
+Generar orden de compra	Generate purchase order
+Consultar orden de compra	View purchase orders
+Anular orden de compra	Cancel purchase order
+Registrar factura de proveedor	Record supplier invoice
+Descontar stock por venta	Deduct stock for a sale
+Exportar reporte gerencial	Export management report
+Telemetría IoT	IoT telemetry
+Alta de sensor	Add sensor
+Modificación de sensor	Edit sensor
+Baja de sensor	Deactivate sensor
+Consultar sensor	View sensors
+Procesar alerta térmica	Process temperature alert
+Suscripción	Subscription
+Alta de suscripción	New subscription
+Baja de suscripción	Cancel subscription
+Admin (WebMaster)	Admin (WebMaster)
+¿Confirma que desea cerrar la sesión de	Do you want to log out
+Admin	Admin
+Aceptar	OK
+Cancelar	Cancel
+Exportar reporte gerencial - IntelligentStock	Export management report - IntelligentStock
+El archivo se genera en el servidor (carpeta App_Data\\Reportes) y se descarga al finalizar. El período no puede superar un año.	The file is generated on the server (App_Data\\Reportes folder) and downloaded when it is ready. The period cannot exceed one year.
+Tipo de reporte (*)	Report type (*)
+Consumo por insumo	Consumption by ingredient
+Ventas por receta	Sales by recipe
+Órdenes por proveedor	Orders by supplier
+Alertas térmicas	Temperature alerts
+Ajustes de stock	Stock adjustments
+Fecha desde (*)	Date from (*)
+Fecha hasta (*)	Date to (*)
+Formato	Format
+PDF	PDF
+Excel	Excel
+CSV	CSV
+Exportar	Export
+Alta de suscripción - IntelligentStock	New subscription - IntelligentStock
+El token lo devuelve la pasarela de cobros externa. Los importes están expresados en pesos argentinos (ARS).	The token is returned by the external payment gateway. Amounts are in Argentine pesos (ARS).
+Tipo de plan (*)	Plan type (*)
+Básico (ARS 15.000 por mes)	Basic (ARS 15,000 per month)
+Profesional (ARS 30.000 por mes)	Professional (ARS 30,000 per month)
+Empresarial (ARS 60.000 por mes)	Enterprise (ARS 60,000 per month)
+Token de pago (*)	Payment token (*)
+El token de pago es obligatorio.	The payment token is required.
+Empieza con tok_ seguido de 16 a 60 letras o números.	It starts with tok_ followed by 16 to 60 letters or numbers.
+Fecha de inicio	Start date
+Si se deja vacía, la suscripción empieza hoy.	If left empty, the subscription starts today.
+Activar suscripción	Activate subscription
+Ir al contenido	Skip to content
+Abrir el menú	Open the menu
+Idioma	Language
+Hola, Admin.	Hi, Admin.
+Ingresó como WebMaster; sus tareas están en el menú de la izquierda.	You are signed in as WebMaster; your tasks are in the menu on the left.
+Inventario de insumos	Ingredient inventory
+Stock, stock mínimo, vida útil y ajustes con su motivo, siempre al día.	Stock, minimum stock, shelf life and adjustments with their reason, always up to date.
+Recetas y ventas	Recipes and sales
+Cada plato vendido descuenta solo los insumos de su receta.	Each dish sold deducts only the ingredients in its recipe.
+Cadena de frío	Cold chain
+Sensores de temperatura que avisan cuando una heladera o cámara se sale de rango.	Temperature sensors that warn you when a fridge or cold room goes out of range.
+Reportes gerenciales	Management reports
+Abono mensual en pesos, con todas las actualizaciones incluidas.	Monthly fee in pesos, with all updates included.
+Básico	Basic
+por mes	per month
+Aviso de stock mínimo por correo	Minimum stock alert by email
+Soporte por correo electrónico	Email support
+El más elegido	Most popular
+Proveedores y órdenes de compra	Suppliers and purchase orders
+Compras sugeridas según la demanda	Purchases suggested from demand
+Empresarial	Enterprise
+Exportación de datos para auditoría	Data export for audits
+Soporte prioritario	Priority support
+Contacto	Contact
+Obligatorio	Required
+Dato obligatorio	Required field
+El stock de su cocina, bajo control	Your kitchen stock, under control
+IntelligentStock es un sistema para bares, restaurantes y casas de comida: lleva el inventario de insumos, descuenta lo que se usa en cada plato vendido, sugiere qué comprar y vigila la temperatura de heladeras y cámaras.	IntelligentStock is a system for bars, restaurants and eateries: it keeps the ingredient inventory, deducts what each dish sold uses, suggests what to buy and watches the temperature of fridges and cold rooms.
+Quiénes somos	About us
+Qué ofrecemos	What we offer
+Compras inteligentes	Smart purchasing
+Órdenes de compra sugeridas según la demanda prevista con aprendizaje automático.	Purchase orders suggested from the demand predicted with machine learning.
+Consumo, ventas, compras por proveedor y alertas, en PDF, Excel o CSV.	Consumption, sales, purchases by supplier and alerts, in PDF, Excel or CSV.
+Usuarios con roles y permisos, bitácora de eventos y control de integridad de los datos.	Users with roles and permissions, event log and data integrity control.
+Planes	Plans
+Para locales chicos que quieren ordenar su stock.	For small venues that want to keep their stock in order.
+Inventario de insumos y recetas	Ingredient and recipe inventory
+Descuento de stock por venta	Stock deduction for each sale
+Profesional	Professional
+Para restaurantes que compran seguido a sus proveedores.	For restaurants that buy from their suppliers often.
+Todo lo del plan Básico	Everything in the Basic plan
+Para cocinas con cámaras de frío y varios turnos.	For kitchens with cold rooms and several shifts.
+Todo lo del plan Profesional	Everything in the Professional plan
+Sensores de temperatura y alertas de frío	Temperature sensors and cold alerts
+¿Quiere sumar otro local o cambiar de plan? Escríbanos a	Want to add another venue or change plans? Write to us at
+contacto@intelligentstock.com.ar	contacto@intelligentstock.com.ar
+y le respondemos en el día. Estamos en Lomas de Zamora, provincia de Buenos Aires.	and we will reply the same day. We are in Lomas de Zamora, Buenos Aires province.
+© 2026 IntelligentStock	© 2026 IntelligentStock
+Inicio de sesión - IntelligentStock	Sign in - IntelligentStock
+Inicio de sesión	Sign in
+Stock, compras, recetas y alertas de frío del local, en un solo lugar.	Stock, purchases, recipes and cold alerts for your venue, in one place.
+Iniciar sesión	Sign in
+Nombre de usuario	Username
+Debe ingresar el nombre de usuario.	Enter the username.
+Contraseña	Password
+Debe ingresar la contraseña.	Enter the password.
+Ingresar	Sign in
+¿Olvidaste tu contraseña?	Forgot your password?
+Confirmar la operación	Confirm the operation
+Volver	Go back
+Confirmar	Confirm
+Procesando...	Processing...
+Consulta de familias - IntelligentStock	View families - IntelligentStock
+Consulta de familias	View families
+Estructura de permisos	Permission structure
+Se muestran las familias y patentes que no dependen de ninguna otra, con todo lo que contienen por debajo.	Families and permissions that do not depend on any other are shown, with everything they contain below them.
+Omitir vínculos de navegación.	Skip navigation links.
+[F] Administración del Sistema	[F] System administration
+[F] Gestión de Compras	[F] Purchasing management
+[F] Gestión de Insumos	[F] Ingredient management
+[F] Gestión de Permisos	[F] Permission management
+[F] Gestión de Proveedores	[F] Supplier management
+[F] Gestión de Recetas	[F] Recipe management
+[F] Gestión de Sensores	[F] Sensor management
+[F] Gestión de Usuarios	[F] User management
+[F] Reportes	[F] Reports
+Permisos por rol	Permissions by role
+Encargado	Manager
+Auditor	Auditor
+Tecnico	Technician
+Empleado	Employee
+Estructura asignada	Assigned structure
+Patente	Permission
+Familia	Family
+Gestión de Usuarios	User management
+Gestión de Permisos	Permission management
+Administración del Sistema	System administration
+Gestión de Insumos	Ingredient management
+Gestión de Proveedores	Supplier management
+Gestión de Recetas	Recipe management
+Gestión de Sensores	Sensor management
+Gestión de Compras	Purchasing management
+Reportes	Reports
+Patentes efectivas	Effective permissions
+Consultar una familia	View a family
+Estructura de la familia	Family structure
+Listado de componentes	Component list
+Id	Id
+Nombre	Name
+Tipo	Type
+Alta de sensor IoT - IntelligentStock	Add IoT sensor - IntelligentStock
+Alta de sensor IoT	Add IoT sensor
+La dirección MAC no se puede repetir entre dispositivos activos.	The MAC address cannot be repeated among active devices.
+Dirección MAC (*)	MAC address (*)
+La dirección MAC es obligatoria.	The MAC address is required.
+La dirección MAC tiene que tener 12 dígitos hexadecimales, por ejemplo 00:1A:2B:3C:4D:5E.	The MAC address must have 12 hexadecimal digits, for example 00:1A:2B:3C:4D:5E.
+Modelo	Model
+Temperatura máxima permitida (°C) (*)	Maximum allowed temperature (°C) (*)
+La temperatura máxima permitida es obligatoria.	The maximum allowed temperature is required.
+Por encima de este valor el sensor genera una alerta. En un freezer es negativa (por ejemplo, -15).	Above this value the sensor raises an alert. In a freezer it is negative (for example, -15).
+Procesar alerta térmica IoT - IntelligentStock	Process IoT temperature alert - IntelligentStock
+Procesar alerta térmica IoT	Process IoT temperature alert
+Las alertas las genera el sistema externo de telemetría; acá se resuelven.	Alerts are generated by the external telemetry system; they are resolved here.
+Alerta a procesar (*)	Alert to process (*)
+(no hay alertas abiertas)	(no open alerts)
+Elija la alerta a procesar.	Choose the alert to process.
+Nuevo estado (*)	New status (*)
+Pendiente	Pending
+En revisión	Under review
+Resuelta	Resolved
+Descartada	Dismissed
+Observaciones (*)	Notes (*)
+Indique la acción correctiva realizada.	Describe the corrective action taken.
+Alertas registradas	Recorded alerts
+Código	Code
+Sensor	Sensor
+Fecha y hora	Date and time
+Temperatura alcanzada	Temperature reached
+Estado	Status
+No hay registros para mostrar.	There are no records to show.
+Alta de usuario - IntelligentStock	Add user - IntelligentStock
+DNI (*)	ID number (*)
+El DNI es obligatorio.	The ID number is required.
+El DNI debe tener 7 u 8 dígitos, sin puntos.	The ID number must have 7 or 8 digits, without dots.
+Nombre (*)	First name (*)
+El nombre es obligatorio.	The first name is required.
+Apellido (*)	Last name (*)
+El apellido es obligatorio.	The last name is required.
+Fecha de nacimiento (*)	Date of birth (*)
+La fecha de nacimiento es obligatoria.	The date of birth is required.
+Correo electrónico (*)	Email (*)
+El correo electrónico es obligatorio.	The email is required.
+El correo debe tener texto antes de la @, y texto con un punto (el dominio) después de la @.	The email must have text before the @, and text with a dot (the domain) after the @.
+Teléfono	Phone
+Rol (*)	Role (*)
+El rol define las familias y patentes que va a tener el usuario.	The role defines the families and permissions the user will have.
+Nombre de usuario (*)	Username (*)
+El nombre de usuario es obligatorio.	The username is required.
+Contraseña (*)	Password (*)
+La contraseña es obligatoria.	The password is required.
+La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula y un número.	The password must have at least 8 characters, with an uppercase letter, a lowercase letter and a number.
+Mínimo 8 caracteres, con mayúscula, minúscula y número.	At least 8 characters, with uppercase, lowercase and a number.
+Repetir contraseña (*)	Repeat password (*)
+Debe repetir la contraseña.	You must repeat the password.
+Las contraseñas no coinciden.	The passwords do not match.
+Permisos que otorga el rol seleccionado	Permissions granted by the selected role
+Bienvenido, Admin (WebMaster)	Welcome, Admin (WebMaster)
+Limpiar	Clear
+Consulta de usuarios - IntelligentStock	View users - IntelligentStock
+Consulta de usuarios	View users
+Filtros	Filters
+DNI, usuario, nombre o correo	ID number, username, name or email
+Rol	Role
+(todos)	(all)
+Activo	Active
+Bloqueado	Blocked
+Inactivo	Inactive
+Buscar	Search
+1 usuario encontrado.	1 user found.
+DNI	ID number
+Usuario	User
+Apellido y nombre	Last and first name
+Correo	Email
+Intentos fallidos	Failed attempts
+Sistema, Admin	Sistema, Admin
+admin@intelligentstock.com	admin@intelligentstock.com
+Alta de insumo - IntelligentStock	Add ingredient - IntelligentStock
+Descripción	Description
+Unidad de medida (*)	Unit of measure (*)
+La unidad de medida es obligatoria.	The unit of measure is required.
+Por ejemplo kg, g, lt, ml o unidad.	For example kg, g, lt, ml or unit.
+Stock inicial (*)	Initial stock (*)
+El stock inicial es obligatorio (puede ser 0).	The initial stock is required (it can be 0).
+Stock mínimo (*)	Minimum stock (*)
+El stock mínimo es obligatorio.	The minimum stock is required.
+Precio unitario ($) (*)	Unit price ($) (*)
+El precio unitario es obligatorio.	The unit price is required.
+Costo de una unidad de medida (por ejemplo, de 1 kg).	Cost of one unit of measure (for example, of 1 kg).
+Días de vida útil	Shelf life (days)
+Generar orden de compra - IntelligentStock	Generate purchase order - IntelligentStock
+Falló la ejecución del servicio de predicción de ML.NET. Se han producido uno o varios errores. [#ERR005]	The ML.NET prediction service failed. One or more errors occurred. [#ERR005]
+La sugerencia de cantidades sale del módulo de predicción de demanda.	Suggested quantities come from the demand prediction module.
+Proveedor (*)	Supplier (*)
+(seleccione)	(select)
+a (CUIT 12-34567890-3)	a (CUIT 12-34567890-3)
+Fecha de la orden	Order date
+No hay cantidades sugeridas para mostrar.	There are no suggested quantities to show.
+Generar orden	Generate order
+Alta de familia - IntelligentStock	Add family - IntelligentStock
+Familias	Families
+Roles	Roles
+Una	A
+familia	family
+agrupa patentes y otras familias. Las	groups permissions and other families. The
+patentes	permissions
+son los permisos individuales sobre cada funcionalidad del sistema: vienen definidas con la instalación y no se dan de alta desde acá.	are the individual rights over each feature of the system: they come defined with the installation and are not created here.
+Nombre de la familia (*)	Family name (*)
+Componentes que va a contener	Components it will contain
+[Familia] Administración del Sistema	[Family] System administration
+[Familia] Gestión de Compras	[Family] Purchasing management
+[Familia] Gestión de Insumos	[Family] Ingredient management
+[Familia] Gestión de Permisos	[Family] Permission management
+[Familia] Gestión de Proveedores	[Family] Supplier management
+[Familia] Gestión de Recetas	[Family] Recipe management
+[Familia] Gestión de Sensores	[Family] Sensor management
+[Familia] Gestión de Usuarios	[Family] User management
+[Familia] Reportes	[Family] Reports
+Composición de la familia	Family composition
+Todavía no se eligió ningún componente.	No component has been chosen yet.
+Permisos efectivos	Effective permissions
+Sin permisos.	No permissions.
+Un	A
+rol	role
+es un perfil del sistema (por ejemplo Encargado o Auditor). Se le asignan familias y patentes exactamente igual que a una familia: de ahí en más, cualquier usuario con ese rol tiene esos permisos.	is a system profile (for example Manager or Auditor). Families and permissions are assigned to it exactly as to a family: from then on, every user with that role has those permissions.
+Nombre del rol (*)	Role name (*)
+Familias y patentes que va a otorgar	Families and permissions it will grant
+Composición del rol	Role composition
+Consulta de insumos - IntelligentStock	View ingredients - IntelligentStock
+Consulta de insumos	View ingredients
+Código, nombre o descripción	Code, name or description
+Solo insumos en su stock mínimo o por debajo	Only ingredients at or below their minimum stock
+3 insumos encontrados.	3 ingredients found.
+Unidad	Unit
+Stock	Stock
+Stock mínimo	Minimum stock
+Precio unitario	Unit price
+Vida útil	Shelf life
+Masa	Dough
+Una masa	A dough
+kg	kg
+PRECAUCIÓN	CAUTION
+1000 días	1000 days
+Queso	Cheese
+Queso para la pizza	Cheese for the pizza
+1 días	1 days
+Salame rojo	Red salami
+El ajuste suma (incremento) o resta (decremento) la cantidad al stock físico del insumo.	The adjustment adds (increase) or subtracts (decrease) the quantity from the ingredient's physical stock.
+Insumo (*)	Ingredient (*)
+Tipo de ajuste (*)	Adjustment type (*)
+Incremento	Increase
+Decremento	Decrease
+Cantidad (*)	Quantity (*)
+La cantidad es obligatoria.	The quantity is required.
+Motivo del ajuste (*)	Reason for the adjustment (*)
+El motivo es obligatorio.	The reason is required.
+Últimos ajustes registrados	Latest recorded adjustments
+Todavía no se registraron ajustes.	No adjustments have been recorded yet.
+Fecha	Date
+Insumo	Ingredient
+Cantidad	Quantity
+Motivo	Reason
+Registrar ajuste	Record adjustment
+CUIT (*)	CUIT (*)
+El CUIT es obligatorio.	The CUIT is required.
+El CUIT debe tener 11 dígitos, con o sin guiones.	The CUIT must have 11 digits, with or without dashes.
+Con o sin guiones, por ejemplo 20-12345678-6.	With or without dashes, for example 20-12345678-6.
+Razón social (*)	Company name (*)
+La razón social es obligatoria.	The company name is required.
+El teléfono solo puede contener números, espacios, guiones, paréntesis y el signo +.	The phone number can only contain numbers, spaces, dashes, parentheses and the + sign.
+El teléfono debe tener al menos 6 números.	The phone number must have at least 6 digits.
+Nombre de la receta (*)	Recipe name (*)
+El nombre de la receta es obligatorio.	The recipe name is required.
+Insumos de la receta	Recipe ingredients
+Elija el insumo en la lista (puede escribir parte del nombre para filtrarla), indique cuánto lleva una porción y presione "Agregar a la receta".	Choose the ingredient from the list (you can type part of the name to filter it), enter how much one portion takes and press "Add to recipe".
+Cantidad por porción	Quantity per portion
+Ingrese la cantidad del insumo.	Enter the ingredient quantity.
+En la unidad de medida del insumo (la que figura entre paréntesis en la lista).	In the ingredient's unit of measure (the one shown in parentheses in the list).
+Agregar a la receta	Add to recipe
+Todavía no se agregó ningún insumo.	No ingredient has been added yet.
+Solo se pueden anular órdenes en estado Pendiente. La orden anulada deja de contar como pedido en camino para la próxima orden predictiva.	Only orders in Pending status can be canceled. A canceled order no longer counts as an order on its way for the next predictive order.
+Orden de compra (*)	Purchase order (*)
+Motivo de la anulación (*)	Reason for canceling (*)
+Entre 5 y 200 caracteres. Queda registrado en la orden y en la bitácora.	Between 5 and 200 characters. It is saved in the order and in the event log.
+Insumos de la orden	Order ingredients
+Elija una orden para ver sus insumos.	Choose an order to see its ingredients.
+Importe estimado	Estimated amount
+Anular orden	Cancel order
+La orden elegida va a quedar Anulada y ya no se va a poder recibir. ¿Continuar?	The chosen order will be Canceled and can no longer be received. Continue?
+Copia de seguridad de la base de datos	Database backup
+Carpeta de destino (*)	Destination folder (*)
+La carpeta de destino es obligatoria.	The destination folder is required.
+El archivo lo escribe SQL Server. Se recomienda dejar la carpeta propuesta: el sistema le da permiso al servicio de SQL Server y después permite descargar la copia.	The file is written by SQL Server. Keeping the suggested folder is recommended: the system grants permission to the SQL Server service and then lets you download the copy.
+Generar copia de seguridad	Create backup
+Descargar el último archivo generado	Download the last file created
+Solo se dan de baja familias. Las patentes representan funcionalidades del sistema y no se eliminan.	Only families can be deleted. Permissions represent features of the system and are not deleted.
+Familia a eliminar	Family to delete
+Contenido de la familia	Family contents
+Eliminar familia	Delete family
+Se va a eliminar la familia y sus asignaciones. ¿Continuar?	The family and its assignments will be deleted. Continue?
+El rol	The role
+es parte del sistema y no se puede eliminar. Tampoco se puede eliminar el rol de la propia cuenta, ni un rol que todavía tenga usuarios asignados.	is part of the system and cannot be deleted. You also cannot delete the role of your own account, or a role that still has users assigned.
+Rol a eliminar	Role to delete
+Eliminar rol	Delete role
+Se va a eliminar el rol. ¿Continuar?	The role will be deleted. Continue?
+La baja es lógica. No se puede dar de baja un insumo que forme parte de una receta activa o de una orden de compra pendiente.	Deactivation is logical. An ingredient that is part of an active recipe or a pending purchase order cannot be deactivated.
+Mostrar también los dados de baja (para reactivarlos)	Also show deactivated ones (to reactivate them)
+No hay insumos activos para dar de baja.	There are no active ingredients to deactivate.
+Dar de baja	Deactivate
+¿Confirma la baja del insumo seleccionado?	Do you confirm deactivating the selected ingredient?
+La baja es lógica: el proveedor deja de estar disponible pero se conservan sus órdenes de compra.	Deactivation is logical: the supplier is no longer available but its purchase orders are kept.
+No hay proveedores activos para dar de baja.	There are no active suppliers to deactivate.
+CUIT	CUIT
+Razón social	Company name
+¿Confirma la baja del proveedor seleccionado?	Do you confirm deactivating the selected supplier?
+La baja es lógica: la receta deja de poder venderse pero se conserva su detalle.	Deactivation is logical: the recipe can no longer be sold but its details are kept.
+Mostrar también las dadas de baja (para reactivarlas)	Also show deactivated ones (to reactivate them)
+No hay recetas activas para dar de baja.	There are no active recipes to deactivate.
+Cantidad de insumos	Number of ingredients
+¿Confirma la baja de la receta seleccionada?	Do you confirm deactivating the selected recipe?
+Baja de sensor IoT	Deactivate IoT sensor
+La baja es lógica: el sensor deja de monitorear pero se conservan sus alertas. Un sensor con alertas sin resolver no se puede dar de baja.	Deactivation is logical: the sensor stops monitoring but its alerts are kept. A sensor with unresolved alerts cannot be deactivated.
+No hay sensores activos para dar de baja.	There are no active sensors to deactivate.
+MAC	MAC
+Temp. máxima	Max. temp.
+Alertas abiertas	Open alerts
+¿Confirma la baja del sensor seleccionado?	Do you confirm deactivating the selected sensor?
+La baja detiene los cobros futuros. El servicio sigue habilitado hasta el cierre del período ya pagado. Las suscripciones dadas de baja quedan en la lista con la fecha en que termina (o terminó) el servicio.	Canceling stops future charges. The service stays enabled until the end of the period already paid. Canceled subscriptions stay in the list with the date the service ends (or ended).
+No hay suscripciones registradas.	There are no recorded subscriptions.
+Plan	Plan
+Abono mensual	Monthly fee
+Token de pago	Payment token
+Vigencia	Valid until
+¿Confirma la baja de la suscripción seleccionada? Se detendrán los cobros.	Do you confirm canceling the selected subscription? Charges will stop.
+La baja es lógica: el usuario deja de poder iniciar sesión pero el registro se conserva para no perder la trazabilidad de la bitácora.	Deactivation is logical: the user can no longer sign in but the record is kept so the event log stays traceable.
+Mostrar también los usuarios dados de baja (para reactivarlos)	Also show deactivated users (to reactivate them)
+No hay usuarios en condiciones de ser dados de baja.	There are no users that can be deactivated.
+¿Confirma la baja del usuario seleccionado?	Do you confirm deactivating the selected user?
+Fecha desde	Date from
+Fecha hasta	Date to
+Acción o descripción	Action or description
+Filtrar	Filter
+Criticidad	Severity
+(todas)	(all)
+Informativa	Informational
+Advertencia	Warning
+Grave	Critical
+No se registraron eventos para los filtros aplicados.	No events were recorded for the applied filters.
+Hora	Time
+Acción	Action
+Se listan los usuarios activos que no bloqueó un administrador (salvo la propia cuenta). Elija uno y presione Bloquear. Si el usuario tiene la sesión abierta, se le cierra. Un bloqueo hecho desde acá no se puede levantar con "¿Olvidaste tu contraseña?": solo lo levanta un administrador desde Desbloquear usuario. Por eso también aparecen las cuentas bloqueadas por intentos fallidos: al bloquearlas acá, el bloqueo pasa a ser manual.	Active users not blocked by an administrator are listed (except your own account). Choose one and press Block. If the user has an open session, it is closed. A block made here cannot be lifted with "Forgot your password?": only an administrator can lift it from Unblock user. That is why accounts blocked for failed attempts also appear: blocking them here makes the block manual.
+No hay usuarios en condiciones de ser bloqueados.	There are no users that can be blocked.
+Bloquear	Block
+¿Confirma el bloqueo del usuario seleccionado?	Do you confirm blocking the selected user?
+Contraseña actual (*)	Current password (*)
+Ingrese la contraseña actual.	Enter the current password.
+Contraseña nueva (*)	New password (*)
+Ingrese la contraseña nueva.	Enter the new password.
+Repetir contraseña nueva (*)	Repeat new password (*)
+Repita la contraseña nueva.	Repeat the new password.
+No hay componentes cargados.	No components have been loaded.
+Consulta de patentes	View permissions
+Cada patente habilita un formulario del sistema. La columna	Each permission enables a form of the system. The column
+muestra en qué agrupaciones está incluida y la columna	shows which groups include it and the column
+qué perfiles terminan teniéndola.	which profiles end up having it.
+Buscar por nombre o Id	Search by name or Id
+No se encontraron patentes.	No permissions were found.
+Funcionalidad	Feature
+Familias que la contienen	Families that contain it
+Roles que la tienen	Roles that have it
+Consulta de proveedores	View suppliers
+CUIT, nombre o razón social	CUIT, name or company name
+Consulta de recetas	View recipes
+Código o nombre de la receta	Recipe code or name
+Activa	Active
+Inactiva	Inactive
+Insumos	Ingredients
+Consulta de sensores IoT	View IoT sensors
+Código, MAC o modelo	Code, MAC or model
+Última alerta	Last alert
+No se encontraron usuarios.	No users were found.
+Consulta de órdenes de compra	View purchase orders
+Busque las órdenes por proveedor, estado o fechas. Los filtros vacíos no se tienen en cuenta. Con "Ver detalle" se muestran los insumos de la orden.	Search orders by supplier, status or dates. Empty filters are ignored. "View details" shows the ingredients of the order.
+Proveedor	Supplier
+Recibida	Received
+Anulada	Canceled
+No hay órdenes de compra para mostrar.	There are no purchase orders to show.
+Número	Number
+Comprobante / motivo	Receipt / reason
+Ítems	Items
+Ver detalle	View details
+La orden no tiene insumos.	The order has no ingredients.
+Al desbloquear también se pone en cero el contador de intentos fallidos, para que el usuario no vuelva a quedar bloqueado al primer error.	Unblocking also resets the failed-attempt counter, so the user is not blocked again at the first mistake.
+No hay usuarios bloqueados.	There are no blocked users.
+Motivo del bloqueo	Reason for the block
+Desbloquear	Unblock
+¿Confirma el desbloqueo del usuario seleccionado?	Do you confirm unblocking the selected user?
+Elija la receta vendida y la cantidad: la grilla muestra cuánto se descuenta de cada insumo y cómo queda el stock antes de confirmar. Si a algún insumo no le alcanza, no se descuenta nada.	Choose the recipe sold and the quantity: the grid shows how much is deducted from each ingredient and how the stock ends up before you confirm. If any ingredient falls short, nothing is deducted.
+Receta vendida (*)	Recipe sold (*)
+Cantidad vendida (*)	Quantity sold (*)
+Hasta 10000 unidades, con hasta dos decimales (media porción: 0,5).	Up to 10000 units, with up to two decimals (half portion: 0.5).
+Fecha de la venta (*)	Sale date (*)
+Hoy o hasta un año atrás.	Today or up to one year ago.
+Cómo queda el stock	How the stock ends up
+Elija la receta y la cantidad vendida.	Choose the recipe and the quantity sold.
+Consumo unitario	Consumption per unit
+Consumo total	Total consumption
+Stock actual	Current stock
+Stock resultante	Resulting stock
+Descontar stock	Deduct stock
+Se va a registrar la venta y descontar del stock los insumos de la receta. ¿Continuar?	The sale will be recorded and the recipe's ingredients will be deducted from stock. Continue?
+Elija el reporte, el período (hasta un año) y el formato. El archivo se genera en el servidor (carpeta App_Data\\Reportes) y se descarga al terminar.	Choose the report, the period (up to one year) and the format. The file is generated on the server (App_Data\\Reportes folder) and downloaded when it is ready.
+Formato (*)	Format (*)
+PDF para imprimir, Excel para trabajar los números y CSV para otros sistemas.	PDF to print, Excel to work with the numbers and CSV for other systems.
+Qué incluye cada reporte	What each report includes
+Lo que consumieron las ventas de cada insumo, el promedio diario, el valorizado y el stock actual.	What the sales consumed of each ingredient, the daily average, the value and the current stock.
+Unidades vendidas y cantidad de operaciones de venta de cada receta.	Units sold and number of sales of each recipe.
+Órdenes pendientes, recibidas y anuladas de cada proveedor, con el importe recibido.	Pending, received and canceled orders of each supplier, with the amount received.
+Las alertas de temperatura de los sensores en el período.	The temperature alerts of the sensors in the period.
+Los ajustes manuales de stock registrados, con el usuario y el motivo.	The manual stock adjustments recorded, with the user and the reason.
+El sistema estima con ML.NET cuánto se va a consumir de cada insumo en los próximos días, a partir de las ventas registradas, y propone lo que hace falta pedir. Elija el proveedor y la fecha, revise la propuesta y genere la orden.	The system uses ML.NET to estimate how much of each ingredient will be used in the coming days, based on the recorded sales, and proposes what needs to be ordered. Choose the supplier and the date, review the proposal and generate the order.
+Solo figuran los proveedores activos.	Only active suppliers are listed.
+Fecha de la orden (*)	Order date (*)
+Desde hoy y hasta 60 días adelante.	From today up to 60 days ahead.
+Propuesta de compra	Purchase proposal
+Consumo previsto	Expected consumption
+Ya pedido	Already ordered
+Cantidad sugerida	Suggested quantity
+Se va a generar una orden de compra Pendiente con las cantidades sugeridas. ¿Continuar?	A Pending purchase order will be generated with the suggested quantities. Continue?
+Recuperar contraseña	Recover password
+Ingrese el correo electrónico de su cuenta. Le vamos a enviar un enlace para definir una contraseña nueva, sin necesidad de que se la restablezca un administrador.	Enter your account's email. We will send you a link to set a new password, without needing an administrator to reset it.
+Correo electrónico	Email
+Debe ingresar el correo electrónico.	Enter the email.
+Enviar enlace	Send link
+Volver al inicio de sesión	Back to sign in
+Nueva contraseña	New password
+Debe tener al menos 8 caracteres, con una mayúscula, una minúscula y un número.	It must have at least 8 characters, with an uppercase letter, a lowercase letter and a number.
+Debe ingresar la nueva contraseña.	Enter the new password.
+Repetir contraseña	Repeat password
+Debe repetir la nueva contraseña.	Repeat the new password.
+Guardar contraseña	Save password
+Somos un equipo de desarrollo de Lomas de Zamora que conoce de cerca el trabajo en una cocina: el insumo que se termina en medio del servicio, la compra hecha a ojo y la cámara que se apagó de noche. IntelligentStock nació para resolver esos problemas con información confiable y fácil de usar, desde la computadora del local o el celular.	We are a development team from Lomas de Zamora that knows kitchen work up close: the ingredient that runs out in the middle of service, the purchase made by guesswork and the cold room that shut down overnight. IntelligentStock was born to solve those problems with reliable, easy-to-use information, from the venue's computer or a phone.
+Familia a modificar	Family to edit
+Guardar nombre	Save name
+Los cambios de composición se guardan al instante: no hace falta volver a presionar "Guardar nombre". Si un permiso ya está incluido a través de otra familia, el sistema lo rechaza para no repetirlo.	Composition changes are saved instantly: there is no need to press "Save name" again. If a permission is already included through another family, the system rejects it so it is not repeated.
+Disponibles	Available
+Contenidos en la familia	Contained in the family
+Árbol resultante	Resulting tree
+Rol a modificar	Role to edit
+Los cambios de composición se guardan al instante. No se puede editar la composición del rol de su propia cuenta.	Composition changes are saved instantly. You cannot edit the composition of your own account's role.
+Otorgados por el rol	Granted by the role
+Insumo a modificar	Ingredient to edit
+El stock no se modifica desde acá: se corrige con un ajuste de stock.	Stock is not changed here: it is corrected with a stock adjustment.
+Guardar cambios	Save changes
+Proveedor a modificar	Supplier to edit
+El CUIT es la clave del proveedor y no se puede modificar.	The CUIT is the supplier's key and cannot be changed.
+Receta a modificar	Recipe to edit
+La receta no tiene insumos.	The recipe has no ingredients.
+Modificación de sensor IoT	Edit IoT sensor
+Sensor a modificar	Sensor to edit
+Buscar usuario	Search user
+Usuario a modificar	User to edit
+El DNI es la clave del registro y no se puede modificar.	The ID number is the record's key and cannot be changed.
+Cambiar el rol cambia todos los permisos del usuario.	Changing the role changes all of the user's permissions.
+No puede cambiar su propio rol. Pídaselo a otro usuario con perfil de administración.	You cannot change your own role. Ask another user with an administration profile.
+Restablecer contraseña	Reset password
+Para cuando el usuario olvidó su contraseña y no puede recuperarla desde el inicio de sesión: se le asigna una contraseña nueva acá y se le avisa por correo electrónico. Conviene que la cambie desde Cambiar contraseña al ingresar.	For when the user forgot the password and cannot recover it from the sign-in page: a new password is assigned here and the user is notified by email. They should change it from Change password when they sign in.
+La contraseña nueva es obligatoria.	The new password is required.
+¿Confirma que desea restablecer la contraseña de este usuario?	Do you confirm resetting this user's password?
+Procesar alerta	Process alert
+Exportar alertas (XML)	Export alerts (XML)
+Elija la orden pendiente que llegó y cargue los datos de la factura. Al registrarla, la orden pasa a Recibida y lo pedido ingresa al stock.	Choose the pending order that arrived and enter the invoice details. When it is recorded, the order becomes Received and what was ordered goes into stock.
+Número de comprobante (*)	Receipt number (*)
+No se puede repetir para el mismo proveedor.	It cannot be repeated for the same supplier.
+Fecha del comprobante (*)	Receipt date (*)
+Entre la fecha de la orden y hoy.	Between the order date and today.
+Importe total (*)	Total amount (*)
+Se propone el importe estimado de la orden: corríjalo con el total de la factura.	The order's estimated amount is suggested: correct it with the invoice total.
+Insumos que ingresan al stock	Ingredients that go into stock
+Cantidad recibida	Quantity received
+Stock antes	Stock before
+Stock después	Stock after
+Registrar factura	Record invoice
+Se va a registrar la factura, la orden va a quedar Recibida y lo pedido va a ingresar al stock. ¿Continuar?	The invoice will be recorded, the order will become Received and what was ordered will go into stock. Continue?
+Inconsistencia en la base de datos	Database inconsistency
+Se detectó una diferencia entre los dígitos verificadores almacenados y los recalculados. A continuación se indica la ubicación exacta de cada inconsistencia.	A difference was found between the stored check digits and the recalculated ones. The exact location of each inconsistency is shown below.
+No se detectaron inconsistencias.	No inconsistencies were found.
+Tabla	Table
+Fila	Row
+Clave del registro	Record key
+Columna	Column
+Detalle	Details
+Opciones disponibles:	Available options:
+Cancelar y volver al inicio de sesión	Cancel and go back to sign in
+Recalcular dígito verificador	Recalculate check digits
+Se van a recalcular los dígitos verificadores ignorando la inconsistencia detectada. ¿Continuar?	The check digits will be recalculated, ignoring the inconsistency found. Continue?
+Restaurar la base de datos	Restore the database
+Cancelar:	Cancel:
+cierra la sesión y vuelve al inicio de sesión sin tocar nada.	closes the session and goes back to sign in without changing anything.
+Recalcular:	Recalculate:
+vuelve a calcular los dígitos sobre los datos actuales. El sistema sigue funcionando con normalidad, pero la alteración queda aceptada como válida.	recalculates the digits over the current data. The system keeps working normally, but the alteration is accepted as valid.
+Restaurar:	Restore:
+lleva la base a un estado anterior a partir de un archivo .bak o de un script .sql.	takes the database back to an earlier state from a .bak file or a .sql script.
+Base recién creada:	Newly created database:
+todas sus tablas aparecen como "Sin dígitos verificadores". En ese caso corresponde Recalcular, para calcularlos por primera vez. Si aparecen solo algunas tablas, alguien borró sus dígitos: conviene revisar los datos antes de recalcular.	all its tables appear as "No check digits". In that case, use Recalculate to calculate them for the first time. If only some tables appear, someone deleted their digits: check the data before recalculating.
+Restaurar base de datos	Restore database
+Archivo de restauración (.bak o .sql) (*)	Restore file (.bak or .sql) (*)
+Se admite una copia de seguridad de SQL Server (	A SQL Server backup (
+.bak	.bak
+) o un script de recreación (	) or a re-creation script (
+.sql	.sql
+Restaurar	Restore
+La restauración reemplaza los datos actuales y cierra la sesión. ¿Continuar?	Restoring replaces the current data and closes the session. Continue?
+- IntelligentStock	- IntelligentStock
+Escriba parte del nombre para filtrar la lista...	Type part of the name to filter the list...
+Sensor IoT	IoT sensor
+Modelo:	Model:
+MAC:	MAC:
+Temp. límite:	Temp. limit:
+Estado:	Status:
+Orden recibida	Order received
+Comprobante	Receipt
+Importe de la factura	Invoice amount
+Insumos ingresados	Ingredients added
+Venta registrada	Sale recorded
+Insumos descontados	Ingredients deducted
+En su mínimo o por debajo	At or below their minimum
+Insumos que se descuentan	Ingredients to deduct
+No alcanzan	Falling short
+Quedarían en su mínimo	Would reach their minimum
+Orden generada	Order generated
+Insumos pedidos	Ingredients ordered
+Insumos para pedir	Ingredients to order
+Días proyectados	Days projected
+Días de ventas analizados	Days of sales analyzed
+Órdenes encontradas	Orders found
+Pendientes	Pending
+Recibidas	Received
+Anuladas	Canceled
+Hola,	Hi,
+Ingresó como	You are signed in as
+; sus tareas están en el menú de la izquierda.	; your tasks are in the menu on the left.
+Baja de familia - IntelligentStock	Delete family - IntelligentStock
+(seleccione una familia)	(select a family)
+(seleccione un rol)	(select a role)
+Copia de seguridad - IntelligentStock	Backup - IntelligentStock
+Copia de seguridad	Backup
+Bitácora de eventos - IntelligentStock	Event log - IntelligentStock
+Restore	Restore
+Acceso denegado	Access denied
+Acceso denegado a servicio web	Web service access denied
+Ajuste de stock	Stock adjustment
+Alerta térmica	Temperature alert
+Alerta térmica no registrada	Temperature alert not recorded
+Alta de rol	Role added
+Anulación de orden de compra	Purchase order canceled
+Asignar permiso a rol	Permission assigned to role
+BackUp de base de datos	Database backup
+Baja de rol	Role deleted
+Baja de suscripción sin aviso a la pasarela	Subscription canceled without notifying the gateway
+Bloqueo de usuario	User blocked
+Cambio de contraseña	Password changed
+Cambio de contraseña fallido	Password change failed
+Cierre de sesión	Sign-out
+Cierre de sesión forzado	Forced sign-out
+Desbloqueo de usuario	User unblocked
+Exportación de alertas	Alert export
+Exportación de reporte gerencial	Management report export
+Factura de proveedor	Supplier invoice
+Generación de orden de compra	Purchase order generated
+Inicio de sesión fallido	Failed sign-in
+Lectura de sensor no registrado	Reading from an unregistered sensor
+Modificación de rol	Role edited
+Operación detenida por inconsistencia	Operation stopped due to inconsistency
+Pago rechazado	Payment declined
+Procesamiento de alerta térmica	Temperature alert processed
+Quitar permiso de rol	Permission removed from role
+Reactivación de insumo	Ingredient reactivated
+Reactivación de proveedor	Supplier reactivated
+Reactivación de receta	Recipe reactivated
+Reactivación de sensor	Sensor reactivated
+Reactivación de usuario	User reactivated
+Recuperación de contraseña	Password recovery
+Recálculo de dígito verificador	Check digit recalculation
+Recálculo de dígitos fallido	Check digit recalculation failed
+Reparación de dígito verificador	Check digit repair
+Restore de base de datos	Database restore
+Solicitud rechazada por servicio web	Request rejected by web service
+Venta	Sale
+Reparación del dígito verificador - IntelligentStock	Check Digit Repair - IntelligentStock
+Reparación del dígito verificador	Verifier Digit Repair
+Se encontraron 4 inconsistencias. Se detectó una falla de integridad en el cálculo de los dígitos verificadores. [#ERR007]	4 Inconsistencies were found. An integrity failure was detected in the calculation of the checker digits. [#ERR007]
+DVH	DVH
+Celda alterada	Altered cell
+Se alteró el valor de la columna DVH en la fila 3 [dni=12345678] de la tabla Usuario.	The value of the DVH column in row 3 [dni=12345678] of the User table was altered.
+nombre	name
+Se alteró el valor de la columna nombre en la fila 3 [dni=12345678] de la tabla Usuario.	The value of the name column in row 3 [dni=12345678] of the User table was altered.
+stock	stock
+Se alteró el valor de la columna stock en la fila 2 [id_insumo=2] de la tabla Insumo.	The value of the stock column in row 2 [input_id =2] of the input table was altered.
+cantidad	amount
+Se alteró el valor de la columna cantidad en la fila 2 [id_ordenCompra=2 | id_insumo=1] de la tabla DetalleOrdenCompra.	The value of the quantity column in row 2 [id_ordenCompra =2 | id_insumo =1] of the DetalleOrdenCompra table has been altered.
+Restaurar base de datos - IntelligentStock	Restore Database - IntelligentStock
+Se recalcularon los dígitos verificadores. El sistema vuelve a funcionar con normalidad.	Verifier digits were recalculated. The system is back to normal.
+Continuar al panel principal	Continue to Main Dashboard
+Las credenciales de acceso ingresadas son incorrectas. [#ERR003]	The login credentials entered are incorrect. [#ERR003]
+5 usuarios encontrados.	users found.
+La cuenta de usuario no se encuentra activa. Se bloqueó por superar los intentos permitidos: use "¿Olvidaste tu contraseña?" para definir una contraseña nueva o comuníquese con el administrador del sistema. [#ERR004]	User account is not active. Blocked for exceeding allowed attempts: use "Forgot your password?" to set a new password or contact your system administrator. [#ERR004]
+Desbloquear usuario - IntelligentStock	Unlock user - IntelligentStock
+Seleccionar	Select
+El usuario Marty quedó desbloqueado.	User Marty has been unlocked.
+Se encontraron 5 inconsistencias. Se detectó una falla de integridad en el cálculo de los dígitos verificadores. [#ERR007]	5 Inconsistencies were found. An integrity failure was detected in the calculation of the checker digits. [#ERR007]
+(indeterminada)	unspecified
+Fila alterada	Row Altered
+Se alteró la fila 1 [dni=11111111] de la tabla Usuario. No fue posible aislar una única columna.	Row 1 [dni= 11111111] of the User table has been altered. It was not possible to isolate a single column.
+Se alteró la fila 2 [dni=11111112] de la tabla Usuario. No fue posible aislar una única columna.	Row 2 [dni= 11111112] of the User table has been altered. It was not possible to isolate a single column.
+Se alteró la fila 3 [dni=12345678] de la tabla Usuario. No fue posible aislar una única columna.	Row 3 [dni= 12345678] of the User table has been altered. It was not possible to isolate a single column.
+Se alteró la fila 4 [dni=12453464] de la tabla Usuario. No fue posible aislar una única columna.	Row 4 [dni= 12453464] of the User table has been altered. It was not possible to isolate a single column.
+Se alteró la fila 5 [dni=89999999] de la tabla Usuario. No fue posible aislar una única columna.	Row 5 [dni= 89999999] of the User table has been altered. It was not possible to isolate a single column.
+Modificación de usuario - IntelligentStock	User Modification - IntelligentStock
+La contraseña se restableció correctamente. No se pudo avisar por correo (el envío de correo no está configurado o falló): comuníquele la contraseña nueva al usuario.	Password reset successfully. Could not notify by mail (mail sending is not configured or failed): please communicate the new password to the user.
+El usuario USER se dio de alta correctamente.	User USER was successfully registered.
+Mostrando los últimos 200 eventos registrados (187 encontrados).	Showing the last 200 recorded events (187 found).
+Consulta de proveedores - IntelligentStock	Supplier Inquiry - IntelligentStock
+2 proveedores encontrados.	2 suppliers found.
+ÓPTIMO	OPTIMUM
+Salame	Salami
+822 días	822 days
+El perfil del usuario carece de los permisos necesarios para la funcionalidad. Funcionalidad: Bitácora de eventos. [#ERR009]	The user profile lacks the necessary permissions for the functionality. Functionality: Log of events. [#ERR009]
+USER	USER
+Mostrando los últimos 200 eventos registrados (192 encontrados).	Showing the last 200 recorded events (192 found).
+No se encontraron registros que coincidan con los filtros de búsqueda aplicados. [#ERR013]	No records matching the applied search filters were found. [#ERR013]
+192 eventos encontrados.	events found.
+1 evento encontrado.	1 event found.
+La cantidad tiene que estar entre 0,01 y 99.999.999,99.	The quantity must be between 0.01 and 99,999,999.99.
+La cantidad admite hasta dos decimales.	The quantity allows up to two decimal places.
+El motivo no puede superar los 200 caracteres.	The reason cannot exceed 200 characters.
+La descripción no puede superar los 500 caracteres.	The description cannot exceed 500 characters.
+El stock inicial tiene que estar entre 0 y 99.999.999,99.	The initial stock must be between 0 and 99,999,999.99.
+El stock inicial admite hasta dos decimales.	The initial stock allows up to two decimal places.
+El stock mínimo tiene que estar entre 0 y 99.999.999,99.	The minimum stock must be between 0 and 99,999,999.99.
+El stock mínimo admite hasta dos decimales.	The minimum stock allows up to two decimal places.
+El precio unitario tiene que estar entre 0 y 99.999.999,99.	The unit price must be between 0 and 99,999,999.99.
+El precio unitario admite hasta dos decimales.	The unit price allows up to two decimal places.
+Los días de vida útil tienen que estar entre 1 y 36.500.	The shelf life must be between 1 and 36,500 days.
+La cantidad tiene que estar entre 0,01 y 999.999,99.	The quantity must be between 0.01 and 999,999.99.
+La temperatura máxima permitida tiene que estar entre -60 °C y 60 °C.	The maximum allowed temperature must be between -60 °C and 60 °C.
+La temperatura admite un solo decimal (por ejemplo 4,5).	The temperature allows a single decimal place (for example 4.5).
+El token de pago tiene que empezar con tok_ seguido de 16 a 60 letras o números.	The payment token must start with tok_ followed by 16 to 60 letters or numbers.
+La fecha de inicio tiene que estar entre hoy y un año adelante.	The start date must be between today and one year from now.
+El DNI tiene que estar entre 1.000.000 y 99.999.999.	The ID number must be between 1,000,000 and 99,999,999.
+El nombre solo puede tener letras, espacios, apóstrofos y guiones.	The first name can only contain letters, spaces, apostrophes and hyphens.
+El apellido solo puede tener letras, espacios, apóstrofos y guiones.	The last name can only contain letters, spaces, apostrophes and hyphens.
+La fecha de nacimiento tiene que corresponder a una edad de entre 18 y 100 años.	The date of birth must correspond to an age between 18 and 100 years.
+El nombre de usuario tiene que tener entre 4 y 50 caracteres, sin espacios.	The username must be between 4 and 50 characters long, with no spaces.
+La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula, un número y un carácter especial (por ejemplo !, #, $, %, * o @).	The password must be at least 8 characters long, with an uppercase letter, a lowercase letter, a number and a special character (for example !, #, $, %, * or @).
+Mínimo 8 caracteres, con mayúscula, minúscula, número y un carácter especial (por ejemplo !, #, $, %, * o @).	At least 8 characters, with uppercase, lowercase, a number and a special character (for example !, #, $, %, * or @).
+Elija la orden de compra.	Choose the purchase order.
+Ingrese el motivo de la anulación.	Enter the reason for the cancellation.
+El motivo tiene que tener entre 5 y 200 caracteres.	The reason must be between 5 and 200 characters long.
+Ingrese una fecha entre el 01/01/2000 y el 31/12/2099.	Enter a date between 01/01/2000 and 12/31/2099.
+La fecha hasta no puede ser anterior a la fecha desde.	The end date cannot be earlier than the start date.
+Elija la receta vendida.	Choose the recipe sold.
+Ingrese la cantidad vendida.	Enter the quantity sold.
+La cantidad vendida tiene que estar entre 0,01 y 10.000.	The quantity sold must be between 0.01 and 10,000.
+La cantidad vendida admite hasta dos decimales.	The quantity sold allows up to two decimal places.
+Ingrese la fecha de la venta.	Enter the date of the sale.
+La fecha de la venta tiene que ser de hoy o de hasta un año atrás.	The date of the sale must be today or up to one year ago.
+Ingrese la fecha desde.	Enter the start date.
+La fecha desde no puede ser posterior a hoy.	The start date cannot be later than today.
+Ingrese la fecha hasta.	Enter the end date.
+La fecha hasta no puede ser posterior a hoy.	The end date cannot be later than today.
+Elija el proveedor.	Choose the supplier.
+Ingrese la fecha de la orden.	Enter the order date.
+La fecha de la orden tiene que estar entre hoy y 60 días adelante.	The order date must be between today and 60 days from now.
+Las observaciones no pueden superar los 500 caracteres.	The observations cannot exceed 500 characters.
+Ingrese el número de comprobante.	Enter the invoice number.
+El comprobante admite letras, números, espacios, guiones o barras (por ejemplo A-0001-00001234).	The invoice number allows letters, numbers, spaces, hyphens or slashes (for example A-0001-00001234).
+Ingrese la fecha del comprobante.	Enter the invoice date.
+La fecha del comprobante no puede ser posterior a hoy.	The invoice date cannot be later than today.
+Ingrese el importe total.	Enter the total amount.
+El importe total tiene que estar entre 0,01 y 9.999.999.999,99.	The total amount must be between 0.01 and 9,999,999,999.99.
+El importe total admite hasta dos decimales.	The total amount allows up to two decimal places.
+Debe tener al menos 8 caracteres, con una mayúscula, una minúscula, un número y un carácter especial (por ejemplo !, #, $, %, * o @).	It must be at least 8 characters long, with an uppercase letter, a lowercase letter, a number and a special character (for example !, #, $, %, * or @).
+Meses que paga por adelantado (*)	Months paid in advance (*)
+Fecha de inicio (*)	Start date (*)
+Ingrese la fecha de inicio.	Enter the start date.
+Razón social o apellido y nombre (*)	Company name or full name (*)
+Ingrese la razón social o el apellido y nombre.	Enter the company name or the full name.
+Condición frente al IVA (*)	VAT status (*)
+CUIT (o DNI si es consumidor final) (*)	CUIT tax ID (or national ID if final consumer) (*)
+Ingrese el CUIT o el DNI.	Enter the CUIT tax ID or the national ID.
+Escriba un CUIT de 11 números (con o sin guiones) o un DNI de 7 u 8 números.	Enter an 11-digit CUIT (with or without hyphens) or a 7 or 8-digit national ID.
+Domicilio	Address
+Correo para recibir la factura (*)	Email to receive the invoice (*)
+Número de tarjeta (*)	Card number (*)
+Ingrese el número de la tarjeta.	Enter the card number.
+El número de tarjeta tiene entre 13 y 19 números (puede escribirlo con espacios).	The card number has between 13 and 19 digits (you can type it with spaces).
+Nombre del titular, como figura en la tarjeta (*)	Cardholder name, as shown on the card (*)
+Ingrese el nombre del titular.	Enter the cardholder name.
+El nombre del titular solo puede tener letras, espacios, apóstrofos y guiones.	The cardholder name can only contain letters, spaces, apostrophes and hyphens.
+Vencimiento (*)	Expiration date (*)
+Ingrese el vencimiento.	Enter the expiration date.
+Escriba el mes y el año, por ejemplo 08/29.	Enter the month and year, for example 08/29.
+Código de seguridad (*)	Security code (*)
+Ingrese el código de seguridad.	Enter the security code.
+El código de seguridad tiene 3 o 4 números.	The security code has 3 or 4 digits.
+Cuotas sin interés (*)	Interest-free installments (*)
+Confirmar compra	Confirm purchase
+Descargar factura (PDF)	Download invoice (PDF)
+Reenviar por correo	Resend by email
+Volver al panel	Back to the dashboard
+Compra de un plan de IntelligentStock. Los precios están en pesos argentinos (ARS) y no incluyen IVA.	Purchase of an IntelligentStock plan. Prices are in Argentine pesos (ARS) and do not include VAT.
+1. Plan	1. Plan
+Pagando 3, 6 o 12 meses juntos hay descuento.	Paying 3, 6 or 12 months at once gets a discount.
+2. Datos de facturación	2. Billing information
+Responsable Inscripto y Monotributista reciben factura A; Exento y Consumidor Final, factura B.	Registered VAT taxpayers and Monotributistas receive an A invoice; VAT-exempt customers and final consumers, a B invoice.
+3. Medio de pago	3. Payment method
+Pago en efectivo o por transferencia. Al contado no hay cobros automáticos: el plan cubre los meses pagados.	Payment in cash or by bank transfer. There are no automatic charges: the plan covers the months paid.
+Visa, Mastercard o American Express. Se controla el dígito de control y no se guarda.	Visa, Mastercard or American Express. The check digit is verified and the number is not stored.
+Pasarela de cobros simulada. Tarjetas de prueba: 4111 1111 1111 1111 (se aprueba) y 4000 0000 0000 0002 (la rechaza la entidad emisora). Con tarjeta, al terminar los meses pagados la pasarela sigue cobrando el abono todos los meses hasta que se dé de baja la suscripción.	Simulated payment gateway. Test cards: 4111 1111 1111 1111 (approved) and 4000 0000 0000 0002 (declined by the issuer). With a card, once the months paid are over, the gateway keeps charging the monthly fee until the subscription is cancelled.
+Resumen de la compra	Purchase summary
+Compra realizada	Purchase completed
+Se va a registrar el pago, activar la suscripción y emitir la factura. ¿Continuar?	The payment will be recorded, the subscription activated and the invoice issued. Continue?
+1 mes	1 month
+3 meses (5 % de descuento)	3 months (5% discount)
+6 meses (10 % de descuento)	6 months (10% discount)
+12 meses (15 % de descuento)	12 months (15% discount)
+Básico ($ 15.000 por mes + IVA)	Basic ($15,000 per month + VAT)
+Profesional ($ 30.000 por mes + IVA)	Professional ($30,000 per month + VAT)
+Empresarial ($ 60.000 por mes + IVA)	Enterprise ($60,000 per month + VAT)
+Responsable Inscripto	Registered VAT taxpayer
+Monotributista	Monotributista (simplified regime)
+Exento	VAT exempt
+Consumidor Final	Final consumer
+Contado (efectivo o transferencia)	Cash (cash or bank transfer)
+Tarjeta de crédito	Credit card
+1 pago	1 payment
+3 cuotas sin interés	3 interest-free installments
+6 cuotas sin interés	6 interest-free installments
+Precio mensual (sin IVA)	Monthly price (excluding VAT)
+Meses	Months
+Subtotal	Subtotal
+Descuento por pago adelantado (0 %)	Advance payment discount (0%)
+Descuento por pago adelantado (5 %)	Advance payment discount (5%)
+Descuento por pago adelantado (10 %)	Advance payment discount (10%)
+Descuento por pago adelantado (15 %)	Advance payment discount (15%)
+Neto gravado	Taxable net amount
+IVA 21 %	VAT 21%
+Total	Total
+3 cuotas sin interés de	3 interest-free installments of
+6 cuotas sin interés de	6 interest-free installments of
+Factura A	A invoice
+Factura B	B invoice
+Suscripción N°	Subscription No.
+Pagado hasta	Paid until
+Cliente	Customer
+Condición frente al IVA	VAT status
+Forma de pago	Payment method
+Transacción de la pasarela	Gateway transaction
+CAE	CAE
+Factura de venta	Sales invoice
+Permisos que otorga el perfil seleccionado	Permissions granted by the selected profile
+Familias del perfil	Profile families
+El perfil no pertenece a ninguna familia.	The profile does not belong to any family.
+Incluye las familias:	Includes the families:
+Permisos particulares	Individual permissions
+Patentes asignadas directamente al perfil, fuera de cualquier familia.	Permissions assigned directly to the profile, outside any family.
+Ninguno: todos los permisos del perfil vienen de sus familias.	None: all the profile's permissions come from its families.
+Patentes que habilita el perfil en total:	Total permissions enabled by the profile:
+Permisos por perfil (rol)	Permissions by profile (role)
+Solo para consultar: los permisos de un perfil se asignan en Modificación de familia.	View only: a profile's permissions are assigned in Edit family.
+Contingencia	Contingency
+Se encontraron 1 inconsistencia. Se detectó una falla de integridad en el cálculo de los dígitos verificadores. [#ERR007]	1 Inconsistency was found. An integrity failure was detected in the calculation of the checker digits. [#ERR007]
+Sin dígitos verificadores	No check digits
+La tabla TokenRecuperacion no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró. Antes de recalcular, revise sus datos o restaure una copia de seguridad.	The TokenRecovery table has no saved checker digits, but the rest of the tables do: someone deleted them. Before recalculating, review your data or restore a backup.
+Mostrando los últimos 200 eventos registrados (195 encontrados).	Showing the last 200 recorded events (195 found).
+Acceso a formulario	Form Access
+Alta de proveedor - IntelligentStock	Supplier registration - IntelligentStock
+Incluir eventos eliminados	Include deleted events
+Los eventos de los últimos 30 días están activos. Los anteriores pasan a eliminados (no se borran) después de archivarse en el XML de su mes.	Events from the last 30 days are active. Older ones are marked as deleted (they are not removed) after being archived in the XML file for their month.
+Archivo histórico (XML)	Historical archive (XML)
+Antes de pasar a eliminados, los eventos se archivan en un archivo XML por mes.	Before being marked as deleted, events are archived in one XML file per month.
+Mes archivado	Archived month
+Descargar XML	Download XML
+Todavía no se archivó ningún mes.	No month has been archived yet.
+Eliminado	Deleted
+(no disponible)	(not available)
+(no hay insumos activos)	(no active ingredients)
+(no hay proveedores activos)	(no active suppliers)
+(no hay recetas activas)	(no active recipes)
+(no hay sensores activos)	(no active sensors)
+(sin modelo)	(no model)
+<< Quitar	<< Remove
+Activo, sin alertas abiertas	Active, no open alerts
+Agregar >>	Add >>
+Alerta	Alert
+Alguna de las fechas no es válida.	One of the dates is not valid.
+Alta de receta - IntelligentStock	Add recipe - IntelligentStock
+American Express	American Express
+Anular orden de compra - IntelligentStock	Cancel purchase order - IntelligentStock
+Baja de insumo - IntelligentStock	Deactivate ingredient - IntelligentStock
+Baja de proveedor - IntelligentStock	Deactivate supplier - IntelligentStock
+Baja de receta - IntelligentStock	Deactivate recipe - IntelligentStock
+Baja de sensor IoT - IntelligentStock	Deactivate IoT sensor - IntelligentStock
+Baja de suscripción - IntelligentStock	Cancel subscription - IntelligentStock
+Baja de usuario - IntelligentStock	Deactivate user - IntelligentStock
+Bloquear usuario - IntelligentStock	Block user - IntelligentStock
+Cambiar contraseña - IntelligentStock	Change password - IntelligentStock
+Comprobante simulado: sin validez fiscal.	Simulated receipt: not valid for tax purposes.
+Con tarjeta se puede pagar en 1, 3 o 6 cuotas sin interés.	With a card you can pay in 1, 3 or 6 interest-free installments.
+Consulta de patentes - IntelligentStock	View permissions - IntelligentStock
+Consulta de recetas - IntelligentStock	View recipes - IntelligentStock
+Consulta de sensores IoT - IntelligentStock	View IoT sensors - IntelligentStock
+Consulta de órdenes de compra - IntelligentStock	View purchase orders - IntelligentStock
+Consumo	Consumption
+Contado	Cash
+Credenciales incorrectas.	Incorrect credentials.
+Credenciales incorrectas. No se actualizó el contador por inconsistencia de integridad.	Incorrect credentials. The counter was not updated because of an integrity inconsistency.
+Debe completar todos los campos obligatorios del formulario.	You must fill in all the required fields of the form.
+Descarga de bitácora archivada	Archived event log downloaded
+Descontar stock por venta - IntelligentStock	Deduct stock for a sale - IntelligentStock
+El CUIT debe tener 11 dígitos, con o sin guiones (por ejemplo 20-12345678-6).	The CUIT must have 11 digits, with or without dashes (for example 20-12345678-6).
+El CUIT no es válido: tiene que tener 11 números y el último tiene que corresponder a los anteriores.	The CUIT is not valid: it must have 11 digits and the last one must match the previous ones.
+El DNI debe tener 7 u 8 dígitos.	The ID number must have 7 or 8 digits.
+El administrador canceló la reparación y cerró la sesión.	The administrator canceled the repair and logged out.
+El administrador recalculó los dígitos verificadores ignorando la inconsistencia detectada.	The administrator recalculated the check digits, ignoring the inconsistency found.
+El archivo de copia de seguridad seleccionado es inválido o se encuentra corrompido.	The selected backup file is invalid or corrupted.
+El archivo ya no está disponible en el servidor.	The file is no longer available on the server.
+El año de vencimiento no es válido.	The expiration year is not valid.
+El componente no está asignado a ningún rol ni familia.	The component is not assigned to any role or family.
+El código de seguridad de American Express tiene 4 números (está en el frente de la tarjeta).	The American Express security code has 4 digits (it is on the front of the card).
+El código de seguridad no es válido.	The security code is not valid.
+El código de seguridad tiene 3 números (está en el dorso de la tarjeta).	The security code has 3 digits (it is on the back of the card).
+El enlace de recuperación no es válido, ya se utilizó o venció. Pida uno nuevo.	The recovery link is not valid, has already been used or has expired. Request a new one.
+El estado actual del registro no permite ejecutar la operación solicitada.	The current status of the record does not allow the requested operation.
+El estado elegido no es válido.	The chosen status is not valid.
+El formato elegido no existe.	The chosen format does not exist.
+El identificador de red ingresado ya se encuentra asignado a otro dispositivo activo.	The network identifier entered is already assigned to another active device.
+El importe tiene que ser un número.	The amount must be a number.
+El importe total tiene que ser mayor que cero.	The total amount must be greater than zero.
+El insumo se dio de baja mientras se registraba el ajuste.	The ingredient was deactivated while the adjustment was being recorded.
+El insumo se encuentra dado de baja.	The ingredient is deactivated.
+El insumo ya se encuentra activo.	The ingredient is already active.
+El insumo ya se encuentra dado de baja.	The ingredient is already deactivated.
+El medio de pago fue rechazado por la entidad emisora.	The payment method was declined by the issuer.
+El monto a cobrar tiene que ser mayor que cero.	The amount to charge must be greater than zero.
+El nombre de la familia se actualizó.	The family name was updated.
+El nombre de usuario debe tener al menos 4 caracteres.	The username must have at least 4 characters.
+El nombre del registro ya existe en la base de datos.	The record name already exists in the database.
+El nombre del rol se actualizó.	The role name was updated.
+El número de comprobante ya se encuentra registrado para el proveedor.	The invoice number is already recorded for the supplier.
+El número de tarjeta no es válido.	The card number is not valid.
+El número de tarjeta no es válido: el dígito de control no coincide. Revise que esté bien escrito.	The card number is not valid: the check digit does not match. Check that it is typed correctly.
+El origen de la petición no está autorizado.	The origin of the request is not authorized.
+El perfil del usuario carece de los permisos necesarios para la funcionalidad.	The user profile lacks the permissions required for this feature.
+El período no puede superar un año.	The period cannot exceed one year.
+El plan elegido no existe.	The chosen plan does not exist.
+El precio unitario no puede ser negativo.	The unit price cannot be negative.
+El precio unitario supera el máximo admitido.	The unit price exceeds the maximum allowed.
+El precio unitario tiene que ser un número.	The unit price must be a number.
+El proveedor se encuentra dado de baja.	The supplier is deactivated.
+El proveedor ya se encuentra activo.	The supplier is already active.
+El proveedor ya se encuentra dado de baja.	The supplier is already deactivated.
+El punto de venta y el número de comprobante tienen que ser mayores que cero.	The point of sale and the invoice number must be greater than zero.
+El rol WebMaster es parte del sistema y no se puede eliminar.	The WebMaster role is part of the system and cannot be deleted.
+El rol WebMaster es parte del sistema y no se puede modificar.	The WebMaster role is part of the system and cannot be edited.
+El rol no tiene usuarios asignados.	The role has no users assigned.
+El rol se eliminó correctamente.	The role was deleted successfully.
+El sensor se encuentra dado de baja.	The sensor is deactivated.
+El sensor ya se encuentra activo.	The sensor is already active.
+El sensor ya se encuentra dado de baja.	The sensor is already deactivated.
+El servicio externo de cobros rechazó la transacción y no fue posible activar la suscripción.	The external payment service declined the transaction and the subscription could not be activated.
+El stock inicial no puede ser negativo.	The initial stock cannot be negative.
+El stock inicial supera el máximo admitido.	The initial stock exceeds the maximum allowed.
+El stock inicial y el stock mínimo tienen que ser números.	The initial stock and the minimum stock must be numbers.
+El stock mínimo no puede ser negativo.	The minimum stock cannot be negative.
+El stock mínimo supera el máximo admitido.	The minimum stock exceeds the maximum allowed.
+El stock mínimo tiene que ser un número.	The minimum stock must be a number.
+El stock resultante supera el máximo admitido.	The resulting stock exceeds the maximum allowed.
+El tipo de comprobante no es válido.	The invoice type is not valid.
+El tipo de reporte no existe.	The report type does not exist.
+El token de pago no es válido.	The payment token is not valid.
+El usuario no se encuentra bloqueado.	The user is not blocked.
+El usuario ya se encuentra activo.	The user is already active.
+El usuario ya se encuentra bloqueado por un administrador.	The user is already blocked by an administrator.
+El usuario ya se encuentra dado de baja.	The user is already deactivated.
+El vencimiento se escribe con el mes y el año, por ejemplo 08/29.	The expiration date is written with the month and the year, for example 08/29.
+El volumen de datos históricos es insuficiente para calcular la predicción de demanda.	There is not enough historical data to calculate the demand prediction.
+Elija el medio de pago: contado o tarjeta de crédito.	Choose the payment method: cash or credit card.
+Elija el proveedor y la fecha de la orden.	Choose the supplier and the order date.
+Elija el reporte, el período (hasta un año) y el formato. El archivo se genera en el servidor (carpeta App_Data\Reportes) y se descarga al terminar.	Choose the report, the period (up to one year) and the format. The file is generated on the server (App_Data\Reportes folder) and downloaded when it is ready.
+Elija la orden e ingrese el motivo de la anulación.	Choose the order and enter the reason for the cancellation.
+Elija la receta e ingrese la cantidad y la fecha de la venta.	Choose the recipe and enter the quantity and the date of the sale.
+Elija un insumo de la lista.	Choose an ingredient from the list.
+Exportar alertas	Export alerts
+Falló la ejecución del servicio de predicción de ML.NET.	The ML.NET prediction service failed.
+Falló la escritura al intentar generar el archivo físico en el servidor.	Writing failed while trying to generate the file on the server.
+Falta el documento del cliente.	The customer's tax ID is missing.
+Falta el nombre del titular.	The cardholder name is missing.
+Faltan elementos asociados en la grilla de detalle del registro.	Items are missing from the detail grid of the record.
+Forma de pago: contado (efectivo o transferencia).	Payment method: cash (cash or bank transfer).
+Hay muy pocos datos de consumo para entrenar el modelo.	There is too little consumption data to train the model.
+IVA Responsable Inscripto	Registered VAT taxpayer
+Importe recibido	Amount received
+Ingrese un DNI de 7 u 8 números o un CUIT válido (por ejemplo 20-12345678-6).	Enter a 7 or 8-digit ID number or a valid CUIT (for example 20-12345678-6).
+La cantidad a ajustar tiene que ser mayor que cero.	The quantity to adjust must be greater than zero.
+La cantidad a descontar supera el stock físico actual del insumo.	The quantity to deduct exceeds the ingredient's current physical stock.
+La cantidad tiene que ser un número.	The quantity must be a number.
+La cantidad vendida tiene que ser mayor que cero.	The quantity sold must be greater than zero.
+La cantidad vendida tiene que ser un número.	The quantity sold must be a number.
+La condición frente al IVA no es válida.	The VAT status is not valid.
+La confirmación de la contraseña no coincide con la nueva clave ingresada.	The password confirmation does not match the new password entered.
+La contraseña se cambió correctamente.	The password was changed successfully.
+La contraseña se cambió correctamente. Ya puede iniciar sesión con la contraseña nueva.	The password was changed successfully. You can now sign in with the new password.
+La contraseña se restableció correctamente y se avisó al usuario por correo.	The password was reset successfully and the user was notified by email.
+La cuenta de usuario no se encuentra activa.	The user account is not active.
+La cuenta se encuentra bloqueada por intentos fallidos.	The account is blocked because of failed attempts.
+La cuenta se encuentra bloqueada por un administrador.	The account is blocked by an administrator.
+La cuenta se encuentra dada de baja.	The account is deactivated.
+La dirección MAC recibida no es válida.	The MAC address received is not valid.
+La familia se eliminó correctamente.	The family was deleted successfully.
+La fecha de inicio no puede estar a más de un año.	The start date cannot be more than one year away.
+La fecha de inicio no puede ser anterior a hoy.	The start date cannot be earlier than today.
+La fecha de inicio no puede ser posterior a la fecha de fin.	The start date cannot be later than the end date.
+La fecha de la orden no puede estar a más de 60 días.	The order date cannot be more than 60 days away.
+La fecha de la orden no puede ser anterior a hoy.	The order date cannot be earlier than today.
+La fecha de la venta no puede ser posterior a hoy.	The date of the sale cannot be later than today.
+La fecha de la venta no puede tener más de un año.	The date of the sale cannot be more than one year ago.
+La fecha de nacimiento no puede ser posterior a hoy.	The date of birth cannot be later than today.
+La fecha desde no puede ser posterior a la fecha hasta.	The start date cannot be later than the end date.
+La fecha no es válida.	The date is not valid.
+La receta lleva insumos dados de baja. Revísela desde Modificación de receta.	The recipe uses deactivated ingredients. Review it from Edit recipe.
+La receta se encuentra dada de baja.	The recipe is deactivated.
+La receta tiene que llevar al menos un insumo.	The recipe must include at least one ingredient.
+La receta ya se encuentra activa.	The recipe is already active.
+La receta ya se encuentra dada de baja.	The recipe is already deactivated.
+La respuesta de la pasarela no proviene de un origen autorizado.	The gateway response does not come from an authorized source.
+La sesión expiró o todavía no inició sesión. Vuelva a ingresar sus credenciales.	The session expired or you have not signed in yet. Enter your credentials again.
+La tarjeta está vencida.	The card has expired.
+La temperatura máxima permitida tiene que ser un número.	The maximum allowed temperature must be a number.
+La temperatura recibida está fuera del rango que puede medir un sensor.	The temperature received is outside the range a sensor can measure.
+La temperatura recibida no es un número.	The temperature received is not a number.
+Las credenciales de acceso ingresadas son incorrectas.	The login credentials entered are incorrect.
+Los cambios de la receta se guardaron correctamente.	The recipe changes were saved successfully.
+Los datos del insumo se actualizaron correctamente.	The ingredient data was updated successfully.
+Los datos del proveedor se actualizaron correctamente.	The supplier data was updated successfully.
+Los datos del sensor se actualizaron correctamente.	The sensor data was updated successfully.
+Los datos del usuario se actualizaron correctamente.	The user data was updated successfully.
+Los días a proyectar tienen que estar entre 1 y 90.	The days to project must be between 1 and 90.
+Los días de vida útil tienen que ser un número entero.	The shelf life must be a whole number of days.
+Los insumos marcados en rojo no alcanzan para esta venta.	The ingredients marked in red are not enough for this sale.
+Los niveles de stock actuales no requieren la generación de nuevos pedidos.	The current stock levels do not require new orders.
+MM/AA	MM/YY
+Mantenimiento de bitácora	Event log maintenance
+Mastercard	Mastercard
+Modificación de familia - IntelligentStock	Edit family - IntelligentStock
+Modificación de insumo - IntelligentStock	Edit ingredient - IntelligentStock
+Modificación de proveedor - IntelligentStock	Edit supplier - IntelligentStock
+Modificación de receta - IntelligentStock	Edit recipe - IntelligentStock
+Modificación de sensor IoT - IntelligentStock	Edit IoT sensor - IntelligentStock
+Mostrar también los dados de baja	Also show deactivated ones
+No es posible establecer la conexión con el motor de base de datos.	Unable to connect to the database engine.
+No hay insumos activos cargados.	There are no active ingredients.
+No hay permisos de escritura en el directorio de destino del archivo generado.	There is no write permission on the destination folder of the generated file.
+No hay recetas activas con insumos cargados.	There are no active recipes with ingredients.
+No hay órdenes pendientes.	There are no pending orders.
+No puede eliminar el rol de su propia cuenta.	You cannot delete the role of your own account.
+No puede modificar los permisos del rol de su propia cuenta.	You cannot change the permissions of your own account's role.
+No se encontraron registros que coincidan con los filtros de búsqueda aplicados.	No records matching the applied search filters were found.
+No se encontró el archivo de la factura.	The invoice file was not found.
+No se permite alterar ni dar de baja un registro estructural predeterminado.	A default structural record cannot be changed or deactivated.
+No se pudo actualizar el stock del insumo. Intente nuevamente.	The ingredient stock could not be updated. Try again.
+No se puede ejecutar una operación restrictiva sobre la propia cuenta en uso.	A restrictive operation cannot be performed on the account in use.
+Observaciones	Notes
+Operaciones de venta	Sales operations
+Promedio diario	Daily average
+Pérdida confirmada	Confirmed loss
+Quiebre de stock	Stockout
+Quitar	Remove
+Reactivar	Reactivate
+Receta	Recipe
+Registrar ajuste de stock - IntelligentStock	Record stock adjustment - IntelligentStock
+Registrar factura de proveedor - IntelligentStock	Record supplier invoice - IntelligentStock
+Se aceptan tarjetas Visa, Mastercard y American Express: revise el número.	Visa, Mastercard and American Express cards are accepted: check the number.
+Se detectó un conflicto de integridad al ejecutar la transacción en la base de datos.	An integrity conflict was detected while running the transaction in the database.
+Se detectó una falla de integridad en el cálculo de los dígitos verificadores.	An integrity failure was detected in the check digit calculation.
+Se ingresó mal la contraseña actual al intentar cambiarla.	The current password was entered incorrectly while trying to change it.
+Se intentó usar un enlace de recuperación de una cuenta bloqueada por un administrador.	Someone tried to use a recovery link for an account blocked by an administrator.
+Se intentó usar un enlace de recuperación inválido, usado o vencido.	Someone tried to use an invalid, used or expired recovery link.
+Se pidió un enlace de recuperación para un correo que no corresponde a ninguna cuenta.	A recovery link was requested for an email that does not belong to any account.
+Se pidió un enlace de recuperación para una cuenta dada de baja. No se envió.	A recovery link was requested for a deactivated account. It was not sent.
+Se pueden pagar por adelantado 1, 3, 6 o 12 meses.	You can pay 1, 3, 6 or 12 months in advance.
+Se recalcularon los dígitos verificadores de todas las tablas controladas.	The check digits of all the controlled tables were recalculated.
+Seleccione al menos un componente de la familia.	Select at least one component of the family.
+Seleccione al menos un componente de la lista de disponibles.	Select at least one component from the available list.
+Seleccione al menos un componente otorgado por el rol.	Select at least one component granted by the role.
+Seleccione el archivo de restauración.	Select the restore file.
+Seleccione un insumo activo.	Select an active ingredient.
+Seleccione un insumo de la grilla.	Select an ingredient from the grid.
+Seleccione un insumo de la lista.	Select an ingredient from the list.
+Seleccione un proveedor de la grilla.	Select a supplier from the grid.
+Seleccione un proveedor de la lista.	Select a supplier from the list.
+Seleccione un sensor de la grilla.	Select a sensor from the grid.
+Seleccione un sensor de la lista.	Select a sensor from the list.
+Seleccione un usuario de la grilla.	Select a user from the grid.
+Seleccione un usuario de la lista.	Select a user from the list.
+Seleccione una receta de la grilla.	Select a recipe from the grid.
+Seleccione una receta de la lista.	Select a recipe from the list.
+Seleccione una suscripción de la grilla.	Select a subscription from the grid.
+Solo una familia puede contener otros componentes.	Only a family can contain other components.
+Stock perecedero valorizado	Valued perishable stock
+Su sesión se cerró porque la cuenta fue dada de baja.	Your session was closed because the account was deactivated.
+Su sesión se cerró porque un administrador del sistema bloqueó la cuenta.	Your session was closed because a system administrator blocked the account.
+Temperatura	Temperature
+Todavía no hay ventas registradas.	There are no sales recorded yet.
+Un administrador del sistema bloqueó la cuenta: comuníquese con él para que la desbloquee.	A system administrator blocked the account: contact them to unblock it.
+Una familia no puede contenerse a sí misma.	A family cannot contain itself.
+Unidades vendidas	Units sold
+Uno de los componentes elegidos ya no existe. Vuelva a cargar la pantalla.	One of the chosen components no longer exists. Reload the page.
+Uno de los datos ingresados no tiene un formato o un valor válido.	One of the values entered does not have a valid format or value.
+Uno de los insumos de la receta ya no existe.	One of the recipe's ingredients no longer exists.
+Usuario de contingencia	Contingency user
+Valor en riesgo	Value at risk
+Valorizado	Valued
+Ver	View
+Visa	Visa
+Error de validación del token Anti-XSRF.	Anti-XSRF token validation error.
+Se encontró 1 inconsistencia.	1 inconsistency was found.
+Se encontraron {0} inconsistencias.	{0} inconsistencies were found.
+{0} usuario encontrado.	{0} user found.
+{0} usuarios encontrados.	{0} users found.
+{0} receta encontrada.	{0} recipe found.
+{0} recetas encontradas.	{0} recipes found.
+{0} sensor encontrado.	{0} sensor found.
+{0} sensores encontrados.	{0} sensors found.
+{0} insumo encontrado.	{0} ingredient found.
+{0} insumos encontrados.	{0} ingredients found.
+{0} proveedor encontrado.	{0} supplier found.
+{0} proveedores encontrados.	{0} suppliers found.
+{0} evento encontrado.	{0} event found.
+{0} eventos encontrados.	{0} events found.
+Se encontró {0} orden de compra.	{0} purchase order was found.
+Se encontraron {0} órdenes de compra.	{0} purchase orders were found.
+Mostrando los últimos {0} eventos activos ({1} encontrados).	Showing the last {0} active events ({1} found).
+Mostrando los últimos {0} eventos registrados, activos y eliminados ({1} encontrados).	Showing the last {0} recorded events, active and deleted ({1} found).
+Mostrando los últimos {0} eventos registrados ({1} encontrados).	Showing the last {0} recorded events ({1} found).
+Funcionalidad: Bitácora de eventos.	Feature: Event log.
+Quedó en estado Pendiente.	It is now Pending.
+Reparación del dígito verificador - IntelligentStock	Check digit repair - IntelligentStock
+Reparación del dígito verificador	Check digit repair
+Se recalcularon los dígitos verificadores. El sistema vuelve a funcionar con normalidad.	The check digits were recalculated. The system is working normally again.
+Continuar al panel principal	Continue to the dashboard
+5 usuarios encontrados.	5 users found.
+192 eventos encontrados.	192 events found.
+Desbloquear usuario - IntelligentStock	Unblock user - IntelligentStock
+(indeterminada)	(undetermined)
+Fila alterada	Altered row
+Fila agregada	Added row
+Fila eliminada	Deleted row
+Tabla alterada	Altered table
+Modificación de usuario - IntelligentStock	Edit user - IntelligentStock
+Consulta de proveedores - IntelligentStock	View suppliers - IntelligentStock
+ÓPTIMO	OPTIMAL
+El perfil del usuario carece de los permisos necesarios para la funcionalidad. Funcionalidad: Bitácora de eventos. [#ERR009]	The user profile lacks the permissions required for this feature. Feature: Event log. [#ERR009]
+Se encontraron 4 inconsistencias. Se detectó una falla de integridad en el cálculo de los dígitos verificadores. [#ERR007]	4 inconsistencies were found. An integrity failure was detected in the check digit calculation. [#ERR007]
+Se encontraron 5 inconsistencias. Se detectó una falla de integridad en el cálculo de los dígitos verificadores. [#ERR007]	5 inconsistencies were found. An integrity failure was detected in the check digit calculation. [#ERR007]
+Se encontraron 1 inconsistencia. Se detectó una falla de integridad en el cálculo de los dígitos verificadores. [#ERR007]	1 inconsistency was found. An integrity failure was detected in the check digit calculation. [#ERR007]
+Acceso a formulario	Form access
+Alta de proveedor - IntelligentStock	Add supplier - IntelligentStock
+Restaurar base de datos - IntelligentStock	Restore database - IntelligentStock
+No fue posible aislar una única columna.	It was not possible to isolate a single column.
+Antes de recalcular, revise sus datos o restaure una copia de seguridad.	Before recalculating, review the data or restore a backup.
+Es normal en una base recién creada o actualizada con el script.	This is normal in a database just created or updated with the script.
+Se alteró el valor de la columna id_alerta en la fila {0} [id_alerta={1}] de la tabla Alerta.	The value of the id_alerta column in row {0} [id_alerta={1}] of the Alerta table was altered.
+Se alteró el valor de la columna id_sensor en la fila {0} [id_alerta={1}] de la tabla Alerta.	The value of the id_sensor column in row {0} [id_alerta={1}] of the Alerta table was altered.
+Se alteró el valor de la columna fechaHora en la fila {0} [id_alerta={1}] de la tabla Alerta.	The value of the fechaHora column in row {0} [id_alerta={1}] of the Alerta table was altered.
+Se alteró el valor de la columna estado en la fila {0} [id_alerta={1}] de la tabla Alerta.	The value of the estado column in row {0} [id_alerta={1}] of the Alerta table was altered.
+Se alteró el valor de la columna observaciones en la fila {0} [id_alerta={1}] de la tabla Alerta.	The value of the observaciones column in row {0} [id_alerta={1}] of the Alerta table was altered.
+Se alteró la fila {0} [id_alerta={1}] de la tabla Alerta.	Row {0} [id_alerta={1}] of the Alerta table was altered.
+Se agregó la fila [id_alerta={0}] a la tabla Alerta sin recalcular el dígito verificador.	Row [id_alerta={0}] was added to the Alerta table without recalculating the check digit.
+Se eliminó la fila [id_alerta={0}] de la tabla Alerta sin recalcular el dígito verificador.	Row [id_alerta={0}] was deleted from the Alerta table without recalculating the check digit.
+La tabla Alerta no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Alerta table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Alerta no tiene dígitos verificadores guardados.	The Alerta table has no stored check digits.
+El dígito verificador de la tabla Alerta no coincide con el almacenado en la base de datos.	The check digit of the Alerta table does not match the one stored in the database.
+Se alteró el valor de la columna id_ordenCompra en la fila {0} [id_ordenCompra={1} | id_insumo={2}] de la tabla DetalleOrdenCompra.	The value of the id_ordenCompra column in row {0} [id_ordenCompra={1} | id_insumo={2}] of the DetalleOrdenCompra table was altered.
+Se alteró el valor de la columna id_insumo en la fila {0} [id_ordenCompra={1} | id_insumo={2}] de la tabla DetalleOrdenCompra.	The value of the id_insumo column in row {0} [id_ordenCompra={1} | id_insumo={2}] of the DetalleOrdenCompra table was altered.
+Se alteró el valor de la columna cantidad en la fila {0} [id_ordenCompra={1} | id_insumo={2}] de la tabla DetalleOrdenCompra.	The value of the cantidad column in row {0} [id_ordenCompra={1} | id_insumo={2}] of the DetalleOrdenCompra table was altered.
+Se alteró la fila {0} [id_ordenCompra={1} | id_insumo={2}] de la tabla DetalleOrdenCompra.	Row {0} [id_ordenCompra={1} | id_insumo={2}] of the DetalleOrdenCompra table was altered.
+Se agregó la fila [id_ordenCompra={0} | id_insumo={1}] a la tabla DetalleOrdenCompra sin recalcular el dígito verificador.	Row [id_ordenCompra={0} | id_insumo={1}] was added to the DetalleOrdenCompra table without recalculating the check digit.
+Se eliminó la fila [id_ordenCompra={0} | id_insumo={1}] de la tabla DetalleOrdenCompra sin recalcular el dígito verificador.	Row [id_ordenCompra={0} | id_insumo={1}] was deleted from the DetalleOrdenCompra table without recalculating the check digit.
+La tabla DetalleOrdenCompra no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The DetalleOrdenCompra table has no stored check digits, but the other tables do: someone deleted them.
+La tabla DetalleOrdenCompra no tiene dígitos verificadores guardados.	The DetalleOrdenCompra table has no stored check digits.
+El dígito verificador de la tabla DetalleOrdenCompra no coincide con el almacenado en la base de datos.	The check digit of the DetalleOrdenCompra table does not match the one stored in the database.
+Se alteró el valor de la columna id_receta en la fila {0} [id_receta={1} | id_insumo={2}] de la tabla DetalleReceta.	The value of the id_receta column in row {0} [id_receta={1} | id_insumo={2}] of the DetalleReceta table was altered.
+Se alteró el valor de la columna id_insumo en la fila {0} [id_receta={1} | id_insumo={2}] de la tabla DetalleReceta.	The value of the id_insumo column in row {0} [id_receta={1} | id_insumo={2}] of the DetalleReceta table was altered.
+Se alteró el valor de la columna cantidad en la fila {0} [id_receta={1} | id_insumo={2}] de la tabla DetalleReceta.	The value of the cantidad column in row {0} [id_receta={1} | id_insumo={2}] of the DetalleReceta table was altered.
+Se alteró la fila {0} [id_receta={1} | id_insumo={2}] de la tabla DetalleReceta.	Row {0} [id_receta={1} | id_insumo={2}] of the DetalleReceta table was altered.
+Se agregó la fila [id_receta={0} | id_insumo={1}] a la tabla DetalleReceta sin recalcular el dígito verificador.	Row [id_receta={0} | id_insumo={1}] was added to the DetalleReceta table without recalculating the check digit.
+Se eliminó la fila [id_receta={0} | id_insumo={1}] de la tabla DetalleReceta sin recalcular el dígito verificador.	Row [id_receta={0} | id_insumo={1}] was deleted from the DetalleReceta table without recalculating the check digit.
+La tabla DetalleReceta no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The DetalleReceta table has no stored check digits, but the other tables do: someone deleted them.
+La tabla DetalleReceta no tiene dígitos verificadores guardados.	The DetalleReceta table has no stored check digits.
+El dígito verificador de la tabla DetalleReceta no coincide con el almacenado en la base de datos.	The check digit of the DetalleReceta table does not match the one stored in the database.
+Se alteró el valor de la columna id_familia en la fila {0} [id_familia={1}] de la tabla Familia.	The value of the id_familia column in row {0} [id_familia={1}] of the Familia table was altered.
+Se alteró el valor de la columna nombre en la fila {0} [id_familia={1}] de la tabla Familia.	The value of the nombre column in row {0} [id_familia={1}] of the Familia table was altered.
+Se alteró el valor de la columna tipo en la fila {0} [id_familia={1}] de la tabla Familia.	The value of the tipo column in row {0} [id_familia={1}] of the Familia table was altered.
+Se alteró la fila {0} [id_familia={1}] de la tabla Familia.	Row {0} [id_familia={1}] of the Familia table was altered.
+Se agregó la fila [id_familia={0}] a la tabla Familia sin recalcular el dígito verificador.	Row [id_familia={0}] was added to the Familia table without recalculating the check digit.
+Se eliminó la fila [id_familia={0}] de la tabla Familia sin recalcular el dígito verificador.	Row [id_familia={0}] was deleted from the Familia table without recalculating the check digit.
+La tabla Familia no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Familia table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Familia no tiene dígitos verificadores guardados.	The Familia table has no stored check digits.
+El dígito verificador de la tabla Familia no coincide con el almacenado en la base de datos.	The check digit of the Familia table does not match the one stored in the database.
+Se alteró el valor de la columna id_insumo en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the id_insumo column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna nombre en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the nombre column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna descripcion en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the descripcion column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna unidadDeMedida en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the unidadDeMedida column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna stock en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the stock column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna stockMinimo en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the stockMinimo column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna diasDeVidaUtil en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the diasDeVidaUtil column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna activo en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the activo column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró el valor de la columna precioUnitario en la fila {0} [id_insumo={1}] de la tabla Insumo.	The value of the precioUnitario column in row {0} [id_insumo={1}] of the Insumo table was altered.
+Se alteró la fila {0} [id_insumo={1}] de la tabla Insumo.	Row {0} [id_insumo={1}] of the Insumo table was altered.
+Se agregó la fila [id_insumo={0}] a la tabla Insumo sin recalcular el dígito verificador.	Row [id_insumo={0}] was added to the Insumo table without recalculating the check digit.
+Se eliminó la fila [id_insumo={0}] de la tabla Insumo sin recalcular el dígito verificador.	Row [id_insumo={0}] was deleted from the Insumo table without recalculating the check digit.
+La tabla Insumo no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Insumo table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Insumo no tiene dígitos verificadores guardados.	The Insumo table has no stored check digits.
+El dígito verificador de la tabla Insumo no coincide con el almacenado en la base de datos.	The check digit of the Insumo table does not match the one stored in the database.
+Se alteró el valor de la columna id_ordenCompra en la fila {0} [id_ordenCompra={1}] de la tabla OrdenCompra.	The value of the id_ordenCompra column in row {0} [id_ordenCompra={1}] of the OrdenCompra table was altered.
+Se alteró el valor de la columna cuitProveedor en la fila {0} [id_ordenCompra={1}] de la tabla OrdenCompra.	The value of the cuitProveedor column in row {0} [id_ordenCompra={1}] of the OrdenCompra table was altered.
+Se alteró el valor de la columna fecha en la fila {0} [id_ordenCompra={1}] de la tabla OrdenCompra.	The value of the fecha column in row {0} [id_ordenCompra={1}] of the OrdenCompra table was altered.
+Se alteró el valor de la columna estado en la fila {0} [id_ordenCompra={1}] de la tabla OrdenCompra.	The value of the estado column in row {0} [id_ordenCompra={1}] of the OrdenCompra table was altered.
+Se alteró la fila {0} [id_ordenCompra={1}] de la tabla OrdenCompra.	Row {0} [id_ordenCompra={1}] of the OrdenCompra table was altered.
+Se agregó la fila [id_ordenCompra={0}] a la tabla OrdenCompra sin recalcular el dígito verificador.	Row [id_ordenCompra={0}] was added to the OrdenCompra table without recalculating the check digit.
+Se eliminó la fila [id_ordenCompra={0}] de la tabla OrdenCompra sin recalcular el dígito verificador.	Row [id_ordenCompra={0}] was deleted from the OrdenCompra table without recalculating the check digit.
+La tabla OrdenCompra no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The OrdenCompra table has no stored check digits, but the other tables do: someone deleted them.
+La tabla OrdenCompra no tiene dígitos verificadores guardados.	The OrdenCompra table has no stored check digits.
+El dígito verificador de la tabla OrdenCompra no coincide con el almacenado en la base de datos.	The check digit of the OrdenCompra table does not match the one stored in the database.
+Se alteró el valor de la columna cuit en la fila {0} [cuit={1}] de la tabla Proveedor.	The value of the cuit column in row {0} [cuit={1}] of the Proveedor table was altered.
+Se alteró el valor de la columna nombre en la fila {0} [cuit={1}] de la tabla Proveedor.	The value of the nombre column in row {0} [cuit={1}] of the Proveedor table was altered.
+Se alteró el valor de la columna razonSocial en la fila {0} [cuit={1}] de la tabla Proveedor.	The value of the razonSocial column in row {0} [cuit={1}] of the Proveedor table was altered.
+Se alteró el valor de la columna correo en la fila {0} [cuit={1}] de la tabla Proveedor.	The value of the correo column in row {0} [cuit={1}] of the Proveedor table was altered.
+Se alteró el valor de la columna numero en la fila {0} [cuit={1}] de la tabla Proveedor.	The value of the numero column in row {0} [cuit={1}] of the Proveedor table was altered.
+Se alteró el valor de la columna activo en la fila {0} [cuit={1}] de la tabla Proveedor.	The value of the activo column in row {0} [cuit={1}] of the Proveedor table was altered.
+Se alteró la fila {0} [cuit={1}] de la tabla Proveedor.	Row {0} [cuit={1}] of the Proveedor table was altered.
+Se agregó la fila [cuit={0}] a la tabla Proveedor sin recalcular el dígito verificador.	Row [cuit={0}] was added to the Proveedor table without recalculating the check digit.
+Se eliminó la fila [cuit={0}] de la tabla Proveedor sin recalcular el dígito verificador.	Row [cuit={0}] was deleted from the Proveedor table without recalculating the check digit.
+Se alteró el valor de la columna cuit en la fila {0} [cuit={1}-{2}-{3}] de la tabla Proveedor.	The value of the cuit column in row {0} [cuit={1}-{2}-{3}] of the Proveedor table was altered.
+Se alteró el valor de la columna nombre en la fila {0} [cuit={1}-{2}-{3}] de la tabla Proveedor.	The value of the nombre column in row {0} [cuit={1}-{2}-{3}] of the Proveedor table was altered.
+Se alteró el valor de la columna razonSocial en la fila {0} [cuit={1}-{2}-{3}] de la tabla Proveedor.	The value of the razonSocial column in row {0} [cuit={1}-{2}-{3}] of the Proveedor table was altered.
+Se alteró el valor de la columna correo en la fila {0} [cuit={1}-{2}-{3}] de la tabla Proveedor.	The value of the correo column in row {0} [cuit={1}-{2}-{3}] of the Proveedor table was altered.
+Se alteró el valor de la columna numero en la fila {0} [cuit={1}-{2}-{3}] de la tabla Proveedor.	The value of the numero column in row {0} [cuit={1}-{2}-{3}] of the Proveedor table was altered.
+Se alteró el valor de la columna activo en la fila {0} [cuit={1}-{2}-{3}] de la tabla Proveedor.	The value of the activo column in row {0} [cuit={1}-{2}-{3}] of the Proveedor table was altered.
+Se alteró la fila {0} [cuit={1}-{2}-{3}] de la tabla Proveedor.	Row {0} [cuit={1}-{2}-{3}] of the Proveedor table was altered.
+Se agregó la fila [cuit={0}-{1}-{2}] a la tabla Proveedor sin recalcular el dígito verificador.	Row [cuit={0}-{1}-{2}] was added to the Proveedor table without recalculating the check digit.
+Se eliminó la fila [cuit={0}-{1}-{2}] de la tabla Proveedor sin recalcular el dígito verificador.	Row [cuit={0}-{1}-{2}] was deleted from the Proveedor table without recalculating the check digit.
+La tabla Proveedor no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Proveedor table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Proveedor no tiene dígitos verificadores guardados.	The Proveedor table has no stored check digits.
+El dígito verificador de la tabla Proveedor no coincide con el almacenado en la base de datos.	The check digit of the Proveedor table does not match the one stored in the database.
+Se alteró el valor de la columna id_receta en la fila {0} [id_receta={1}] de la tabla Receta.	The value of the id_receta column in row {0} [id_receta={1}] of the Receta table was altered.
+Se alteró el valor de la columna nombre en la fila {0} [id_receta={1}] de la tabla Receta.	The value of the nombre column in row {0} [id_receta={1}] of the Receta table was altered.
+Se alteró el valor de la columna activo en la fila {0} [id_receta={1}] de la tabla Receta.	The value of the activo column in row {0} [id_receta={1}] of the Receta table was altered.
+Se alteró la fila {0} [id_receta={1}] de la tabla Receta.	Row {0} [id_receta={1}] of the Receta table was altered.
+Se agregó la fila [id_receta={0}] a la tabla Receta sin recalcular el dígito verificador.	Row [id_receta={0}] was added to the Receta table without recalculating the check digit.
+Se eliminó la fila [id_receta={0}] de la tabla Receta sin recalcular el dígito verificador.	Row [id_receta={0}] was deleted from the Receta table without recalculating the check digit.
+La tabla Receta no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Receta table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Receta no tiene dígitos verificadores guardados.	The Receta table has no stored check digits.
+El dígito verificador de la tabla Receta no coincide con el almacenado en la base de datos.	The check digit of the Receta table does not match the one stored in the database.
+Se alteró el valor de la columna id_familiaPadre en la fila {0} [id_familiaPadre={1} | id_familiaHija={2}] de la tabla RelacionFamilia.	The value of the id_familiaPadre column in row {0} [id_familiaPadre={1} | id_familiaHija={2}] of the RelacionFamilia table was altered.
+Se alteró el valor de la columna id_familiaHija en la fila {0} [id_familiaPadre={1} | id_familiaHija={2}] de la tabla RelacionFamilia.	The value of the id_familiaHija column in row {0} [id_familiaPadre={1} | id_familiaHija={2}] of the RelacionFamilia table was altered.
+Se alteró la fila {0} [id_familiaPadre={1} | id_familiaHija={2}] de la tabla RelacionFamilia.	Row {0} [id_familiaPadre={1} | id_familiaHija={2}] of the RelacionFamilia table was altered.
+Se agregó la fila [id_familiaPadre={0} | id_familiaHija={1}] a la tabla RelacionFamilia sin recalcular el dígito verificador.	Row [id_familiaPadre={0} | id_familiaHija={1}] was added to the RelacionFamilia table without recalculating the check digit.
+Se eliminó la fila [id_familiaPadre={0} | id_familiaHija={1}] de la tabla RelacionFamilia sin recalcular el dígito verificador.	Row [id_familiaPadre={0} | id_familiaHija={1}] was deleted from the RelacionFamilia table without recalculating the check digit.
+La tabla RelacionFamilia no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The RelacionFamilia table has no stored check digits, but the other tables do: someone deleted them.
+La tabla RelacionFamilia no tiene dígitos verificadores guardados.	The RelacionFamilia table has no stored check digits.
+El dígito verificador de la tabla RelacionFamilia no coincide con el almacenado en la base de datos.	The check digit of the RelacionFamilia table does not match the one stored in the database.
+Se alteró el valor de la columna id_rol en la fila {0} [id_rol={1}] de la tabla Rol.	The value of the id_rol column in row {0} [id_rol={1}] of the Rol table was altered.
+Se alteró el valor de la columna nombre en la fila {0} [id_rol={1}] de la tabla Rol.	The value of the nombre column in row {0} [id_rol={1}] of the Rol table was altered.
+Se alteró la fila {0} [id_rol={1}] de la tabla Rol.	Row {0} [id_rol={1}] of the Rol table was altered.
+Se agregó la fila [id_rol={0}] a la tabla Rol sin recalcular el dígito verificador.	Row [id_rol={0}] was added to the Rol table without recalculating the check digit.
+Se eliminó la fila [id_rol={0}] de la tabla Rol sin recalcular el dígito verificador.	Row [id_rol={0}] was deleted from the Rol table without recalculating the check digit.
+La tabla Rol no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Rol table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Rol no tiene dígitos verificadores guardados.	The Rol table has no stored check digits.
+El dígito verificador de la tabla Rol no coincide con el almacenado en la base de datos.	The check digit of the Rol table does not match the one stored in the database.
+Se alteró el valor de la columna id_rol en la fila {0} [id_rol={1} | id_familia={2}] de la tabla RolFamilia.	The value of the id_rol column in row {0} [id_rol={1} | id_familia={2}] of the RolFamilia table was altered.
+Se alteró el valor de la columna id_familia en la fila {0} [id_rol={1} | id_familia={2}] de la tabla RolFamilia.	The value of the id_familia column in row {0} [id_rol={1} | id_familia={2}] of the RolFamilia table was altered.
+Se alteró la fila {0} [id_rol={1} | id_familia={2}] de la tabla RolFamilia.	Row {0} [id_rol={1} | id_familia={2}] of the RolFamilia table was altered.
+Se agregó la fila [id_rol={0} | id_familia={1}] a la tabla RolFamilia sin recalcular el dígito verificador.	Row [id_rol={0} | id_familia={1}] was added to the RolFamilia table without recalculating the check digit.
+Se eliminó la fila [id_rol={0} | id_familia={1}] de la tabla RolFamilia sin recalcular el dígito verificador.	Row [id_rol={0} | id_familia={1}] was deleted from the RolFamilia table without recalculating the check digit.
+La tabla RolFamilia no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The RolFamilia table has no stored check digits, but the other tables do: someone deleted them.
+La tabla RolFamilia no tiene dígitos verificadores guardados.	The RolFamilia table has no stored check digits.
+El dígito verificador de la tabla RolFamilia no coincide con el almacenado en la base de datos.	The check digit of the RolFamilia table does not match the one stored in the database.
+Se alteró el valor de la columna id_sensor en la fila {0} [id_sensor={1}] de la tabla Sensor.	The value of the id_sensor column in row {0} [id_sensor={1}] of the Sensor table was altered.
+Se alteró el valor de la columna macAddress en la fila {0} [id_sensor={1}] de la tabla Sensor.	The value of the macAddress column in row {0} [id_sensor={1}] of the Sensor table was altered.
+Se alteró el valor de la columna modelo en la fila {0} [id_sensor={1}] de la tabla Sensor.	The value of the modelo column in row {0} [id_sensor={1}] of the Sensor table was altered.
+Se alteró el valor de la columna activo en la fila {0} [id_sensor={1}] de la tabla Sensor.	The value of the activo column in row {0} [id_sensor={1}] of the Sensor table was altered.
+Se alteró la fila {0} [id_sensor={1}] de la tabla Sensor.	Row {0} [id_sensor={1}] of the Sensor table was altered.
+Se agregó la fila [id_sensor={0}] a la tabla Sensor sin recalcular el dígito verificador.	Row [id_sensor={0}] was added to the Sensor table without recalculating the check digit.
+Se eliminó la fila [id_sensor={0}] de la tabla Sensor sin recalcular el dígito verificador.	Row [id_sensor={0}] was deleted from the Sensor table without recalculating the check digit.
+La tabla Sensor no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Sensor table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Sensor no tiene dígitos verificadores guardados.	The Sensor table has no stored check digits.
+El dígito verificador de la tabla Sensor no coincide con el almacenado en la base de datos.	The check digit of the Sensor table does not match the one stored in the database.
+Se alteró el valor de la columna id_suscripcion en la fila {0} [id_suscripcion={1}] de la tabla Suscripcion.	The value of the id_suscripcion column in row {0} [id_suscripcion={1}] of the Suscripcion table was altered.
+Se alteró el valor de la columna tipoPlan en la fila {0} [id_suscripcion={1}] de la tabla Suscripcion.	The value of the tipoPlan column in row {0} [id_suscripcion={1}] of the Suscripcion table was altered.
+Se alteró el valor de la columna tokenPago en la fila {0} [id_suscripcion={1}] de la tabla Suscripcion.	The value of the tokenPago column in row {0} [id_suscripcion={1}] of the Suscripcion table was altered.
+Se alteró el valor de la columna estado en la fila {0} [id_suscripcion={1}] de la tabla Suscripcion.	The value of the estado column in row {0} [id_suscripcion={1}] of the Suscripcion table was altered.
+Se alteró el valor de la columna fechaInicio en la fila {0} [id_suscripcion={1}] de la tabla Suscripcion.	The value of the fechaInicio column in row {0} [id_suscripcion={1}] of the Suscripcion table was altered.
+Se alteró la fila {0} [id_suscripcion={1}] de la tabla Suscripcion.	Row {0} [id_suscripcion={1}] of the Suscripcion table was altered.
+Se agregó la fila [id_suscripcion={0}] a la tabla Suscripcion sin recalcular el dígito verificador.	Row [id_suscripcion={0}] was added to the Suscripcion table without recalculating the check digit.
+Se eliminó la fila [id_suscripcion={0}] de la tabla Suscripcion sin recalcular el dígito verificador.	Row [id_suscripcion={0}] was deleted from the Suscripcion table without recalculating the check digit.
+La tabla Suscripcion no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Suscripcion table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Suscripcion no tiene dígitos verificadores guardados.	The Suscripcion table has no stored check digits.
+El dígito verificador de la tabla Suscripcion no coincide con el almacenado en la base de datos.	The check digit of the Suscripcion table does not match the one stored in the database.
+La tabla TokenRecuperacion no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The TokenRecuperacion table has no stored check digits, but the other tables do: someone deleted them.
+La tabla TokenRecuperacion no tiene dígitos verificadores guardados.	The TokenRecuperacion table has no stored check digits.
+El dígito verificador de la tabla TokenRecuperacion no coincide con el almacenado en la base de datos.	The check digit of the TokenRecuperacion table does not match the one stored in the database.
+Se alteró el valor de la columna dni en la fila {0} [dni={1}] de la tabla Usuario.	The value of the dni column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna id_rol en la fila {0} [dni={1}] de la tabla Usuario.	The value of the id_rol column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna nombre en la fila {0} [dni={1}] de la tabla Usuario.	The value of the nombre column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna apellido en la fila {0} [dni={1}] de la tabla Usuario.	The value of the apellido column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna fechaNacimiento en la fila {0} [dni={1}] de la tabla Usuario.	The value of the fechaNacimiento column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna correoElectronico en la fila {0} [dni={1}] de la tabla Usuario.	The value of the correoElectronico column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna numeroTelefono en la fila {0} [dni={1}] de la tabla Usuario.	The value of the numeroTelefono column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna nombreUsuario en la fila {0} [dni={1}] de la tabla Usuario.	The value of the nombreUsuario column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna contraseña en la fila {0} [dni={1}] de la tabla Usuario.	The value of the contraseña column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna activo en la fila {0} [dni={1}] de la tabla Usuario.	The value of the activo column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna bloqueado en la fila {0} [dni={1}] de la tabla Usuario.	The value of the bloqueado column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró el valor de la columna intentosFallidos en la fila {0} [dni={1}] de la tabla Usuario.	The value of the intentosFallidos column in row {0} [dni={1}] of the Usuario table was altered.
+Se alteró la fila {0} [dni={1}] de la tabla Usuario.	Row {0} [dni={1}] of the Usuario table was altered.
+Se agregó la fila [dni={0}] a la tabla Usuario sin recalcular el dígito verificador.	Row [dni={0}] was added to the Usuario table without recalculating the check digit.
+Se eliminó la fila [dni={0}] de la tabla Usuario sin recalcular el dígito verificador.	Row [dni={0}] was deleted from the Usuario table without recalculating the check digit.
+La tabla Usuario no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró.	The Usuario table has no stored check digits, but the other tables do: someone deleted them.
+La tabla Usuario no tiene dígitos verificadores guardados.	The Usuario table has no stored check digits.
+El dígito verificador de la tabla Usuario no coincide con el almacenado en la base de datos.	The check digit of the Usuario table does not match the one stored in the database.
+Se alteró el valor de la columna nombre en la fila 3 [dni=12345678] de la tabla Usuario.	The value of the nombre column in row 3 [dni=12345678] of the Usuario table was altered.
+Se alteró el valor de la columna stock en la fila 2 [id_insumo=2] de la tabla Insumo.	The value of the stock column in row 2 [id_insumo=2] of the Insumo table was altered.
+Se alteró el valor de la columna cantidad en la fila 2 [id_ordenCompra=2 | id_insumo=1] de la tabla DetalleOrdenCompra.	The value of the cantidad column in row 2 [id_ordenCompra=2 | id_insumo=1] of the DetalleOrdenCompra table was altered.
+Se alteró la fila 1 [dni=11111111] de la tabla Usuario. No fue posible aislar una única columna.	Row 1 [dni=11111111] of the Usuario table was altered. It was not possible to isolate a single column.
+Se alteró la fila 2 [dni=11111112] de la tabla Usuario. No fue posible aislar una única columna.	Row 2 [dni=11111112] of the Usuario table was altered. It was not possible to isolate a single column.
+Se alteró la fila 3 [dni=12345678] de la tabla Usuario. No fue posible aislar una única columna.	Row 3 [dni=12345678] of the Usuario table was altered. It was not possible to isolate a single column.
+Se alteró la fila 4 [dni=12453464] de la tabla Usuario. No fue posible aislar una única columna.	Row 4 [dni=12453464] of the Usuario table was altered. It was not possible to isolate a single column.
+Se alteró la fila 5 [dni=89999999] de la tabla Usuario. No fue posible aislar una única columna.	Row 5 [dni=89999999] of the Usuario table was altered. It was not possible to isolate a single column.
+La tabla TokenRecuperacion no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró. Antes de recalcular, revise sus datos o restaure una copia de seguridad.	The TokenRecuperacion table has no stored check digits, but the other tables do: someone deleted them. Before recalculating, review the data or restore a backup.

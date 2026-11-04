@@ -42,6 +42,8 @@
   <ItemGroup>
     <Compile Include="DALAlerta.cs" />
     <Compile Include="DALAlertasXml.cs" />
+    <Compile Include="DALArchivoBitacora.cs" />
+    <Compile Include="DALArchivoFactura.cs" />
     <Compile Include="DALArchivoReporte.cs" />
     <Compile Include="DALCatalogoRecetas.cs" />
     <Compile Include="DALConexion.cs" />

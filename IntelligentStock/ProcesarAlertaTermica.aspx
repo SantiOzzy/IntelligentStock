@@ -44,6 +44,10 @@
                 <asp:RequiredFieldValidator ID="rfvObservaciones" runat="server" ControlToValidate="txtObservaciones"
                     ValidationGroup="Procesar" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="Indique la acción correctiva realizada."></asp:RequiredFieldValidator>
+                <asp:RegularExpressionValidator ID="revLargoObservaciones" runat="server" ControlToValidate="txtObservaciones"
+                    ValidationExpression="^[\s\S]{0,500}$" ValidationGroup="Procesar" Display="Dynamic"
+                    CssClass="text-danger"
+                    ErrorMessage="Las observaciones no pueden superar los 500 caracteres."></asp:RegularExpressionValidator>
             </div>
         </div>
     </div>

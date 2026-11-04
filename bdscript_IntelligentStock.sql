@@ -38,8 +38,7 @@ CREATE TABLE Usuario (
     contraseña VARCHAR(64) NOT NULL,
     activo BIT DEFAULT 1,
     bloqueado BIT DEFAULT 0,
-    intentosFallidos INT DEFAULT 0,
-    DVH VARCHAR(64) NULL
+    intentosFallidos INT DEFAULT 0
 )
 GO
 
@@ -76,7 +75,11 @@ CREATE TABLE Evento (
     descripcion VARCHAR(500) NULL,
     -- Informativa / Advertencia / Grave (BE.CriticidadEvento). Se usa para
     -- filtrar la bitácora; ver 07-Plan-pendiente / apéndice de políticas.
-    criticidad VARCHAR(20) NOT NULL DEFAULT 'Informativa'
+    criticidad VARCHAR(20) NOT NULL DEFAULT 'Informativa',
+    -- Eliminación lógica: los eventos de más de 30 días (Web.config,
+    -- DiasEventosActivos) quedan con activo = 0 después de archivarse en
+    -- App_Data\Bitacora\Bitacora_AAAA-MM.xml. No se borran nunca.
+    activo BIT NOT NULL DEFAULT 1
 )
 GO
 
@@ -88,8 +91,8 @@ CREATE TABLE DV (
 )
 GO
 
--- DVH de cada registro. Las tablas de negocio no tienen columna DVH propia
--- (solo Usuario la tiene), así que el dígito por fila se guarda acá.
+-- DVH de cada registro. Ninguna tabla controlada tiene una columna DVH
+-- propia: el dígito de cada fila se guarda solamente acá.
 -- La columna "clave" guarda la PK del registro con formato "columna=valor".
 CREATE TABLE DVH_Fila (
     tabla NVARCHAR(50) NOT NULL,
@@ -290,25 +293,28 @@ BEGIN
 END
 GO
 
--- Filtrar eventos por fecha
+-- Filtrar eventos por fecha. Sin @IncluirEliminados trae solo los activos
+-- (los de los últimos 30 días).
 CREATE PROCEDURE FiltrarEventos
     @FechaInicio DATETIME,
-    @FechaFin DATETIME
+    @FechaFin DATETIME,
+    @IncluirEliminados BIT = 0
 AS
 BEGIN
-    SELECT E.id_evento, E.dni_usuario, U.nombreUsuario, E.fecha, E.accion, E.descripcion, E.criticidad
+    SELECT E.id_evento, E.dni_usuario, U.nombreUsuario, E.fecha, E.accion, E.descripcion, E.criticidad, E.activo
     FROM Evento E
     LEFT JOIN Usuario U ON E.dni_usuario = U.dni
     WHERE E.fecha >= @FechaInicio AND E.fecha <= @FechaFin
+      AND (E.activo = 1 OR @IncluirEliminados = 1)
     ORDER BY E.id_evento DESC
 END
 GO
 
--- Traer todos los eventos
+-- Traer todos los eventos (activos y eliminados)
 CREATE PROCEDURE TraerEventos
 AS
 BEGIN
-    SELECT E.id_evento, E.dni_usuario, U.nombreUsuario, E.fecha, E.accion, E.descripcion, E.criticidad
+    SELECT E.id_evento, E.dni_usuario, U.nombreUsuario, E.fecha, E.accion, E.descripcion, E.criticidad, E.activo
     FROM Evento E
     LEFT JOIN Usuario U ON E.dni_usuario = U.dni
     ORDER BY E.id_evento DESC
@@ -316,48 +322,49 @@ END
 GO
 
 -- Vista inicial de la bitácora: los últimos N eventos (la pantalla pide 200).
+-- Sin @IncluirEliminados, solo los activos.
 CREATE PROCEDURE TraerUltimosEventos
-    @Cantidad INT
+    @Cantidad INT,
+    @IncluirEliminados BIT = 0
 AS
 BEGIN
     SELECT TOP (@Cantidad) E.id_evento, E.dni_usuario, U.nombreUsuario,
-           E.fecha, E.accion, E.descripcion, E.criticidad
+           E.fecha, E.accion, E.descripcion, E.criticidad, E.activo
     FROM Evento E
     LEFT JOIN Usuario U ON E.dni_usuario = U.dni
+    WHERE E.activo = 1 OR @IncluirEliminados = 1
     ORDER BY E.id_evento DESC
 END
 GO
 
--- Cantidad total de eventos, para decidir si hace falta purgar los mas viejos.
--- Cuenta los eventos sujetos a la política de retención: las ventas del
--- último año no cuentan (ver PurgarEventosAntiguos).
-CREATE PROCEDURE ContarEventos
+-- Política de la bitácora (CU-003-016): los eventos activos anteriores a
+-- @Limite (hoy menos 30 días) son los que hay que archivar en el XML del mes
+-- y pasar a eliminados.
+CREATE PROCEDURE TraerEventosVencidos
+    @Limite DATETIME
 AS
 BEGIN
-    SELECT COUNT(1) FROM Evento
-    WHERE NOT (accion = 'Venta' AND fecha >= DATEADD(DAY, -400, GETDATE()))
+    SELECT E.id_evento, E.dni_usuario, U.nombreUsuario, E.fecha, E.accion, E.descripcion, E.criticidad, E.activo
+    FROM Evento E
+    LEFT JOIN Usuario U ON E.dni_usuario = U.dni
+    WHERE E.activo = 1 AND E.fecha < @Limite
+    ORDER BY E.fecha, E.id_evento
 END
 GO
 
--- Política de retención de la bitácora: conserva solo los @CantidadARetener
--- eventos mas recientes (orden descendente por fecha) y borra el resto.
--- Las ventas del último año no se borran: son el historial con el que se
--- entrena la predicción de demanda (CU-006-033).
-CREATE PROCEDURE PurgarEventosAntiguos
-    @CantidadARetener INT
+-- Eliminación lógica de los eventos anteriores a @Limite que ya se archivaron
+-- (@HastaId es el código más alto del lote archivado). No se borra ninguna
+-- fila: las ventas siguen sirviendo a la predicción de demanda (CU-006-033) y
+-- las altas de suscripción al cálculo de los meses pagados.
+CREATE PROCEDURE EliminarEventosLogicamente
+    @Limite DATETIME,
+    @HastaId INT
 AS
 BEGIN
-    -- Las ventas del último año no se borran ni cuentan para el límite: son
-    -- el historial de consumo de la predicción de demanda (CU-006-033).
-    ;WITH Ordenados AS (
-        SELECT id_evento, ROW_NUMBER() OVER (ORDER BY fecha DESC, id_evento DESC) AS Posicion
-        FROM Evento
-        WHERE NOT (accion = 'Venta' AND fecha >= DATEADD(DAY, -400, GETDATE()))
-    )
-    DELETE E
-    FROM Evento E
-    INNER JOIN Ordenados O ON E.id_evento = O.id_evento
-    WHERE O.Posicion > @CantidadARetener
+    UPDATE Evento SET activo = 0
+    WHERE activo = 1 AND fecha < @Limite AND id_evento <= @HastaId;
+
+    SELECT @@ROWCOUNT;
 END
 GO
 
@@ -563,15 +570,6 @@ CREATE PROCEDURE InvalidarTokensDeUsuario
 AS
 BEGIN
     UPDATE TokenRecuperacion SET usado = 1 WHERE dni_usuario = @DniUsuario AND usado = 0
-END
-GO
-
-CREATE PROCEDURE ActualizarDVHUsuario
-    @DNI INT,
-    @DVH VARCHAR(64)
-AS
-BEGIN
-    UPDATE Usuario SET DVH = @DVH WHERE dni = @DNI
 END
 GO
 
@@ -1118,14 +1116,15 @@ END
 GO
 
 -- Movimientos de stock registrados en la bitácora (por ejemplo, los últimos
--- ajustes de stock que muestra la pantalla de ajuste).
+-- ajustes de stock que muestra la pantalla de ajuste). Trae activos y
+-- eliminados: son datos que el sistema vuelve a leer.
 CREATE PROCEDURE TraerUltimosEventosPorAccion
     @Accion VARCHAR(100),
     @Cantidad INT
 AS
 BEGIN
     SELECT TOP (@Cantidad) E.id_evento, E.dni_usuario, U.nombreUsuario,
-           E.fecha, E.accion, E.descripcion, E.criticidad
+           E.fecha, E.accion, E.descripcion, E.criticidad, E.activo
     FROM Evento E
     LEFT JOIN Usuario U ON E.dni_usuario = U.dni
     WHERE E.accion = @Accion
@@ -1539,13 +1538,14 @@ GO
 
 -- Eventos de una acción desde una fecha. Con 'Venta' es el historial de
 -- consumo con el que se entrena la predicción de demanda (CU-006-033) y el
--- que usa el reporte gerencial.
+-- que usa el reporte gerencial. Trae activos y eliminados: la eliminación
+-- lógica no le quita historial a la predicción.
 CREATE PROCEDURE TraerEventosPorAccionDesde
     @Accion VARCHAR(100),
     @Desde DATETIME
 AS
 BEGIN
-    SELECT E.id_evento, E.dni_usuario, U.nombreUsuario, E.fecha, E.accion, E.descripcion, E.criticidad
+    SELECT E.id_evento, E.dni_usuario, U.nombreUsuario, E.fecha, E.accion, E.descripcion, E.criticidad, E.activo
     FROM Evento E
     LEFT JOIN Usuario U ON E.dni_usuario = U.dni
     WHERE E.accion = @Accion AND E.fecha >= @Desde
@@ -1568,11 +1568,12 @@ INSERT INTO Rol (id_rol, nombre) VALUES (5, 'Empleado')
 SET IDENTITY_INSERT Rol OFF
 GO
 
--- Usuario Admin (contraseña: Admin123 → SHA256)
+-- Usuario Admin (contraseña: Admin123! → SHA256). Cumple la regla de contraseñas:
+-- 8 caracteres o más, mayúscula, minúscula, número y carácter especial.
 INSERT INTO Usuario (dni, id_rol, nombre, apellido, fechaNacimiento, correoElectronico, 
                      numeroTelefono, nombreUsuario, contraseña, activo, bloqueado, intentosFallidos)
 VALUES (12345678, 1, 'Admin', 'Sistema', '1990-01-01', 'admin@intelligentstock.com',
-        '1100000000', 'Admin', '3b612c75a7b5048a435fb6ec81e52ff92d6d795a8b5a9c17070f6a63c97a53b2', 1, 0, 0)
+        '1100000000', 'Admin', '3eb3fe66b31e3b4d10fa70b5cad49c7112294af6ae4e476a1c405155d45aa121', 1, 0, 0)
 GO
 
 -- Patentes (permisos individuales - hojas del Composite)
@@ -1718,6 +1719,7 @@ INSERT INTO RolFamilia VALUES (2, 105)  -- Gestión de Recetas (028 a 031)
 INSERT INTO RolFamilia VALUES (2, 107)  -- Gestión de Compras (033 a 036)
 INSERT INTO RolFamilia VALUES (2, 108)  -- Reportes (032, 037, 038, 043)
 INSERT INTO RolFamilia VALUES (2, 32)   -- ConsultaSensor (042)
+INSERT INTO RolFamilia VALUES (2, 33)   -- AltaSuscripcion (044): el encargado compra el plan del local
 
 -- Auditor (3): solo consultas, más la bitácora.
 INSERT INTO RolFamilia VALUES (3, 4)    -- ConsultaUsuario (012)
@@ -1768,6 +1770,7 @@ INSERT INTO DV (tabla, DVH, DVV) VALUES ('DetalleReceta', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('Sensor', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('Alerta', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('Suscripcion', '', '')
+INSERT INTO DV (tabla, DVH, DVV) VALUES ('TokenRecuperacion', '', '')
 GO
 
 USE [master]

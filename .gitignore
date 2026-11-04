@@ -1,18 +1,48 @@
-﻿.vs/
-bin/
-obj/
-packages/
-_buildcheck/
-_program files_git/
+﻿# Visual Studio
+.vs/
 *.user
 *.suo
 
-# Bin del sitio web: solo se suben los .refresh (NuGet trae el resto)
+# Compilados de las bibliotecas de clases
+BE/bin/
+BE/obj/
+BLL/bin/
+BLL/obj/
+DAL/bin/
+DAL/obj/
+Servicios/bin/
+Servicios/obj/
+
+# Paquetes NuGet: Visual Studio los vuelve a bajar al compilar (packages.config)
+packages/
+
+# Bin del sitio web: solo se suben los .refresh, que le indican a Visual Studio
+# qué DLL copiar desde packages; el resto se arma al compilar
 IntelligentStock/Bin/*
 !IntelligentStock/Bin/*.refresh
+!IntelligentStock/Bin/roslyn/
+IntelligentStock/Bin/roslyn/*
+!IntelligentStock/Bin/roslyn/*.refresh
 
-# Archivos que genera el sistema
-IntelligentStock/App_Data/Traducciones/
+# Carpetas de trabajo locales
+_buildcheck/
+_program files_git/
+
+# Archivos que genera el sistema al usarse
 IntelligentStock/App_Data/Reportes/
+IntelligentStock/App_Data/Respaldos/
+IntelligentStock/App_Data/Uploads/
+IntelligentStock/App_Data/Facturas/
+IntelligentStock/App_Data/Bitacora/
 IntelligentStock/App_Data/*.mdf
 IntelligentStock/App_Data/*.ldf
+*.bak
+
+# Datos privados (contraseña del correo): ver el comentario de SMTP en Web.config
+IntelligentStock/Secretos.config
+
+# No van al repositorio: script de actualización, datos de prueba y documentación
+bdscript_actualizacion.sql
+bdscript_datos_prueba_ventas.sql
+*.docx
+*.pdf

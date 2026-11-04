@@ -132,17 +132,12 @@ public partial class Restore : PaginaBase
                string.Equals(extension, ".sql", StringComparison.OrdinalIgnoreCase);
     }
 
-    // El archivo se deja en App_Data\Uploads. Ojo: para un .bak la cuenta del
-    // servicio de SQL Server tiene que poder leer esa carpeta, porque el RESTORE
-    // lo hace el motor y no la aplicacion.
+    // El archivo se deja en App_Data\Respaldos\Restauracion. El RESTORE lo hace
+    // el motor y no la aplicacion, asi que BLLRespaldo prepara esa carpeta para
+    // que la cuenta del servicio de SQL Server pueda leer el archivo.
     private string GuardarArchivoSubido()
     {
-        string carpeta = Server.MapPath("~/App_Data/Uploads");
-
-        if (!Directory.Exists(carpeta))
-        {
-            Directory.CreateDirectory(carpeta);
-        }
+        string carpeta = bllRespaldo.PrepararCarpetaDeRestauracion();
 
         string ruta = Path.Combine(carpeta, Path.GetFileName(fuArchivo.FileName));
         fuArchivo.SaveAs(ruta);

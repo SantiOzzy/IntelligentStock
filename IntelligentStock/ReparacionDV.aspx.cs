@@ -65,8 +65,9 @@ public partial class ReparacionDV : PaginaBase
         gvInconsistencias.DataBind();
 
         MostrarMensaje(lblMensaje,
-            "Se encontraron " + inconsistencias.Count +
-            (inconsistencias.Count == 1 ? " inconsistencia. " : " inconsistencias. ") +
+            (inconsistencias.Count == 1
+                ? "Se encontró 1 inconsistencia. "
+                : "Se encontraron " + inconsistencias.Count + " inconsistencias. ") +
             AdministradorErrores.Mensaje("ERR007"), true);
     }
 

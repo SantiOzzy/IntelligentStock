@@ -21,10 +21,19 @@ namespace BE
 
         public decimal StockResultante { get; set; }
 
+        /// Stock mínimo del insumo (para avisar si la venta lo deja en el mínimo).
+        public decimal StockMinimo { get; set; }
+
         /// El stock no alcanza para la venta.
         public bool SinStock
         {
             get { return StockResultante < 0; }
+        }
+
+        /// Alcanza, pero el insumo queda en su stock mínimo o por debajo.
+        public bool QuedaEnMinimo
+        {
+            get { return !SinStock && StockResultante <= StockMinimo; }
         }
 
         public string ConsumoUnitarioTexto

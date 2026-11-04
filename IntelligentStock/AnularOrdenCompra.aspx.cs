@@ -34,6 +34,11 @@ public partial class AnularOrdenCompra : PaginaBase
 
     protected void btnAceptar_Click(object sender, EventArgs e)
     {
+        if (!IsValid)
+        {
+            return;
+        }
+
         int idOrden;
         int.TryParse(ddlOrden.SelectedValue, out idOrden);
 
@@ -85,6 +90,7 @@ public partial class AnularOrdenCompra : PaginaBase
     private void MostrarDetalle()
     {
         gvDetalle.DataSource = null;
+        litIndicadores.Text = string.Empty;
 
         int idOrden;
         if (int.TryParse(ddlOrden.SelectedValue, out idOrden) && idOrden > 0)
@@ -95,6 +101,12 @@ public partial class AnularOrdenCompra : PaginaBase
                 if (orden != null)
                 {
                     gvDetalle.DataSource = orden.Detalles;
+                    litIndicadores.Text = new Indicadores()
+                        .Agregar("Proveedor", string.IsNullOrEmpty(orden.NombreProveedor) ? orden.CuitProveedor : orden.NombreProveedor, "destacado")
+                        .Agregar("Fecha de la orden", orden.FechaTexto)
+                        .Agregar("Insumos", orden.Detalles.Count.ToString())
+                        .Agregar("Importe estimado", orden.ImporteEstimado.ToString("C"))
+                        .ToString();
                 }
             }
             catch (Exception ex)

@@ -25,37 +25,50 @@ namespace DAL
             dalCon.EjecutarProcAlmacenado("RegistrarEvento", parametros);
         }
 
-        /// Cantidad total de eventos en la bitácora.
-        public int ContarEventos()
+        /// Eventos todavía activos con fecha anterior al límite: los que la
+        /// política de la bitácora tiene que pasar a eliminados.
+        public List<BEEvento> TraerEventosVencidos(DateTime limite)
         {
-            DataTable tabla = dalCon.ConsultaProcAlmacenado("ContarEventos", null);
+            SqlParameter[] parametros = new SqlParameter[]
+            {
+                new SqlParameter("@Limite", limite)
+            };
+
+            DataTable tabla = dalCon.ConsultaProcAlmacenado("TraerEventosVencidos", parametros);
+            return Mapear(tabla);
+        }
+
+        /// Eliminación lógica (activo = 0) de los eventos anteriores al límite.
+        /// hastaId acota la actualización a los que ya se archivaron. Devuelve
+        /// cuántos eventos se marcaron.
+        public int EliminarEventosLogicamente(DateTime limite, int hastaId)
+        {
+            SqlParameter[] parametros = new SqlParameter[]
+            {
+                new SqlParameter("@Limite", limite),
+                new SqlParameter("@HastaId", hastaId)
+            };
+
+            DataTable tabla = dalCon.ConsultaProcAlmacenado("EliminarEventosLogicamente", parametros);
             return tabla.Rows.Count == 0 ? 0 : Convert.ToInt32(tabla.Rows[0][0]);
         }
 
-        /// Aplica la política de retención: conserva solo los más recientes.
-        public void PurgarEventosAntiguos(int cantidadARetener)
+        /// Ultimos N eventos registrados, del mas reciente al mas antiguo. Sin
+        /// incluirEliminados, solo los activos (los de los últimos 30 días).
+        public List<BEEvento> TraerUltimosEventos(int cantidad, bool incluirEliminados)
         {
             SqlParameter[] parametros = new SqlParameter[]
             {
-                new SqlParameter("@CantidadARetener", cantidadARetener)
-            };
-
-            dalCon.EjecutarProcAlmacenado("PurgarEventosAntiguos", parametros);
-        }
-
-        /// Ultimos N eventos registrados, del mas reciente al mas antiguo.
-        public List<BEEvento> TraerUltimosEventos(int cantidad)
-        {
-            SqlParameter[] parametros = new SqlParameter[]
-            {
-                new SqlParameter("@Cantidad", cantidad)
+                new SqlParameter("@Cantidad", cantidad),
+                new SqlParameter("@IncluirEliminados", incluirEliminados)
             };
 
             DataTable tabla = dalCon.ConsultaProcAlmacenado("TraerUltimosEventos", parametros);
             return Mapear(tabla);
         }
 
-        /// Ultimos N eventos de una acción determinada (por ejemplo, los ajustes de stock).
+        /// Ultimos N eventos de una acción determinada (por ejemplo, los ajustes
+        /// de stock), activos o eliminados: son datos que el sistema vuelve a leer.
         public List<BEEvento> TraerUltimosEventosPorAccion(string accion, int cantidad)
         {
             SqlParameter[] parametros = new SqlParameter[]
@@ -68,7 +81,8 @@ namespace DAL
             return Mapear(tabla);
         }
 
-        /// Eventos de una acción desde una fecha, del más viejo al más nuevo.
+        /// Eventos de una acción desde una fecha, del más viejo al más nuevo,
+        /// activos o eliminados (con "Venta" es el historial de la predicción).
         public List<BEEvento> TraerEventosPorAccionDesde(string accion, DateTime desde)
         {
             SqlParameter[] parametros = new SqlParameter[]
@@ -87,12 +101,13 @@ namespace DAL
             return Mapear(tabla);
         }
 
-        public List<BEEvento> FiltrarEventos(DateTime fechaInicio, DateTime fechaFin)
+        public List<BEEvento> FiltrarEventos(DateTime fechaInicio, DateTime fechaFin, bool incluirEliminados)
         {
             SqlParameter[] parametros = new SqlParameter[]
             {
                 new SqlParameter("@FechaInicio", fechaInicio),
-                new SqlParameter("@FechaFin", fechaFin)
+                new SqlParameter("@FechaFin", fechaFin),
+                new SqlParameter("@IncluirEliminados", incluirEliminados)
             };
 
             DataTable tabla = dalCon.ConsultaProcAlmacenado("FiltrarEventos", parametros);
@@ -120,6 +135,8 @@ namespace DAL
                                      Enum.TryParse(Convert.ToString(fila["criticidad"]), true, out criticidad)
                     ? criticidad
                     : CriticidadEvento.Informativa;
+
+                evento.Activo = !fila.Table.Columns.Contains("activo") || Convert.ToBoolean(fila["activo"]);
 
                 lista.Add(evento);
             }

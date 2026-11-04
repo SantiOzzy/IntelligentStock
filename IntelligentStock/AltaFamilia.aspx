@@ -14,7 +14,7 @@
     </ul>
 
     <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active" id="tabFamilias" style="padding-top: 15px">
+    <div role="tabpanel" class="tab-pane active pestana-contenido" id="tabFamilias">
 
     <p class="help-block">
         Una <strong>familia</strong> agrupa patentes y otras familias. Las
@@ -37,7 +37,7 @@
             <div class="form-group">
                 <asp:Label ID="lblComponentes" runat="server" CssClass="control-label"
                     Text="Componentes que va a contener"></asp:Label>
-                <div style="max-height: 340px; overflow-y: auto; border: 1px solid #ddd; padding: 8px">
+                <div class="lista-desplazable">
                     <asp:CheckBoxList ID="cblComponentes" runat="server" CssClass="list-unstyled"
                         AutoPostBack="true" OnSelectedIndexChanged="cblComponentes_SelectedIndexChanged"
                         CausesValidation="false"></asp:CheckBoxList>
@@ -97,7 +97,7 @@
             <div class="form-group">
                 <asp:Label ID="lblComponentesRol" runat="server" CssClass="control-label"
                     Text="Familias y patentes que va a otorgar"></asp:Label>
-                <div style="max-height: 340px; overflow-y: auto; border: 1px solid #ddd; padding: 8px">
+                <div class="lista-desplazable">
                     <asp:CheckBoxList ID="cblComponentesRol" runat="server" CssClass="list-unstyled"
                         AutoPostBack="true" OnSelectedIndexChanged="cblComponentesRol_SelectedIndexChanged"
                         CausesValidation="false"></asp:CheckBoxList>

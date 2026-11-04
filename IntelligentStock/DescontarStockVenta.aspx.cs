@@ -24,6 +24,8 @@ public partial class DescontarStockVenta : PaginaBase
 
     protected void Page_Load(object sender, EventArgs e)
     {
+        ValidadorDeRango.CargarFechas(rvFecha, DateTime.Today.AddDays(-BLLVenta.DiasMaximosHaciaAtras), DateTime.Today);
+
         if (!IsPostBack)
         {
             txtFecha.Text = DateTime.Today.ToString("yyyy-MM-dd");
@@ -45,17 +47,30 @@ public partial class DescontarStockVenta : PaginaBase
 
     protected void btnAceptar_Click(object sender, EventArgs e)
     {
-        int idReceta;
-        int.TryParse(ddlReceta.SelectedValue, out idReceta);
-
-        decimal cantidad;
-        if (!LeerCantidad(out cantidad))
+        if (!IsValid)
         {
             return;
         }
 
+        int idReceta;
+        int.TryParse(ddlReceta.SelectedValue, out idReceta);
+
+        if (idReceta <= 0 || string.IsNullOrEmpty(txtCantidad.Text.Trim()) || string.IsNullOrEmpty(txtFecha.Text.Trim()))
+        {
+            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002",
+                "Elija la receta e ingrese la cantidad y la fecha de la venta."), true);
+            return;
+        }
+
+        decimal cantidad;
+        if (!Numeros.TryParseDecimal(txtCantidad.Text, out cantidad))
+        {
+            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025", "La cantidad vendida tiene que ser un número."), true);
+            return;
+        }
+
         DateTime? fecha = LeerFecha(txtFecha.Text);
-        if (!string.IsNullOrEmpty(txtFecha.Text) && !fecha.HasValue)
+        if (!fecha.HasValue)
         {
             MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025", "La fecha no es válida."), true);
             return;
@@ -72,18 +87,27 @@ public partial class DescontarStockVenta : PaginaBase
                              " y se descontó el stock de " + Textos.Contar(consumos.Count, "insumo", "insumos") + ".";
 
             List<string> enMinimo = new List<string>();
-            foreach (BEConsumoVenta consumo in consumos)
+            for (int i = 0; i < consumos.Count; i++)
             {
-                BEInsumo insumo = new BLLInsumo().ObtenerPorId(consumo.IdInsumo);
-                if (insumo != null && insumo.BajoMinimo)
+                if (consumos[i].QuedaEnMinimo)
                 {
-                    enMinimo.Add(insumo.Nombre);
+                    enMinimo.Add(consumos[i].NombreInsumo);
+                    if (i < gvDetalle.Rows.Count)
+                    {
+                        gvDetalle.Rows[i].CssClass = "warning";
+                    }
                 }
             }
             if (enMinimo.Count > 0)
             {
                 mensaje += " Atención: quedaron en su stock mínimo o por debajo: " + string.Join(", ", enMinimo.ToArray()) + ".";
             }
+
+            litIndicadores.Text = new Indicadores()
+                .Agregar("Venta registrada", cantidad.ToString("0.##") + " x " + ddlReceta.SelectedItem.Text, "destacado")
+                .Agregar("Insumos descontados", consumos.Count.ToString(), "exito")
+                .Agregar("En su mínimo o por debajo", enMinimo.Count.ToString(), enMinimo.Count > 0 ? "aviso" : null)
+                .ToString();
 
             txtCantidad.Text = string.Empty;
             MostrarMensaje(lblMensaje, mensaje, false);
@@ -127,6 +151,7 @@ public partial class DescontarStockVenta : PaginaBase
     {
         gvDetalle.DataSource = null;
         gvDetalle.DataBind();
+        litIndicadores.Text = string.Empty;
 
         int idReceta;
         decimal cantidad;
@@ -142,16 +167,28 @@ public partial class DescontarStockVenta : PaginaBase
             gvDetalle.DataSource = consumos;
             gvDetalle.DataBind();
 
-            bool falta = false;
+            int sinStock = 0, enMinimo = 0;
             for (int i = 0; i < consumos.Count && i < gvDetalle.Rows.Count; i++)
             {
                 if (consumos[i].SinStock)
                 {
                     gvDetalle.Rows[i].CssClass = "danger";
-                    falta = true;
+                    sinStock++;
+                }
+                else if (consumos[i].QuedaEnMinimo)
+                {
+                    gvDetalle.Rows[i].CssClass = "warning";
+                    enMinimo++;
                 }
             }
 
+            litIndicadores.Text = new Indicadores()
+                .Agregar("Insumos que se descuentan", consumos.Count.ToString(), "destacado")
+                .Agregar("No alcanzan", sinStock.ToString(), sinStock > 0 ? "peligro" : "exito")
+                .Agregar("Quedarían en su mínimo", enMinimo.ToString(), enMinimo > 0 ? "aviso" : null)
+                .ToString();
+
+            bool falta = sinStock > 0;
             if (falta && !lblMensaje.Visible)
             {
                 MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR018",
@@ -165,17 +202,6 @@ public partial class DescontarStockVenta : PaginaBase
                 MostrarMensaje(lblMensaje, ex.Message, true);
             }
         }
-    }
-
-    private bool LeerCantidad(out decimal cantidad)
-    {
-        if (!Numeros.TryParseDecimal(txtCantidad.Text, out cantidad))
-        {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002",
-                "Ingrese la cantidad vendida."), true);
-            return false;
-        }
-        return true;
     }
 
     private static DateTime? LeerFecha(string texto)

@@ -21,7 +21,10 @@ namespace DAL
             SqlParameter[] parametros = new SqlParameter[]
             {
                 new SqlParameter("@TipoPlan", suscripcion.TipoPlan),
-                new SqlParameter("@TokenPago", suscripcion.TokenPago),
+                // Al contado no hay token: se guarda NULL.
+                new SqlParameter("@TokenPago", string.IsNullOrEmpty(suscripcion.TokenPago)
+                    ? (object)DBNull.Value
+                    : suscripcion.TokenPago),
                 new SqlParameter("@Estado", suscripcion.Estado),
                 fecha
             };

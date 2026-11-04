@@ -44,6 +44,14 @@
                 <asp:RequiredFieldValidator ID="rfvTemperatura" runat="server" ControlToValidate="txtTemperatura"
                     ValidationGroup="Modificacion" Display="Dynamic" CssClass="text-danger"
                     ErrorMessage="La temperatura máxima permitida es obligatoria."></asp:RequiredFieldValidator>
+                <asp:RangeValidator ID="rvTemperatura" runat="server" ControlToValidate="txtTemperatura"
+                    Type="Double" MinimumValue="-60" MaximumValue="60" CultureInvariantValues="true"
+                    ValidationGroup="Modificacion" Display="Dynamic" CssClass="text-danger"
+                    ErrorMessage="La temperatura máxima permitida tiene que estar entre -60 °C y 60 °C."></asp:RangeValidator>
+                <asp:RegularExpressionValidator ID="revDecimalesTemperatura" runat="server" ControlToValidate="txtTemperatura"
+                    ValidationExpression="^-?\d+([.,]\d)?$" ValidationGroup="Modificacion" Display="Dynamic"
+                    CssClass="text-danger"
+                    ErrorMessage="La temperatura admite un solo decimal (por ejemplo 4,5)."></asp:RegularExpressionValidator>
                 <span class="help-block">Por encima de este valor el sensor genera una alerta. En un freezer es negativa (por ejemplo, -15).</span>
             </div>
         </div>

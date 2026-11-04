@@ -27,8 +27,14 @@ namespace BLL
         public const int LargoComprobante = 40;
         public const int LargoMotivo = 200;
 
+        /// Un motivo de anulación más corto que esto no explica nada ("x", "no").
+        public const int LargoMinimoMotivo = 5;
+
         /// Lo máximo que admite la columna cantidad, DECIMAL(8,2).
         public const decimal CantidadMaxima = 999999.99m;
+
+        /// Importe máximo de una factura.
+        public const decimal ImporteMaximo = 9999999999.99m;
 
         private static readonly Regex FormatoComprobante = new Regex(@"^[A-Za-z0-9][A-Za-z0-9 \-/]*$", RegexOptions.Compiled);
 
@@ -283,6 +289,11 @@ namespace BLL
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
                     "Elija la orden e ingrese el motivo de la anulación."));
             }
+            if (motivo.Length < LargoMinimoMotivo)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "Explique el motivo de la anulación (al menos " + LargoMinimoMotivo + " caracteres)."));
+            }
             if (motivo.Length > LargoMotivo)
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
@@ -320,12 +331,12 @@ namespace BLL
 
         /// Registra la factura de una orden pendiente: la orden pasa a Recibida
         /// (con el comprobante) y lo pedido de cada insumo se suma al stock (R8),
-        /// todo junto. El importe es opcional y queda en la bitácora.
+        /// todo junto. El importe total de la factura queda en la bitácora.
         public BEOrdenCompra RegistrarFactura(int idOrden, string comprobante, DateTime? fecha, decimal? importe)
         {
             comprobante = comprobante == null ? string.Empty : Regex.Replace(comprobante.Trim(), @"\s+", " ");
 
-            if (idOrden <= 0 || comprobante.Length == 0 || !fecha.HasValue)
+            if (idOrden <= 0 || comprobante.Length == 0 || !fecha.HasValue || !importe.HasValue)
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR002"));
             }
@@ -335,10 +346,15 @@ namespace BLL
                     "El número de comprobante admite hasta " + LargoComprobante + " letras, números, espacios, " +
                     "guiones o barras (por ejemplo A-0001-00001234)."));
             }
-            if (importe.HasValue && (importe.Value < 0 || importe.Value > 9999999999.99m))
+            if (importe.Value <= 0 || importe.Value > ImporteMaximo)
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
-                    "El importe tiene que ser un número positivo."));
+                    "El importe total tiene que ser mayor que cero."));
+            }
+            if (decimal.Round(importe.Value, 2) != importe.Value)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "El importe total admite hasta dos decimales."));
             }
 
             BEOrdenCompra orden = ObtenerPorId(idOrden);
@@ -401,7 +417,7 @@ namespace BLL
             bllEvento.RegistrarDelUsuarioActual("Factura de proveedor",
                 Recortar("Se registró el comprobante " + comprobante + " del " + fechaComprobante.ToString("dd/MM/yyyy") +
                          " de " + orden.ProveedorTexto + " para la orden " + orden.Numero +
-                         (importe.HasValue ? ", por " + importe.Value.ToString("C") : string.Empty) +
+                         ", por " + importe.Value.ToString("C") +
                          ". Ingresó al stock: " + ingresos + ".", 500));
 
             orden.Estado = estado;

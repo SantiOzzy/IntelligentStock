@@ -47,10 +47,17 @@
                     <div class="form-group">
                         <asp:Label ID="lblCantidad" runat="server" AssociatedControlID="txtCantidad"
                             CssClass="control-label" Text="Cantidad por porción"></asp:Label>
-                        <asp:TextBox ID="txtCantidad" runat="server" CssClass="form-control" TextMode="Number" min="0.01" step="0.01"></asp:TextBox>
+                        <asp:TextBox ID="txtCantidad" runat="server" CssClass="form-control" TextMode="Number" min="0.01" step="0.01" max="999999.99"></asp:TextBox>
                         <asp:RequiredFieldValidator ID="rfvCantidad" runat="server" ControlToValidate="txtCantidad"
                             ValidationGroup="Detalle" Display="Dynamic" CssClass="text-danger"
                             ErrorMessage="Ingrese la cantidad del insumo."></asp:RequiredFieldValidator>
+                        <asp:RangeValidator ID="rvCantidad" runat="server" ControlToValidate="txtCantidad"
+                            Type="Double" MinimumValue="0.01" MaximumValue="999999.99" CultureInvariantValues="true"
+                            ValidationGroup="Detalle" Display="Dynamic" CssClass="text-danger"
+                            ErrorMessage="La cantidad tiene que estar entre 0,01 y 999.999,99."></asp:RangeValidator>
+                        <asp:RegularExpressionValidator ID="revDecimalesCantidad" runat="server" ControlToValidate="txtCantidad"
+                            ValidationExpression="^\d+([.,]\d{1,2})?$" ValidationGroup="Detalle" Display="Dynamic"
+                            CssClass="text-danger" ErrorMessage="La cantidad admite hasta dos decimales."></asp:RegularExpressionValidator>
                         <span class="help-block">En la unidad de medida del insumo (la que figura entre paréntesis en la lista).</span>
                     </div>
                 </div>

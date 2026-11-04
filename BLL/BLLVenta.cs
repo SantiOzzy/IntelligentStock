@@ -94,8 +94,10 @@ namespace BLL
                 consumo.NombreInsumo = detalle.NombreInsumo;
                 consumo.UnidadDeMedida = detalle.UnidadDeMedida;
                 consumo.ConsumoUnitario = detalle.Cantidad;
-                consumo.ConsumoTotal = Math.Round(detalle.Cantidad * cantidad, 2);
+                // Igual que ROUND de SQL Server, que es el que descuenta de verdad.
+                consumo.ConsumoTotal = Math.Round(detalle.Cantidad * cantidad, 2, MidpointRounding.AwayFromZero);
                 consumo.StockAnterior = insumo == null ? 0m : insumo.Stock;
+                consumo.StockMinimo = insumo == null ? 0m : insumo.StockMinimo;
                 consumo.StockResultante = consumo.StockAnterior - consumo.ConsumoTotal;
                 consumos.Add(consumo);
             }
@@ -109,7 +111,13 @@ namespace BLL
             BEReceta receta = ObtenerRecetaVendible(idReceta);
             ValidarCantidad(cantidad);
 
-            DateTime fechaVenta = fecha.HasValue ? fecha.Value.Date : DateTime.Today;
+            if (!fecha.HasValue)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
+                    "Ingrese la fecha de la venta."));
+            }
+
+            DateTime fechaVenta = fecha.Value.Date;
             if (fechaVenta > DateTime.Today)
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
@@ -163,6 +171,10 @@ namespace BLL
             foreach (BEConsumoVenta consumo in consumos)
             {
                 BEInsumo actualizado = dalInsumo.ObtenerPorId(consumo.IdInsumo);
+                if (actualizado != null)
+                {
+                    consumo.StockMinimo = actualizado.StockMinimo;
+                }
                 controladorStock.RegistrarDescuento(actualizado, consumo.StockAnterior);
             }
 

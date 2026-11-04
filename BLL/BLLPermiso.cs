@@ -12,6 +12,23 @@ namespace BLL
     /// patentes y asignaciones a roles.
     public class BLLPermiso
     {
+        /// Cambia cada vez que se modifica la estructura de permisos (los
+        /// componentes de un rol, las familias y lo que contienen). PaginaBase lo
+        /// compara con el que quedó en la sesión y, si cambió, vuelve a cargar los
+        /// permisos del usuario conectado: el menú y los accesos se actualizan en
+        /// el próximo pedido, sin tener que volver a iniciar sesión.
+        private static long versionPermisos;
+
+        public static long VersionPermisos
+        {
+            get { return System.Threading.Interlocked.Read(ref versionPermisos); }
+        }
+
+        private static void PermisosModificados()
+        {
+            System.Threading.Interlocked.Increment(ref versionPermisos);
+        }
+
         private readonly DALPermiso dalPermiso = new DALPermiso();
         private readonly BLLDigitoVerificador bllDV = new BLLDigitoVerificador();
         private readonly BLLEvento bllEvento = new BLLEvento();
@@ -183,6 +200,7 @@ namespace BLL
         public void AsignarARol(int idRol, int idComponente)
         {
             bllDV.EjecutarControlado(() => dalPermiso.AsignarComponenteARol(idRol, idComponente), "RolFamilia");
+            PermisosModificados();
             bllEvento.RegistrarDelUsuarioActual("Asignar permiso a rol",
                 "Se asignó el componente " + idComponente + " al rol " + idRol + ".");
         }
@@ -190,6 +208,7 @@ namespace BLL
         public void QuitarDeRol(int idRol, int idComponente)
         {
             bllDV.EjecutarControlado(() => dalPermiso.QuitarComponenteDeRol(idRol, idComponente), "RolFamilia");
+            PermisosModificados();
             bllEvento.RegistrarDelUsuarioActual("Quitar permiso de rol",
                 "Se quitó el componente " + idComponente + " del rol " + idRol + ".");
         }
@@ -236,6 +255,7 @@ namespace BLL
 
             int id = bllDV.EjecutarControlado(
                 () => dalPermiso.CrearRolConComponentes(nombre.Trim(), ids), "Rol", "RolFamilia");
+            PermisosModificados();
 
             asignados = ids.Count;
             bllEvento.RegistrarDelUsuarioActual("Alta de rol",
@@ -266,6 +286,7 @@ namespace BLL
             }
 
             bllDV.EjecutarControlado(() => dalPermiso.RenombrarRol(idRol, nombre.Trim()), "Rol");
+            PermisosModificados();
             bllEvento.RegistrarDelUsuarioActual("Modificación de rol",
                 "Se renombró el rol id " + idRol + ". Nuevo nombre: " + nombre.Trim() + ".");
         }
@@ -299,6 +320,7 @@ namespace BLL
             }
 
             bllDV.EjecutarControlado(() => dalPermiso.EliminarRol(idRol), "RolFamilia", "Rol");
+            PermisosModificados();
 
             bllEvento.RegistrarDelUsuarioActual("Baja de rol",
                 "Se eliminó el rol " + rol.Nombre + " (id " + idRol + ").");
@@ -367,6 +389,7 @@ namespace BLL
 
             int id = bllDV.EjecutarControlado(
                 () => dalPermiso.CrearFamiliaConHijos(nombre.Trim(), ids), "Familia", "RelacionFamilia");
+            PermisosModificados();
 
             asignados = ids.Count;
             bllEvento.RegistrarDelUsuarioActual("Alta de familia",
@@ -473,6 +496,7 @@ namespace BLL
             }
 
             bllDV.EjecutarControlado(() => dalPermiso.ModificarFamilia(id, nombre.Trim()), "Familia");
+            PermisosModificados();
             bllEvento.RegistrarDelUsuarioActual("Modificación de familia",
                 "Se modificó el componente id " + id + ". Nuevo nombre: " + nombre.Trim() + ".");
         }
@@ -517,6 +541,7 @@ namespace BLL
             }
 
             bllDV.EjecutarControlado(() => dalPermiso.EliminarFamilia(id), "RelacionFamilia", "RolFamilia", "Familia");
+            PermisosModificados();
 
             bllEvento.RegistrarDelUsuarioActual("Baja de familia",
                 "Se eliminó la familia " + componente.Nombre + " (id " + id + ").");
@@ -599,6 +624,7 @@ namespace BLL
                 dalPermiso.AgregarHijo(idPadre, idHijo);
                 return QuitarSueltosCubiertosPor(padre, hijo);
             }, "RelacionFamilia");
+            PermisosModificados();
 
             string detalle = "Se agregó " + hijo.Nombre + " a la familia " + padre.Nombre + ".";
             if (absorbidos.Count > 0)
@@ -673,6 +699,7 @@ namespace BLL
         public void QuitarHijo(int idPadre, int idHijo)
         {
             bllDV.EjecutarControlado(() => dalPermiso.QuitarHijo(idPadre, idHijo), "RelacionFamilia");
+            PermisosModificados();
             bllEvento.RegistrarDelUsuarioActual("Modificación de familia",
                 "Se quitó el componente " + idHijo + " de la familia " + idPadre + ".");
         }

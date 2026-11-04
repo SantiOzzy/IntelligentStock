@@ -16,11 +16,23 @@
                     <asp:Label ID="lblDesde" runat="server" AssociatedControlID="txtDesde"
                         CssClass="control-label" Text="Fecha desde"></asp:Label>
                     <asp:TextBox ID="txtDesde" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
+                    <asp:RangeValidator ID="rvDesde" runat="server" ControlToValidate="txtDesde"
+                        Type="Date" MinimumValue="2000-01-01" MaximumValue="2099-12-31" ValidationGroup="Filtro"
+                        Display="Dynamic" CssClass="text-danger"
+                        ErrorMessage="Ingrese una fecha entre el 01/01/2000 y el 31/12/2099."></asp:RangeValidator>
                 </div>
                 <div class="col-md-2 form-group">
                     <asp:Label ID="lblHasta" runat="server" AssociatedControlID="txtHasta"
                         CssClass="control-label" Text="Fecha hasta"></asp:Label>
                     <asp:TextBox ID="txtHasta" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
+                    <asp:CompareValidator ID="cvHasta" runat="server" ControlToValidate="txtHasta"
+                        ControlToCompare="txtDesde" Operator="GreaterThanEqual" Type="Date"
+                        ValidationGroup="Filtro" Display="Dynamic" CssClass="text-danger"
+                        ErrorMessage="La fecha hasta no puede ser anterior a la fecha desde."></asp:CompareValidator>
+                    <asp:RangeValidator ID="rvHasta" runat="server" ControlToValidate="txtHasta"
+                        Type="Date" MinimumValue="2000-01-01" MaximumValue="2099-12-31" ValidationGroup="Filtro"
+                        Display="Dynamic" CssClass="text-danger"
+                        ErrorMessage="Ingrese una fecha entre el 01/01/2000 y el 31/12/2099."></asp:RangeValidator>
                 </div>
                 <div class="col-md-3 form-group">
                     <asp:Label ID="lblUsuario" runat="server" AssociatedControlID="ddlUsuario"
@@ -30,12 +42,12 @@
                 <div class="col-md-3 form-group">
                     <asp:Label ID="lblTexto" runat="server" AssociatedControlID="txtTexto"
                         CssClass="control-label" Text="Acción o descripción"></asp:Label>
-                    <asp:TextBox ID="txtTexto" runat="server" CssClass="form-control"></asp:TextBox>
+                    <asp:TextBox ID="txtTexto" runat="server" CssClass="form-control" MaxLength="100"></asp:TextBox>
                 </div>
                 <div class="col-md-2 form-group">
                     <label class="control-label">&nbsp;</label><br />
                     <asp:Button ID="btnFiltrar" runat="server" Text="Filtrar"
-                        CssClass="btn btn-primary" OnClick="btnFiltrar_Click" />
+                        CssClass="btn btn-primary" OnClick="btnFiltrar_Click" ValidationGroup="Filtro" />
                     <asp:Button ID="btnLimpiar" runat="server" Text="Limpiar"
                         CssClass="btn btn-default" OnClick="btnLimpiar_Click" CausesValidation="false" />
                 </div>
@@ -51,7 +63,16 @@
                         <asp:ListItem Text="Grave" Value="Grave"></asp:ListItem>
                     </asp:DropDownList>
                 </div>
+                <div class="col-md-6 form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <div class="checkbox">
+                        <label>
+                            <asp:CheckBox ID="chkIncluirEliminados" runat="server" Text="Incluir eventos eliminados" />
+                        </label>
+                    </div>
+                </div>
             </div>
+            <p class="help-block"><asp:Literal ID="litPolitica" runat="server"></asp:Literal></p>
         </div>
     </div>
 
@@ -60,6 +81,7 @@
     <asp:GridView ID="gvEventos" runat="server" AutoGenerateColumns="false"
         CssClass="table table-bordered table-condensed table-striped" GridLines="None"
         AllowPaging="true" PageSize="25" OnPageIndexChanging="gvEventos_PageIndexChanging"
+        OnRowDataBound="gvEventos_RowDataBound"
         EmptyDataText="No se registraron eventos para los filtros aplicados.">
         <Columns>
             <asp:BoundField DataField="IdEvento" HeaderText="Código" ItemStyle-Width="70px" />
@@ -68,9 +90,31 @@
             <asp:BoundField DataField="Hora" HeaderText="Hora" ItemStyle-Width="80px" />
             <asp:BoundField DataField="Accion" HeaderText="Acción" ItemStyle-Width="200px" />
             <asp:BoundField DataField="Criticidad" HeaderText="Criticidad" ItemStyle-Width="110px" />
+            <asp:BoundField DataField="Estado" HeaderText="Estado" ItemStyle-Width="90px" Visible="false" />
             <asp:BoundField DataField="Descripcion" HeaderText="Descripción" />
         </Columns>
         <PagerStyle CssClass="text-center" />
     </asp:GridView>
+
+    <div class="panel panel-default">
+        <div class="panel-heading"><strong>Archivo histórico (XML)</strong></div>
+        <div class="panel-body">
+            <p>Antes de pasar a eliminados, los eventos se archivan en un archivo XML por mes.</p>
+            <asp:Panel ID="pnlArchivos" runat="server" CssClass="row">
+                <div class="col-md-4 form-group">
+                    <asp:Label ID="lblArchivo" runat="server" AssociatedControlID="ddlArchivo"
+                        CssClass="control-label" Text="Mes archivado"></asp:Label>
+                    <asp:DropDownList ID="ddlArchivo" runat="server" CssClass="form-control"></asp:DropDownList>
+                </div>
+                <div class="col-md-3 form-group">
+                    <label class="control-label">&nbsp;</label><br />
+                    <asp:Button ID="btnDescargarArchivo" runat="server" Text="Descargar XML"
+                        CssClass="btn btn-default" OnClick="btnDescargarArchivo_Click" CausesValidation="false" />
+                </div>
+            </asp:Panel>
+            <asp:Label ID="lblSinArchivos" runat="server" CssClass="text-muted" Visible="false"
+                Text="Todavía no se archivó ningún mes."></asp:Label>
+        </div>
+    </div>
 
 </asp:Content>

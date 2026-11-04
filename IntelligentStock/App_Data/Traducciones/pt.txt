@@ -1,0 +1,392 @@
+﻿Panel principal - IntelligentStock	Início - IntelligentStock
+Panel principal	Início
+Base de datos	Banco de dados
+Bitácora de eventos	Registro de eventos
+Español	Español
+English	English
+Português	Português
+Français	Français
+Italiano	Italiano
+UsuarioContingencia (Contingencia)	UsuarioContingencia (Contingência)
+Cerrar sesión	Sair
+Bienvenido, Usuario de contingencia (Contingencia)	Bem-vindo, usuário de contingência (Contingência)
+© 2026 - IntelligentStock	© 2026 - IntelligentStock
+Cerrar sesión - IntelligentStock	Sair - IntelligentStock
+mas opciones	Mais opções
+Seguridad	Segurança
+Alta de usuario	Cadastrar usuário
+Modificación de usuario	Editar usuário
+Baja de usuario	Desativar usuário
+Consultar usuario	Consultar usuários
+Bloquear usuario	Bloquear usuário
+Desbloquear usuario	Desbloquear usuário
+Cambiar contraseña	Alterar senha
+Permisos	Permissões
+Alta de familia	Cadastrar família
+Modificación de familia	Editar família
+Baja de familia	Excluir família
+Consultar familia	Consultar famílias
+Consultar patente	Consultar permissões
+Proveedores	Fornecedores
+Alta de proveedor	Cadastrar fornecedor
+Modificación de proveedor	Editar fornecedor
+Baja de proveedor	Desativar fornecedor
+Consultar proveedor	Consultar fornecedores
+Insumos y recetas	Insumos e receitas
+Alta de insumo	Cadastrar insumo
+Modificación de insumo	Editar insumo
+Baja de insumo	Desativar insumo
+Consultar insumo	Consultar insumos
+Alta de receta	Cadastrar receita
+Modificación de receta	Editar receita
+Baja de receta	Desativar receita
+Consultar receta	Consultar receitas
+Registrar ajuste de stock	Registrar ajuste de estoque
+Operaciones	Operações
+Generar orden de compra	Gerar ordem de compra
+Consultar orden de compra	Consultar ordens de compra
+Anular orden de compra	Cancelar ordem de compra
+Registrar factura de proveedor	Registrar fatura do fornecedor
+Descontar stock por venta	Baixar estoque por venda
+Exportar reporte gerencial	Exportar relatório gerencial
+Telemetría IoT	Telemetria IoT
+Alta de sensor	Cadastrar sensor
+Modificación de sensor	Editar sensor
+Baja de sensor	Desativar sensor
+Consultar sensor	Consultar sensores
+Procesar alerta térmica	Processar alerta de temperatura
+Suscripción	Assinatura
+Alta de suscripción	Nova assinatura
+Baja de suscripción	Cancelar assinatura
+Admin (WebMaster)	Admin (WebMaster)
+¿Confirma que desea cerrar la sesión de	Confirma que deseja encerrar a sessão de
+Admin	Admin
+Aceptar	Aceitar
+Cancelar	Cancelar
+Exportar reporte gerencial - IntelligentStock	Exportar relatório gerencial - IntelligentStock
+El archivo se genera en el servidor (carpeta App_Data\\Reportes) y se descarga al finalizar. El período no puede superar un año.	O arquivo é gerado no servidor (pasta App_Data\\Reportes) e baixado ao terminar. O período não pode passar de um ano.
+Tipo de reporte (*)	Tipo de relatório (*)
+Consumo por insumo	Consumo por insumo
+Ventas por receta	Vendas por receita
+Órdenes por proveedor	Ordens por fornecedor
+Alertas térmicas	Alertas de temperatura
+Ajustes de stock	Ajustes de estoque
+Fecha desde (*)	Data inicial (*)
+Fecha hasta (*)	Data final (*)
+Formato	Formato
+PDF	PDF
+Excel	Excel
+CSV	CSV
+Exportar	Exportar
+Alta de suscripción - IntelligentStock	Nova assinatura - IntelligentStock
+El token lo devuelve la pasarela de cobros externa. Los importes están expresados en pesos argentinos (ARS).	O token é devolvido pelo gateway de pagamento externo. Os valores estão em pesos argentinos (ARS).
+Tipo de plan (*)	Tipo de plano (*)
+Básico (ARS 15.000 por mes)	Básico (ARS 15.000 por mês)
+Profesional (ARS 30.000 por mes)	Profissional (ARS 30.000 por mês)
+Empresarial (ARS 60.000 por mes)	Empresarial (ARS 60.000 por mês)
+Token de pago (*)	Token de pagamento (*)
+El token de pago es obligatorio.	O token de pagamento é obrigatório.
+Empieza con tok_ seguido de 16 a 60 letras o números.	Começa com tok_ seguido de 16 a 60 letras ou números.
+Fecha de inicio	Data de início
+Si se deja vacía, la suscripción empieza hoy.	Se ficar vazia, a assinatura começa hoje.
+Activar suscripción	Ativar assinatura
+Ir al contenido	Ir para o conteúdo
+Abrir el menú	Abrir o menu
+Idioma	Idioma
+Hola, Admin.	Olá, Admin.
+Ingresó como WebMaster; sus tareas están en el menú de la izquierda.	Você entrou como WebMaster; suas tarefas estão no menu à esquerda.
+Inventario de insumos	Estoque de insumos
+Stock, stock mínimo, vida útil y ajustes con su motivo, siempre al día.	Estoque, estoque mínimo, validade e ajustes com o motivo, sempre em dia.
+Recetas y ventas	Receitas e vendas
+Cada plato vendido descuenta solo los insumos de su receta.	Cada prato vendido baixa só os insumos da sua receita.
+Cadena de frío	Cadeia de frio
+Sensores de temperatura que avisan cuando una heladera o cámara se sale de rango.	Sensores de temperatura que avisam quando uma geladeira ou câmara sai da faixa.
+Reportes gerenciales	Relatórios gerenciais
+Abono mensual en pesos, con todas las actualizaciones incluidas.	Mensalidade em pesos, com todas as atualizações incluídas.
+Básico	Básico
+por mes	por mês
+Aviso de stock mínimo por correo	Aviso de estoque mínimo por e-mail
+Soporte por correo electrónico	Suporte por e-mail
+El más elegido	O mais escolhido
+Proveedores y órdenes de compra	Fornecedores e ordens de compra
+Compras sugeridas según la demanda	Compras sugeridas pela demanda
+Empresarial	Empresarial
+Exportación de datos para auditoría	Exportação de dados para auditoria
+Soporte prioritario	Suporte prioritário
+Contacto	Contato
+Obligatorio	Obrigatório
+Dato obligatorio	Campo obrigatório
+El stock de su cocina, bajo control	O estoque da sua cozinha, sob controle
+IntelligentStock es un sistema para bares, restaurantes y casas de comida: lleva el inventario de insumos, descuenta lo que se usa en cada plato vendido, sugiere qué comprar y vigila la temperatura de heladeras y cámaras.	IntelligentStock é um sistema para bares, restaurantes e lanchonetes: controla o estoque de insumos, baixa o que cada prato vendido usa, sugere o que comprar e vigia a temperatura de geladeiras e câmaras.
+Quiénes somos	Quem somos
+Qué ofrecemos	O que oferecemos
+Compras inteligentes	Compras inteligentes
+Órdenes de compra sugeridas según la demanda prevista con aprendizaje automático.	Ordens de compra sugeridas pela demanda prevista com aprendizado de máquina.
+Consumo, ventas, compras por proveedor y alertas, en PDF, Excel o CSV.	Consumo, vendas, compras por fornecedor e alertas, em PDF, Excel ou CSV.
+Usuarios con roles y permisos, bitácora de eventos y control de integridad de los datos.	Usuários com perfis e permissões, registro de eventos e controle de integridade dos dados.
+Planes	Planos
+Para locales chicos que quieren ordenar su stock.	Para estabelecimentos pequenos que querem organizar o estoque.
+Inventario de insumos y recetas	Estoque de insumos e receitas
+Descuento de stock por venta	Baixa de estoque por venda
+Profesional	Profissional
+Para restaurantes que compran seguido a sus proveedores.	Para restaurantes que compram com frequência dos fornecedores.
+Todo lo del plan Básico	Tudo do plano Básico
+Para cocinas con cámaras de frío y varios turnos.	Para cozinhas com câmaras frias e vários turnos.
+Todo lo del plan Profesional	Tudo do plano Profissional
+Sensores de temperatura y alertas de frío	Sensores de temperatura e alertas de frio
+¿Quiere sumar otro local o cambiar de plan? Escríbanos a	Quer somar outro estabelecimento ou mudar de plano? Escreva para
+contacto@intelligentstock.com.ar	contacto@intelligentstock.com.ar
+y le respondemos en el día. Estamos en Lomas de Zamora, provincia de Buenos Aires.	e respondemos no mesmo dia. Estamos em Lomas de Zamora, província de Buenos Aires.
+© 2026 IntelligentStock	© 2026 IntelligentStock
+Inicio de sesión - IntelligentStock	Entrar - IntelligentStock
+Inicio de sesión	Entrar
+Stock, compras, recetas y alertas de frío del local, en un solo lugar.	Estoque, compras, receitas e alertas de frio do estabelecimento, em um só lugar.
+Iniciar sesión	Entrar
+Nombre de usuario	Nome de usuário
+Debe ingresar el nombre de usuario.	Informe o nome de usuário.
+Contraseña	Senha
+Debe ingresar la contraseña.	Informe a senha.
+Ingresar	Entrar
+¿Olvidaste tu contraseña?	Esqueceu a senha?
+Confirmar la operación	Confirmar a operação
+Volver	Voltar
+Confirmar	Confirmar
+Procesando...	Processando...
+Consulta de familias - IntelligentStock	Consultar famílias - IntelligentStock
+Consulta de familias	Consultar famílias
+Estructura de permisos	Estrutura de permissões
+Se muestran las familias y patentes que no dependen de ninguna otra, con todo lo que contienen por debajo.	São mostradas as famílias e permissões que não dependem de nenhuma outra, com tudo o que contêm abaixo.
+Omitir vínculos de navegación.	Pular links de navegação.
+[F] Administración del Sistema	[F] Administração do sistema
+[F] Gestión de Compras	[F] Gestão de compras
+[F] Gestión de Insumos	[F] Gestão de insumos
+[F] Gestión de Permisos	[F] Gestão de permissões
+[F] Gestión de Proveedores	[F] Gestão de fornecedores
+[F] Gestión de Recetas	[F] Gestão de receitas
+[F] Gestión de Sensores	[F] Gestão de sensores
+[F] Gestión de Usuarios	[F] Gestão de usuários
+[F] Reportes	[F] Relatórios
+Permisos por rol	Permissões por perfil
+Encargado	Gerente
+Auditor	Auditor
+Tecnico	Técnico
+Empleado	Funcionário
+Estructura asignada	Estrutura atribuída
+Patente	Permissão
+Familia	Família
+Gestión de Usuarios	Gestão de usuários
+Gestión de Permisos	Gestão de permissões
+Administración del Sistema	Administração do sistema
+Gestión de Insumos	Gestão de insumos
+Gestión de Proveedores	Gestão de fornecedores
+Gestión de Recetas	Gestão de receitas
+Gestión de Sensores	Gestão de sensores
+Gestión de Compras	Gestão de compras
+Reportes	Relatórios
+Patentes efectivas	Permissões efetivas
+Consultar una familia	Consultar uma família
+Estructura de la familia	Estrutura da família
+Listado de componentes	Lista de componentes
+Id	Id
+Nombre	Nome
+Tipo	Tipo
+Alta de sensor IoT - IntelligentStock	Cadastrar sensor IoT - IntelligentStock
+Alta de sensor IoT	Cadastrar sensor IoT
+La dirección MAC no se puede repetir entre dispositivos activos.	O endereço MAC não pode se repetir entre dispositivos ativos.
+Dirección MAC (*)	Endereço MAC (*)
+La dirección MAC es obligatoria.	O endereço MAC é obrigatório.
+La dirección MAC tiene que tener 12 dígitos hexadecimales, por ejemplo 00:1A:2B:3C:4D:5E.	O endereço MAC deve ter 12 dígitos hexadecimais, por exemplo 00:1A:2B:3C:4D:5E.
+Modelo	Modelo
+Temperatura máxima permitida (°C) (*)	Temperatura máxima permitida (°C) (*)
+La temperatura máxima permitida es obligatoria.	A temperatura máxima permitida é obrigatória.
+Por encima de este valor el sensor genera una alerta. En un freezer es negativa (por ejemplo, -15).	Acima deste valor o sensor gera um alerta. Em um freezer é negativa (por exemplo, -15).
+Procesar alerta térmica IoT - IntelligentStock	Processar alerta de temperatura IoT - IntelligentStock
+Procesar alerta térmica IoT	Processar alerta de temperatura IoT
+Las alertas las genera el sistema externo de telemetría; acá se resuelven.	Os alertas são gerados pelo sistema externo de telemetria; aqui eles são resolvidos.
+Alerta a procesar (*)	Alerta a processar (*)
+(no hay alertas abiertas)	(não há alertas abertos)
+Elija la alerta a procesar.	Escolha o alerta a processar.
+Nuevo estado (*)	Novo estado (*)
+Pendiente	Pendente
+En revisión	Em revisão
+Resuelta	Resolvido
+Descartada	Descartado
+Observaciones (*)	Observações (*)
+Indique la acción correctiva realizada.	Indique a ação corretiva realizada.
+Alertas registradas	Alertas registrados
+Código	Código
+Sensor	Sensor
+Fecha y hora	Data e hora
+Temperatura alcanzada	Temperatura alcançada
+Estado	Estado
+No hay registros para mostrar.	Não há registros para mostrar.
+Alta de usuario - IntelligentStock	Cadastrar usuário - IntelligentStock
+DNI (*)	Nº do documento (*)
+El DNI es obligatorio.	O número do documento é obrigatório.
+El DNI debe tener 7 u 8 dígitos, sin puntos.	O documento deve ter 7 ou 8 dígitos, sem pontos.
+Nombre (*)	Nome (*)
+El nombre es obligatorio.	O nome é obrigatório.
+Apellido (*)	Sobrenome (*)
+El apellido es obligatorio.	O sobrenome é obrigatório.
+Fecha de nacimiento (*)	Data de nascimento (*)
+La fecha de nacimiento es obligatoria.	A data de nascimento é obrigatória.
+Correo electrónico (*)	E-mail (*)
+El correo electrónico es obligatorio.	O e-mail é obrigatório.
+El correo debe tener texto antes de la @, y texto con un punto (el dominio) después de la @.	O e-mail deve ter texto antes do @ e texto com um ponto (o domínio) depois do @.
+Teléfono	Telefone
+Rol (*)	Perfil (*)
+El rol define las familias y patentes que va a tener el usuario.	O perfil define as famílias e permissões que o usuário terá.
+Nombre de usuario (*)	Nome de usuário (*)
+El nombre de usuario es obligatorio.	O nome de usuário é obrigatório.
+Contraseña (*)	Senha (*)
+La contraseña es obligatoria.	A senha é obrigatória.
+La contraseña debe tener al menos 8 caracteres, con una mayúscula, una minúscula y un número.	A senha deve ter pelo menos 8 caracteres, com uma letra maiúscula, uma minúscula e um número.
+Mínimo 8 caracteres, con mayúscula, minúscula y número.	Mínimo de 8 caracteres, com maiúscula, minúscula e número.
+Repetir contraseña (*)	Repetir senha (*)
+Debe repetir la contraseña.	Você deve repetir a senha.
+Las contraseñas no coinciden.	As senhas não coincidem.
+Permisos que otorga el rol seleccionado	Permissões que o perfil selecionado concede
+Bienvenido, Admin (WebMaster)	Bem-vindo, Admin (WebMaster)
+Limpiar	Limpar
+Consulta de usuarios - IntelligentStock	Consultar usuários - IntelligentStock
+Consulta de usuarios	Consultar usuários
+Filtros	Filtros
+DNI, usuario, nombre o correo	Documento, usuário, nome ou e-mail
+Rol	Perfil
+(todos)	(todos)
+Activo	Ativo
+Bloqueado	Bloqueado
+Inactivo	Inativo
+Buscar	Buscar
+1 usuario encontrado.	1 usuário encontrado.
+DNI	Documento
+Usuario	Usuário
+Apellido y nombre	Sobrenome e nome
+Correo	E-mail
+Intentos fallidos	Tentativas falhas
+Sistema, Admin	Sistema, Admin
+admin@intelligentstock.com	admin@intelligentstock.com
+Alta de insumo - IntelligentStock	Cadastrar insumo - IntelligentStock
+Descripción	Descrição
+Unidad de medida (*)	Unidade de medida (*)
+La unidad de medida es obligatoria.	A unidade de medida é obrigatória.
+Por ejemplo kg, g, lt, ml o unidad.	Por exemplo kg, g, lt, ml ou unidade.
+Stock inicial (*)	Estoque inicial (*)
+El stock inicial es obligatorio (puede ser 0).	O estoque inicial é obrigatório (pode ser 0).
+Stock mínimo (*)	Estoque mínimo (*)
+El stock mínimo es obligatorio.	O estoque mínimo é obrigatório.
+Precio unitario ($) (*)	Preço unitário ($) (*)
+El precio unitario es obligatorio.	O preço unitário é obrigatório.
+Costo de una unidad de medida (por ejemplo, de 1 kg).	Custo de uma unidade de medida (por exemplo, de 1 kg).
+Días de vida útil	Validade (dias)
+Generar orden de compra - IntelligentStock	Gerar ordem de compra - IntelligentStock
+Falló la ejecución del servicio de predicción de ML.NET. Se han producido uno o varios errores. [#ERR005]	Falhou a execução do serviço de previsão do ML.NET. Ocorreram um ou mais erros. [#ERR005]
+La sugerencia de cantidades sale del módulo de predicción de demanda.	As quantidades sugeridas vêm do módulo de previsão de demanda.
+Proveedor (*)	Fornecedor (*)
+(seleccione)	(selecione)
+a (CUIT 12-34567890-3)	a (CUIT 12-34567890-3)
+Fecha de la orden	Data da ordem
+No hay cantidades sugeridas para mostrar.	Não há quantidades sugeridas para mostrar.
+Generar orden	Gerar ordem
+Alta de familia - IntelligentStock	Cadastrar família - IntelligentStock
+Familias	Famílias
+Roles	Perfis
+Una	Uma
+familia	família
+agrupa patentes y otras familias. Las	agrupa permissões e outras famílias. As
+patentes	permissões
+son los permisos individuales sobre cada funcionalidad del sistema: vienen definidas con la instalación y no se dan de alta desde acá.	são os direitos individuais sobre cada funcionalidade do sistema: vêm definidas com a instalação e não são cadastradas aqui.
+Nombre de la familia (*)	Nome da família (*)
+Componentes que va a contener	Componentes que vai conter
+[Familia] Administración del Sistema	[Família] Administração do sistema
+[Familia] Gestión de Compras	[Família] Gestão de compras
+[Familia] Gestión de Insumos	[Família] Gestão de insumos
+[Familia] Gestión de Permisos	[Família] Gestão de permissões
+[Familia] Gestión de Proveedores	[Família] Gestão de fornecedores
+[Familia] Gestión de Recetas	[Família] Gestão de receitas
+[Familia] Gestión de Sensores	[Família] Gestão de sensores
+[Familia] Gestión de Usuarios	[Família] Gestão de usuários
+[Familia] Reportes	[Família] Relatórios
+Composición de la familia	Composição da família
+Todavía no se eligió ningún componente.	Ainda não foi escolhido nenhum componente.
+Permisos efectivos	Permissões efetivas
+Sin permisos.	Sem permissões.
+Un	Um
+rol	perfil
+es un perfil del sistema (por ejemplo Encargado o Auditor). Se le asignan familias y patentes exactamente igual que a una familia: de ahí en más, cualquier usuario con ese rol tiene esos permisos.	é um perfil do sistema (por exemplo Gerente ou Auditor). Recebe famílias e permissões exatamente como uma família: a partir daí, todo usuário com esse perfil tem essas permissões.
+Nombre del rol (*)	Nome do perfil (*)
+Familias y patentes que va a otorgar	Famílias e permissões que vai conceder
+Composición del rol	Composição do perfil
+Consulta de insumos - IntelligentStock	Consultar insumos - IntelligentStock
+Consulta de insumos	Consultar insumos
+Código, nombre o descripción	Código, nome ou descrição
+Solo insumos en su stock mínimo o por debajo	Só insumos no estoque mínimo ou abaixo
+3 insumos encontrados.	3 insumos encontrados.
+Unidad	Unidade
+Stock	Estoque
+Stock mínimo	Estoque mínimo
+Precio unitario	Preço unitário
+Vida útil	Validade
+Masa	Massa
+Una masa	Uma massa
+kg	kg
+PRECAUCIÓN	ATENÇÃO
+1000 días	1000 dias
+Queso	Queijo
+Queso para la pizza	Queijo para a pizza
+1 días	1 dias
+Salame rojo	Salame vermelho
+Hola,	Olá,
+Ingresó como	Você entrou como
+; sus tareas están en el menú de la izquierda.	; suas tarefas estão no menu à esquerda.
+Baja de familia - IntelligentStock	Excluir família - IntelligentStock
+(seleccione una familia)	(selecione uma família)
+(seleccione un rol)	(selecione um perfil)
+Copia de seguridad - IntelligentStock	Cópia de segurança - IntelligentStock
+Copia de seguridad	Cópia de segurança
+Bitácora de eventos - IntelligentStock	Registro de eventos - IntelligentStock
+Restore	Restaurar
+Informativa	Informativa
+Advertencia	Advertência
+Grave	Grave
+Acceso denegado	Acesso negado
+Acceso denegado a servicio web	Acesso negado ao serviço web
+Ajuste de stock	Ajuste de estoque
+Alerta térmica	Alerta de temperatura
+Alerta térmica no registrada	Alerta de temperatura não registrado
+Alta de rol	Perfil cadastrado
+Anulación de orden de compra	Ordem de compra cancelada
+Asignar permiso a rol	Permissão atribuída ao perfil
+BackUp de base de datos	Backup do banco de dados
+Baja de rol	Perfil excluído
+Baja de suscripción sin aviso a la pasarela	Assinatura cancelada sem aviso ao gateway
+Bloqueo de usuario	Usuário bloqueado
+Cambio de contraseña	Senha alterada
+Cambio de contraseña fallido	Falha na alteração de senha
+Cierre de sesión	Saída
+Cierre de sesión forzado	Saída forçada
+Desbloqueo de usuario	Usuário desbloqueado
+Exportación de alertas	Exportação de alertas
+Exportación de reporte gerencial	Exportação de relatório gerencial
+Factura de proveedor	Fatura do fornecedor
+Generación de orden de compra	Ordem de compra gerada
+Inconsistencia en la base de datos	Inconsistência no banco de dados
+Inicio de sesión fallido	Falha ao entrar
+Lectura de sensor no registrado	Leitura de sensor não registrado
+Modificación de rol	Perfil editado
+Operación detenida por inconsistencia	Operação interrompida por inconsistência
+Pago rechazado	Pagamento recusado
+Procesamiento de alerta térmica	Alerta de temperatura processado
+Quitar permiso de rol	Permissão removida do perfil
+Reactivación de insumo	Insumo reativado
+Reactivación de proveedor	Fornecedor reativado
+Reactivación de receta	Receita reativada
+Reactivación de sensor	Sensor reativado
+Reactivación de usuario	Usuário reativado
+Recuperación de contraseña	Recuperação de senha
+Recálculo de dígito verificador	Recálculo do dígito verificador
+Recálculo de dígitos fallido	Falha no recálculo dos dígitos
+Reparación de dígito verificador	Reparo do dígito verificador
+Restore de base de datos	Restauração do banco de dados
+Solicitud rechazada por servicio web	Solicitação recusada pelo serviço web
+Venta	Venda

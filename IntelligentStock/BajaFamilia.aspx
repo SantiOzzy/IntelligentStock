@@ -14,7 +14,7 @@
     </ul>
 
     <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active" id="tabFamilias" style="padding-top: 15px">
+    <div role="tabpanel" class="tab-pane active pestana-contenido" id="tabFamilias">
 
     <p>
         Solo se dan de baja familias. Las patentes representan funcionalidades del

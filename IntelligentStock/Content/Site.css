@@ -1,38 +1,160 @@
-﻿/* Move down content because we have a fixed navbar that is 50px tall */
+﻿/* ===========================================================================
+   IntelligentStock - hoja de estilos del sitio
+   ---------------------------------------------------------------------------
+   Se carga después de Bootstrap 3 (Bundle.config) y lo adapta: no cambia los
+   controles ni las clases que usan las pantallas, solo cómo se ven.
+
+   Criterios:
+   - Menú lateral fijo con todas las tareas agrupadas por módulo, en el guinda
+     institucional; la pantalla actual queda marcada.
+   - El contenido va en una "hoja" blanca sobre un fondo gris claro.
+   - Letra Barlow (cartelería: angosta, clara y con números parejos para las
+     grillas). Los archivos están en la carpeta fonts del sitio, así que no
+     hace falta conexión a internet (licencia libre OFL, ver Barlow-OFL.txt).
+   - Colores con buen contraste, foco visible para usar con teclado y sin
+     animaciones si el sistema operativo pide reducir el movimiento.
+   =========================================================================== */
+
+@font-face {
+    font-family: "Barlow";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../fonts/barlow-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Barlow";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("../fonts/barlow-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Barlow";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("../fonts/barlow-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Barlow Semi Condensed";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("../fonts/barlow-semi-condensed-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+    font-family: "Barlow Semi Condensed";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("../fonts/barlow-semi-condensed-latin-600-normal.woff2") format("woff2");
+}
+
+:root {
+    --guinda: #7a1f2b;
+    --guinda-oscuro: #5c1621;
+    --guinda-tinte: #f6ecee;
+    --vino: #3a1219;
+    --rosa: #f0a7b1;
+    --lienzo: #f1f2f4;
+    --superficie: #ffffff;
+    --tinta: #2b2e33;
+    --tenue: #626973;
+    --linea: #dcdfe4;
+    --linea-suave: #eceef1;
+    --borde-campo: #c9ced6;
+
+    --exito: #1e6b40;
+    --exito-fondo: #e8f4ec;
+    --exito-borde: #b9dcc6;
+    --peligro: #9f2118;
+    --peligro-fondo: #fbecea;
+    --peligro-borde: #f0c4bf;
+    --aviso: #845a06;
+    --aviso-fondo: #fdf4e2;
+    --aviso-borde: #eed9a8;
+    --info: #1f4f8f;
+    --info-fondo: #eaf1fb;
+    --info-borde: #bfd3ee;
+
+    --letra: "Barlow", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    --letra-titulos: "Barlow Semi Condensed", "Barlow", "Segoe UI", system-ui, Arial, sans-serif;
+
+    --ancho-menu: 264px;
+    --alto-barra: 64px;
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+   --------------------------------------------------------------------------- */
+
+html, body {
+    background: var(--lienzo);
+}
+
 body {
-    padding-top: 50px;
-    padding-bottom: 20px;
+    margin: 0;
+    padding: 0;
+    font-family: var(--letra);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--tinta);
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Wrapping element */
-/* Set some basic padding to keep content from hitting the edges */
-.body-content {
-    padding-left: 15px;
-    padding-right: 15px;
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--letra-titulos);
+    font-weight: 600;
+    color: var(--tinta);
 }
 
-/* Set widths on the form inputs since otherwise they're 100% wide */
+a {
+    color: var(--guinda);
+}
+
+a:hover,
+a:focus {
+    color: var(--guinda-oscuro);
+}
+
+/* Foco visible para quien usa el teclado. */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+    outline: 3px solid rgba(122, 31, 43, 0.45);
+    outline-offset: 2px;
+}
+
+.saltar-al-contenido {
+    position: absolute;
+    left: 12px;
+    top: -60px;
+    z-index: 100;
+    padding: 8px 14px;
+    background: var(--superficie);
+    border: 2px solid var(--guinda);
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.saltar-al-contenido:focus {
+    top: 12px;
+}
+
+/* La plantilla original de ASP.NET limitaba todos los campos a 280px. */
 input,
 select,
 textarea {
     max-width: 280px;
 }
 
-/* Responsive: Portrait tablets and up */
-@media screen and (min-width: 768px) {
-    .jumbotron {
-        margin-top: 20px;
-    }
-    .body-content {
-        padding: 0;
-    }
-}
-
-/* ---------------------------------------------------------------------------
-   IntelligentStock
-   La plantilla base limita todos los inputs a 280px y eso rompe los formularios
-   que usan la grilla de Bootstrap, asi que se anula para los .form-control.
-   --------------------------------------------------------------------------- */
 input.form-control,
 select.form-control,
 textarea.form-control {
@@ -40,148 +162,1853 @@ textarea.form-control {
     width: 100%;
 }
 
-/* asp:Label se renderiza como <span>, que es inline. Sin esto los mensajes
-   con las clases .alert de Bootstrap se ven como una linea de color pegada
-   al texto en vez de como un cuadro. */
-span.alert {
-    display: block;
-    margin-bottom: 15px;
-}
-
-/* La barra de navegacion es fixed-top: hay que despegar el contenido. */
-.body-content {
-    padding-top: 15px;
-}
-
-.page-header {
-    margin-top: 10px;
-}
-
-/* Separacion entre los botones que van uno al lado del otro al pie del form. */
-.btn + .btn {
-    margin-left: 6px;
-}
-
-/* Las grillas de las pantallas de seguridad suelen tener muchas columnas. */
-.table-condensed td,
-.table-condensed th {
-    vertical-align: middle;
+input.btn {
+    max-width: none;
 }
 
 /* ---------------------------------------------------------------------------
-   Estética: mismo Bootstrap 3, mismos controles y la misma funcionalidad,
-   solo se le da una paleta propia (el guinda del escudo de la UAI) en vez
-   del gris/negro de la plantilla por defecto, y un poco más de aire entre
-   los bloques. No se toca ningún .aspx ni ningún .cs para esto.
+   Estructura: menú lateral + barra superior + contenido
    --------------------------------------------------------------------------- */
 
-:root {
-    --is-guinda: #7a1f2b;
-    --is-guinda-oscuro: #5a1620;
-    --is-guinda-claro: #f4e9ea;
-    --is-gris-fondo: #f5f6f8;
+.app {
+    display: flex;
+    min-height: 100vh;
 }
 
-html, body {
-    background-color: var(--is-gris-fondo);
+.app-lateral {
+    flex: 0 0 var(--ancho-menu);
+    width: var(--ancho-menu);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 18px 12px 28px;
+    background: var(--vino);
+    color: #e9d9dc;
 }
 
-body {
-    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #333;
+.app-principal {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Barra de navegación con el color institucional en vez del negro por defecto. */
-.navbar-inverse {
-    background-color: var(--is-guinda);
-    border-color: var(--is-guinda-oscuro);
+.app-barra {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: var(--alto-barra);
+    padding: 10px 32px;
+    background: var(--superficie);
+    border-bottom: 1px solid var(--linea);
 }
 
-.navbar-inverse .navbar-brand,
-.navbar-inverse .navbar-nav > li > a {
-    color: rgba(255, 255, 255, 0.92);
+.app-barra-derecha {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
 }
 
-.navbar-inverse .navbar-brand:hover,
-.navbar-inverse .navbar-nav > li > a:hover,
-.navbar-inverse .navbar-nav > .active > a {
+.app-contenido {
+    flex: 1 1 auto;
+    padding: 28px 32px 32px;
+    outline: none;
+}
+
+.hoja {
+    max-width: 1180px;
+    padding: 28px 32px 32px;
+    background: var(--superficie);
+    border: 1px solid var(--linea);
+    border-radius: 12px;
+}
+
+.app-pie {
+    padding: 0 32px 24px;
+    font-size: 13px;
+    color: var(--tenue);
+}
+
+/* ---------------------------------------------------------------------------
+   Marca: el nombre con tres barras de stock (de menos a más)
+   --------------------------------------------------------------------------- */
+
+.marca {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 10px 20px;
+    font-family: var(--letra-titulos);
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
     color: #fff;
-    background-color: var(--is-guinda-oscuro);
+    text-decoration: none;
 }
 
-.navbar-inverse .navbar-toggle {
-    border-color: var(--is-guinda-oscuro);
+.marca:hover,
+.marca:focus {
+    color: #fff;
+    text-decoration: none;
 }
 
-.navbar-brand {
+.marca-icono {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+    width: 22px;
+    height: 22px;
+}
+
+.marca-icono i {
+    display: block;
+    flex: 1 1 0;
+    border-radius: 2px 2px 0 0;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+.marca-icono i:nth-child(1) { height: 40%; }
+.marca-icono i:nth-child(2) { height: 70%; background: rgba(255, 255, 255, 0.8); }
+.marca-icono i:nth-child(3) { height: 100%; background: var(--rosa); }
+
+/* Versión chica de la marca en la barra superior (pantallas sin menú lateral). */
+.marca-compacta {
+    display: none;
+    padding: 0;
+    font-size: 19px;
+    color: var(--tinta);
+}
+
+.marca-compacta:hover,
+.marca-compacta:focus {
+    color: var(--tinta);
+}
+
+.marca-compacta .marca-icono i { background: #c4a3a8; }
+.marca-compacta .marca-icono i:nth-child(2) { background: #a5636c; }
+.marca-compacta .marca-icono i:nth-child(3) { background: var(--guinda); }
+
+/* ---------------------------------------------------------------------------
+   Menú lateral
+   --------------------------------------------------------------------------- */
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.menu-enlace {
+    position: relative;
+    display: block;
+    padding: 7px 12px 7px 14px;
+    border-radius: 6px;
+    font-size: 14.5px;
+    line-height: 1.35;
+    color: #e9d9dc;
+    text-decoration: none;
+}
+
+.menu-enlace:hover,
+.menu-enlace:focus {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.07);
+    text-decoration: none;
+}
+
+/* Pantalla actual: fondo más claro y una barra rosa a la izquierda. */
+.menu-enlace.activo {
+    color: #fff;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    background: rgba(255, 255, 255, 0.12);
 }
 
-/* Encabezado de cada pantalla: una línea de acento en vez del borde gris. */
+.menu-enlace.activo::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 7px;
+    bottom: 7px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--rosa);
+}
+
+.menu-inicio {
+    margin-bottom: 10px;
+}
+
+.menu-grupo-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 9px 12px 7px 14px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font-family: var(--letra-titulos);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-align: left;
+    color: #d6b6bb;
+    cursor: pointer;
+}
+
+.menu-grupo-titulo:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.menu-flecha {
+    width: 8px;
+    height: 8px;
+    margin-right: 2px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+}
+
+.menu-grupo.abierto .menu-flecha {
+    transform: rotate(45deg);
+}
+
+.menu-opciones {
+    display: none;
+    padding: 0 0 8px 8px !important;
+}
+
+.menu-grupo.abierto .menu-opciones {
+    display: block;
+}
+
+.app-lateral a:focus-visible,
+.app-lateral button:focus-visible {
+    outline-color: var(--rosa);
+}
+
+/* ---------------------------------------------------------------------------
+   Barra superior: ubicación, idioma y usuario
+   --------------------------------------------------------------------------- */
+
+.boton-menu {
+    display: none;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: 1px solid var(--linea);
+    border-radius: 8px;
+    background: var(--superficie);
+    cursor: pointer;
+}
+
+.boton-menu-icono {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 18px;
+}
+
+.boton-menu-icono i {
+    display: block;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--tinta);
+}
+
+.migas {
+    min-width: 0;
+}
+
+.migas ol {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14.5px;
+    color: var(--tenue);
+    white-space: nowrap;
+}
+
+.migas li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.migas li + li::before {
+    content: "\203A";
+    margin-right: 8px;
+    color: #9aa0a8;
+}
+
+.migas li[aria-current="page"] {
+    font-weight: 600;
+    color: var(--tinta);
+}
+
+.selector-idioma {
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid var(--linea);
+    border-radius: 8px;
+    background: var(--superficie);
+    font-size: 14px;
+    color: var(--tinta);
+}
+
+/* Iniciales, nombre y perfil del usuario; a la derecha, el idioma y "Cerrar sesión". */
+.usuario-bloque {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-right: 4px;
+}
+
+.usuario {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+}
+
+.usuario-nombre {
+    font-weight: 600;
+    font-size: 14.5px;
+}
+
+.usuario-rol {
+    font-size: 13px;
+    color: var(--tenue);
+}
+
+.boton-salir {
+    padding: 7px 14px;
+    white-space: nowrap;
+    border: 1px solid var(--linea);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--tinta);
+    text-decoration: none;
+}
+
+.boton-salir:hover,
+.boton-salir:focus {
+    border-color: var(--guinda);
+    color: var(--guinda);
+    text-decoration: none;
+}
+
+.velo-menu {
+    display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Pantallas sin menú (inicio de sesión, reparación del dígito verificador)
+   --------------------------------------------------------------------------- */
+
+.sin-menu .app-lateral,
+.sin-menu .boton-menu {
+    display: none;
+}
+
+.sin-menu .marca-compacta {
+    display: flex;
+}
+
+.sin-menu .hoja {
+    margin: 0 auto;
+}
+
+/* En el inicio de sesión la tarjeta de acceso ya es la superficie. */
+.sin-menu .hoja:has(.acceso) {
+    max-width: 920px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+
+body:has(.acceso) .migas,
+body:has(.acceso) .marca-compacta {
+    display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   Encabezado de cada pantalla
+   --------------------------------------------------------------------------- */
+
 .page-header {
-    border-bottom: 2px solid var(--is-guinda);
-    padding-bottom: 8px;
+    margin: 0 0 24px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--linea);
 }
 
-/* Tarjetas (paneles): un poco de sombra y el título con el color institucional. */
-.panel {
-    border-color: #e3e3e8;
-    border-radius: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+.page-header h2 {
+    margin: 0;
+    font-size: 30px;
+    line-height: 1.15;
 }
 
-.panel-default > .panel-heading {
-    background-color: var(--is-guinda-claro);
-    border-color: #e7d3d5;
-    color: var(--is-guinda-oscuro);
+.page-header .help-block {
+    margin: 8px 0 0;
+    font-size: 15px;
+}
+
+/* El texto de ayuda que sigue al título. */
+.hoja > .help-block,
+.hoja > p.help-block {
+    max-width: 72ch;
+    margin: -8px 0 22px;
+    font-size: 15px;
+    color: var(--tenue);
+}
+
+.leyenda-obligatorios {
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    color: var(--tenue);
+}
+
+abbr.obligatorio {
+    border: 0;
+    text-decoration: none;
     font-weight: 600;
+    color: var(--guinda);
+    cursor: help;
 }
 
-/* Botones: mismo componente de Bootstrap, con el color institucional. */
+h3, .h3 {
+    font-size: 20px;
+}
+
+/* ---------------------------------------------------------------------------
+   Formularios
+   --------------------------------------------------------------------------- */
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.control-label,
+.hoja label {
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--tinta);
+}
+
+.form-control {
+    height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--borde-campo);
+    border-radius: 8px;
+    box-shadow: none;
+    font-size: 15px;
+    color: var(--tinta);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+textarea.form-control {
+    height: auto;
+    min-height: 88px;
+}
+
+select[multiple].form-control,
+select[size].form-control {
+    height: auto;
+}
+
+.form-control:focus {
+    border-color: var(--guinda);
+    box-shadow: 0 0 0 3px rgba(122, 31, 43, 0.18);
+    outline: none;
+}
+
+.form-control[readonly],
+.form-control[disabled],
+fieldset[disabled] .form-control {
+    background: #f4f5f7;
+    color: var(--tenue);
+}
+
+.help-block {
+    font-size: 13.5px;
+    color: var(--tenue);
+}
+
+/* Mensajes de los validadores debajo de cada campo. */
+.text-danger {
+    color: var(--peligro);
+}
+
+.form-group .text-danger {
+    font-size: 13.5px;
+}
+
+.checkbox label,
+.radio label,
+.hoja td > label {
+    margin-bottom: 0;
+    font-weight: 400;
+}
+
+/* Listas de casillas (CheckBoxList / RadioButtonList): separación entre la casilla y su texto. */
+.hoja td > input[type="checkbox"] + label,
+.hoja td > input[type="radio"] + label {
+    margin-left: 6px;
+}
+
+.input-group .form-control:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.input-group-btn:last-child > .btn {
+    height: 40px;
+    border-radius: 0 8px 8px 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Botones
+   --------------------------------------------------------------------------- */
+
+.btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-family: var(--letra);
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    box-shadow: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn + .btn {
+    margin-left: 8px;
+}
+
+.btn-block + .btn-block {
+    margin-left: 0;
+}
+
 .btn-primary {
-    background-color: var(--is-guinda);
-    border-color: var(--is-guinda-oscuro);
+    background: var(--guinda);
+    border-color: var(--guinda);
+    color: #fff;
 }
 
 .btn-primary:hover,
 .btn-primary:focus,
-.btn-primary:active {
-    background-color: var(--is-guinda-oscuro);
-    border-color: var(--is-guinda-oscuro);
+.btn-primary:active,
+.btn-primary.active,
+.btn-primary:active:hover {
+    background: var(--guinda-oscuro);
+    border-color: var(--guinda-oscuro);
+    color: #fff;
 }
 
-.btn, .form-control {
-    border-radius: 4px;
+.btn-default {
+    background: var(--superficie);
+    border-color: var(--borde-campo);
+    color: var(--tinta);
 }
 
-.form-control:focus {
-    border-color: var(--is-guinda);
-    box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 6px rgba(122, 31, 43, 0.35);
+.btn-default:hover,
+.btn-default:focus,
+.btn-default:active {
+    background: #f4f5f7;
+    border-color: #b8bec7;
+    color: var(--tinta);
 }
 
-/* Enlaces con el mismo color institucional en vez del azul por defecto. */
-a {
-    color: var(--is-guinda);
+.btn-danger {
+    background: #b3261e;
+    border-color: #b3261e;
 }
 
-a:hover,
-a:focus {
-    color: var(--is-guinda-oscuro);
+.btn-danger:hover,
+.btn-danger:focus {
+    background: #8e1d17;
+    border-color: #8e1d17;
 }
 
-/* Encabezados de tabla: un gris muy suave en vez de blanco liso. */
-.table > thead > tr > th {
-    background-color: #f0f1f4;
-    border-bottom-width: 1px;
+.btn-success {
+    background: #2e7d4f;
+    border-color: #2e7d4f;
 }
 
-/* Las tarjetas del panel principal (menú de opciones habilitadas). */
+.btn-success:hover,
+.btn-success:focus {
+    background: #236140;
+    border-color: #236140;
+}
+
+.btn-warning {
+    background: #b7791f;
+    border-color: #b7791f;
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+    background: #94611a;
+    border-color: #94611a;
+}
+
+.btn-xs {
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 12.5px;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 13.5px;
+}
+
+/* Los botones de acción al pie de cada pantalla. */
+.hoja > .btn,
+.hoja > input.btn {
+    margin-top: 8px;
+}
+
+/* ---------------------------------------------------------------------------
+   Mensajes (resultado de cada operación)
+   --------------------------------------------------------------------------- */
+
+span.alert,
+div.alert {
+    position: relative;
+    display: block;
+    margin-bottom: 20px;
+    padding: 12px 16px 12px 46px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 15px;
+    line-height: 1.45;
+    outline: none;
+}
+
+span.alert::before,
+div.alert::before {
+    position: absolute;
+    left: 16px;
+    top: 14px;
+    font-family: "Glyphicons Halflings";
+    font-size: 15px;
+    line-height: 1;
+}
+
+.alert-success {
+    background: var(--exito-fondo);
+    border-color: var(--exito-borde);
+    color: var(--exito);
+}
+
+.alert-success::before {
+    content: "\e013";
+}
+
+.alert-danger {
+    background: var(--peligro-fondo);
+    border-color: var(--peligro-borde);
+    color: var(--peligro);
+}
+
+.alert-danger::before {
+    content: "\e101";
+}
+
+.alert-warning {
+    background: var(--aviso-fondo);
+    border-color: var(--aviso-borde);
+    color: var(--aviso);
+}
+
+.alert-warning::before {
+    content: "\e107";
+}
+
+.alert-info {
+    background: var(--info-fondo);
+    border-color: var(--info-borde);
+    color: var(--info);
+}
+
+.alert-info::before {
+    content: "\e086";
+}
+
+/* ---------------------------------------------------------------------------
+   Grillas
+   --------------------------------------------------------------------------- */
+
+.table-responsive {
+    margin-bottom: 20px;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    overflow-x: auto;
+}
+
+.table-responsive > .table {
+    margin-bottom: 0;
+}
+
+.table {
+    background: var(--superficie);
+    font-size: 14.5px;
+    font-variant-numeric: tabular-nums;
+}
+
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table th {
+    padding: 10px 12px;
+    background: #f6f7f9;
+    border-bottom: 1px solid var(--linea);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--tenue);
+    white-space: nowrap;
+}
+
+.table > tbody > tr > td,
+.table > thead > tr > td {
+    padding: 9px 12px;
+    border-top: 1px solid var(--linea-suave);
+    vertical-align: middle;
+}
+
+.table-condensed > tbody > tr > td,
+.table-condensed > tbody > tr > th,
+.table-condensed > thead > tr > th {
+    padding: 8px 12px;
+}
+
+/* Bordes solo horizontales: la grilla se lee mejor por filas. */
+.table-bordered,
+.table-responsive > .table-bordered {
+    border: 0;
+}
+
+.table-bordered > tbody > tr > td,
+.table-bordered > tbody > tr > th,
+.table-bordered > thead > tr > th {
+    border-left: 0;
+    border-right: 0;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background: #fafbfc;
+}
+
+.table > tbody > tr:hover > td {
+    background: #fbf4f5;
+}
+
+/* Pestañas de Familias / Roles. */
+.pestana-contenido {
+    padding-top: 15px;
+}
+
+/* Lista de casillas con desplazamiento (componentes de una familia). */
+.lista-desplazable {
+    max-height: 340px;
+    overflow-y: auto;
+    border: 1px solid var(--linea);
+    border-radius: 6px;
+    padding: 8px;
+    background: var(--superficie);
+}
+
+/* Columna de los botones Agregar / Quitar entre las dos listas. */
+.columna-flechas {
+    padding-top: 90px;
+}
+
+@media (max-width: 991px) {
+    .columna-flechas {
+        padding-top: 0;
+        margin: 10px 0;
+    }
+}
+
+.bloque-separado {
+    margin-top: 15px;
+}
+
+/* Bitácora: eventos con eliminación lógica (más de 30 días). */
+.table > tbody > tr.evento-eliminado > td {
+    color: var(--tenue);
+    background: var(--lienzo);
+}
+
+/* Fila elegida en las grillas con "Seleccionar". */
+.table > tbody > tr.info > td {
+    background: var(--guinda-tinte);
+}
+
+.table > tbody > tr.info > td:first-child {
+    box-shadow: inset 3px 0 0 var(--guinda);
+}
+
+/* Grilla vacía: el texto "No hay registros..." centrado y en gris. */
+.table td[colspan] {
+    padding: 28px 16px !important;
+    text-align: center;
+    color: var(--tenue);
+}
+
+.table a {
+    font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------------
+   Paneles, pestañas y recuadros
+   --------------------------------------------------------------------------- */
+
+.panel {
+    margin-bottom: 22px;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.panel-default > .panel-heading,
+.panel-heading {
+    padding: 12px 16px;
+    background: #f8f8fa;
+    border-bottom: 1px solid var(--linea);
+    border-radius: 10px 10px 0 0;
+    font-family: var(--letra-titulos);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--tinta);
+}
+
+.panel-title {
+    font-size: 16px;
+}
+
+.panel-body {
+    padding: 18px 16px 2px;
+}
+
+.nav-tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--linea);
+}
+
+.nav-tabs > li > a {
+    margin-right: 4px;
+    padding: 10px 14px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    font-weight: 600;
+    color: var(--tenue);
+}
+
+.nav-tabs > li > a:hover,
+.nav-tabs > li > a:focus {
+    background: transparent;
+    border-bottom-color: var(--linea);
+    color: var(--tinta);
+}
+
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus {
+    border: 0;
+    border-bottom: 2px solid var(--guinda);
+    background: transparent;
+    color: var(--guinda);
+}
+
+.well {
+    background: #f6f7f9;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    box-shadow: none;
+}
+
+.list-group-item {
+    border-color: var(--linea-suave);
+}
+
 .list-group-item:hover {
-    background-color: var(--is-guinda-claro);
+    background: var(--guinda-tinte);
 }
 
-footer {
-    color: #888;
+/* ---------------------------------------------------------------------------
+   Inicio de sesión
+   --------------------------------------------------------------------------- */
+
+.acceso {
+    display: grid;
+    grid-template-columns: 5fr 6fr;
+    margin: 6vh auto 0;
+    background: var(--superficie);
+    border: 1px solid var(--linea);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.acceso-marca {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 440px;
+    padding: 44px 40px;
+    background: var(--vino);
+    color: #fff;
+}
+
+.marca-icono-grande {
+    width: 60px;
+    height: 68px;
+    gap: 7px;
+    margin-bottom: auto;
+}
+
+.marca-icono-grande i {
+    border-radius: 3px 3px 0 0;
+}
+
+.acceso-nombre {
+    margin: 28px 0 8px;
+    font-family: var(--letra-titulos);
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.acceso-lema {
+    max-width: 28ch;
+    margin: 0;
+    font-size: 16px;
+    color: #e2c9cd;
+}
+
+.acceso-formulario {
+    padding: 44px 40px;
+}
+
+.acceso-titulo {
+    margin: 0 0 24px;
+    font-size: 27px;
+}
+
+.acceso-formulario .btn-block {
+    margin-top: 6px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+}
+
+.acceso-enlace {
+    margin: 18px 0 0;
+    text-align: center;
+    font-size: 14.5px;
+}
+
+/* El mensaje de error del inicio de sesión, arriba de la tarjeta. */
+.sin-menu .hoja:has(.acceso) > span.alert {
+    margin: 6vh 0 16px;
+}
+
+.sin-menu .hoja > span.alert + div > .acceso {
+    margin-top: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Página de bienvenida (al ingresar): presentación del negocio
+   --------------------------------------------------------------------------- */
+
+.saludo {
+    margin: 0 0 22px;
+    font-size: 15px;
+    color: var(--tenue);
+}
+
+.saludo strong {
+    color: var(--tinta);
+}
+
+.portada {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 32px;
+    align-items: center;
+}
+
+.portada h1 {
+    margin: 0 0 14px;
+    font-size: 42px;
+    line-height: 1.05;
+    letter-spacing: -0.005em;
+}
+
+.portada p {
+    max-width: 52ch;
+    margin: 0;
+    font-size: 17.5px;
+    line-height: 1.55;
+    color: var(--tenue);
+}
+
+/* Un estante con el nivel de stock de cinco insumos y la línea punteada del
+   stock mínimo: el que quedó por debajo se marca en rosa. */
+.portada-figura {
+    position: relative;
+    height: 230px;
+    padding: 28px 32px 0;
+    background: var(--vino);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.estante {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    height: 100%;
+}
+
+.estante::after {
+    content: "";
+    position: absolute;
+    left: -8px;
+    right: -8px;
+    bottom: 30%;
+    border-top: 2px dashed rgba(240, 167, 177, 0.75);
+}
+
+.estante i {
+    display: block;
+    flex: 1 1 0;
+    border-radius: 4px 4px 0 0;
+    background: rgba(255, 255, 255, 0.78);
+}
+
+.estante i:nth-child(1) { height: 62%; }
+.estante i:nth-child(2) { height: 88%; background: rgba(255, 255, 255, 0.92); }
+.estante i:nth-child(3) { height: 47%; }
+.estante i:nth-child(4) { height: 18%; background: var(--rosa); }
+.estante i:nth-child(5) { height: 74%; background: rgba(255, 255, 255, 0.6); }
+
+.bienvenida-seccion {
+    margin-top: 40px;
+    padding-top: 28px;
+    border-top: 1px solid var(--linea);
+}
+
+.bienvenida-seccion > h2 {
+    margin: 0 0 12px;
+    font-size: 26px;
+}
+
+.bienvenida-lectura {
+    max-width: 68ch;
+    margin: 0 0 20px;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.servicios {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 26px 32px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.servicios .glyphicon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    background: var(--guinda-tinte);
+    color: var(--guinda);
+    font-size: 16px;
+}
+
+.servicios h3 {
+    margin: 12px 0 4px;
+    font-size: 18px;
+}
+
+.servicios p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--tenue);
+}
+
+.planes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    align-items: start;
+}
+
+.plan {
+    position: relative;
+    padding: 22px 22px 18px;
+    border: 1px solid var(--linea);
+    border-radius: 12px;
+}
+
+.plan-destacado {
+    border: 2px solid var(--guinda);
+    padding: 21px 21px 17px;
+}
+
+/* "El más elegido": arriba a la derecha, para que los tres planes queden alineados. */
+.plan-marca {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    margin: 0;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--guinda-tinte);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--guinda);
+}
+
+.plan h3 {
+    margin: 0 0 6px;
+    font-size: 21px;
+}
+
+.plan-precio {
+    margin: 0 0 8px;
+    font-family: var(--letra-titulos);
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.plan-precio span {
+    font-family: var(--letra);
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--tenue);
+}
+
+.plan-para {
+    margin: 0 0 14px;
+    color: var(--tenue);
+}
+
+.plan ul {
+    margin: 0;
+    padding: 14px 0 0;
+    border-top: 1px solid var(--linea-suave);
+    list-style: none;
+}
+
+.plan li {
+    position: relative;
+    padding: 4px 0 4px 24px;
+}
+
+.plan li::before {
+    content: "\e013";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    font-family: "Glyphicons Halflings";
     font-size: 12px;
+    color: var(--guinda);
+}
+
+.bienvenida-contacto .bienvenida-lectura {
+    margin-bottom: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Íconos del menú, avatar del usuario y encabezado de cada pantalla
+   --------------------------------------------------------------------------- */
+
+.menu-icono {
+    flex: 0 0 auto;
+    width: 18px;
+    margin-right: 10px;
+    font-size: 13px;
+    text-align: center;
+    opacity: 0.75;
+}
+
+.menu-grupo-texto {
+    flex: 1 1 auto;
+}
+
+.menu-grupo.abierto .menu-icono,
+.menu-grupo-titulo:hover .menu-icono,
+.menu-enlace.activo .menu-icono {
+    opacity: 1;
+    color: var(--rosa);
+}
+
+.menu-inicio {
+    display: flex;
+    align-items: center;
+}
+
+.usuario-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--guinda-tinte);
+    border: 1px solid #ead2d6;
+    font-family: var(--letra-titulos);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--guinda);
+}
+
+.page-header.con-icono {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    column-gap: 16px;
+    align-items: center;
+}
+
+.page-header.con-icono > * {
+    grid-column: 2;
+}
+
+.page-header.con-icono > .cabecera-icono {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    align-self: start;
+}
+
+.cabecera-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--guinda-tinte);
+    font-size: 19px;
+    color: var(--guinda);
+}
+
+/* Títulos de las partes de una pantalla (por ejemplo, el detalle de una orden). */
+.seccion-titulo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 26px 0 12px;
+    font-family: var(--letra-titulos);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--tinta);
+}
+
+.seccion-titulo small {
+    font-family: var(--letra);
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--tenue);
+}
+
+/* Texto de ayuda debajo de un campo. */
+.campo-ayuda {
+    display: block;
+    margin-top: 5px;
+    font-size: 13px;
+    color: var(--tenue);
+}
+
+/* Botones de acción al pie de las pantallas que los agrupan. */
+.acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+    padding-top: 18px;
+    border-top: 1px solid var(--linea-suave);
+}
+
+.acciones .btn + .btn {
+    margin-left: 0;
+}
+
+/* Filtros de las consultas, con su botón de búsqueda. */
+.filtros {
+    margin-bottom: 22px;
+    padding: 18px 18px 4px;
+    background: #f8f8fa;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+}
+
+.filtros-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.filtros-acciones .btn + .btn {
+    margin-left: 0;
+}
+
+/* Lista de los reportes gerenciales con lo que incluye cada uno. */
+.lista-reportes {
+    display: grid;
+    grid-template-columns: minmax(150px, max-content) minmax(0, 1fr);
+    gap: 8px 18px;
+    margin: 0 0 8px;
+    padding: 16px 18px;
+    background: #f8f8fa;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    font-size: 14.5px;
+}
+
+.lista-reportes dt {
+    font-weight: 600;
+    color: var(--tinta);
+}
+
+.lista-reportes dd {
+    margin: 0;
+    color: var(--tenue);
+}
+
+/* ---------------------------------------------------------------------------
+   Indicadores: números que resumen la pantalla (importe, cantidad, etc.)
+   --------------------------------------------------------------------------- */
+
+.indicadores {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 0 0 22px;
+}
+
+.indicador {
+    padding: 14px 16px;
+    background: var(--superficie);
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+}
+
+.indicador-valor {
+    display: block;
+    font-family: var(--letra-titulos);
+    font-size: 25px;
+    font-weight: 600;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    color: var(--tinta);
+    overflow-wrap: anywhere;
+}
+
+.indicador-etiqueta {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--tenue);
+}
+
+.indicador-destacado {
+    background: var(--guinda-tinte);
+    border-color: #e3c4c9;
+}
+
+.indicador-destacado .indicador-valor {
+    color: var(--guinda);
+}
+
+.indicador-exito .indicador-valor { color: var(--exito); }
+.indicador-aviso .indicador-valor { color: var(--aviso); }
+.indicador-peligro .indicador-valor { color: var(--peligro); }
+
+/* ---------------------------------------------------------------------------
+   Mensajes que se cierran, estados en las grillas y filas marcadas
+   --------------------------------------------------------------------------- */
+
+span.alert,
+div.alert {
+    padding-right: 46px;
+}
+
+.alerta-cerrar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 8px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font-size: 21px;
+    line-height: 1;
+    color: inherit;
+    opacity: 0.55;
+    cursor: pointer;
+}
+
+.alerta-cerrar:hover,
+.alerta-cerrar:focus {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px 2px 8px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.estado::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.estado-exito { background: var(--exito-fondo); border-color: var(--exito-borde); color: var(--exito); }
+.estado-aviso { background: var(--aviso-fondo); border-color: var(--aviso-borde); color: var(--aviso); }
+.estado-peligro { background: var(--peligro-fondo); border-color: var(--peligro-borde); color: var(--peligro); }
+.estado-neutro { background: #f1f2f4; border-color: var(--linea); color: var(--tenue); }
+
+.table th.num,
+.table td.num {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.table > tbody > tr.danger > td {
+    background: var(--peligro-fondo);
+    color: var(--peligro);
+}
+
+.table > tbody > tr.danger > td:first-child {
+    box-shadow: inset 3px 0 0 var(--peligro);
+}
+
+.table > tbody > tr.warning > td {
+    background: var(--aviso-fondo);
+}
+
+.table > tbody > tr.warning > td:first-child {
+    box-shadow: inset 3px 0 0 #d79b26;
+}
+
+.table > tbody > tr.fila-vacia > td::before {
+    content: "\e028";
+    display: block;
+    margin-bottom: 8px;
+    font-family: "Glyphicons Halflings";
+    font-size: 24px;
+    line-height: 1;
+    color: #b7bcc4;
+}
+
+.table > tbody > tr.fila-vacia:hover > td {
+    background: transparent;
+}
+
+/* ---------------------------------------------------------------------------
+   Mientras el servidor procesa: barra en la parte de arriba y botón ocupado
+   --------------------------------------------------------------------------- */
+
+.app-barra::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--guinda), transparent);
+    background-size: 40% 100%;
+    background-repeat: no-repeat;
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.cargando .app-barra::after {
+    opacity: 1;
+    animation: cargando 1.1s ease-in-out infinite;
+}
+
+@keyframes cargando {
+    from { background-position: -40% 0; }
+    to { background-position: 140% 0; }
+}
+
+body.cargando {
+    cursor: progress;
+}
+
+.btn.procesando {
+    padding-left: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23fff' stroke-opacity='.35' stroke-width='3'/%3E%3Cpath d='M12 3a9 9 0 0 1 9 9' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 12 12' to='360 12 12' dur='.8s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: 14px center;
+    background-size: 16px 16px;
+    cursor: progress;
+    pointer-events: none;
+}
+
+.btn-default.procesando {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%237a1f2b' stroke-opacity='.25' stroke-width='3'/%3E%3Cpath d='M12 3a9 9 0 0 1 9 9' fill='none' stroke='%237a1f2b' stroke-width='3' stroke-linecap='round'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 12 12' to='360 12 12' dur='.8s' repeatCount='indefinite'/%3E%3C/path%3E%3C/svg%3E");
+}
+
+/* ---------------------------------------------------------------------------
+   Diálogo de confirmación
+   --------------------------------------------------------------------------- */
+
+.modal-backdrop.in {
+    opacity: 0.45;
+}
+
+.dialogo-confirmar .modal-dialog {
+    max-width: 440px;
+    margin-top: 12vh;
+}
+
+.dialogo-confirmar .modal-content {
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(20, 8, 10, 0.28);
+}
+
+.dialogo-confirmar .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 24px 6px;
+    border-bottom: 0;
+}
+
+.dialogo-confirmar .modal-title {
+    font-family: var(--letra-titulos);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.dialogo-icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--guinda-tinte);
+    font-size: 18px;
+    color: var(--guinda);
+}
+
+.dialogo-confirmar .modal-body {
+    padding: 8px 24px 8px 76px;
+    font-size: 15px;
+    color: var(--tinta);
+}
+
+.dialogo-confirmar .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 24px 22px;
+    border-top: 0;
+}
+
+.dialogo-confirmar .modal-footer .btn + .btn {
+    margin-left: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Permisos de un perfil: familias, permisos de cada familia y particulares
+   -------------------------------------------------------------------------- */
+.perfil-titulo {
+    font-size: 15px;
+    margin: 4px 0 10px;
+}
+
+.perfil-titulo .badge {
+    vertical-align: 1px;
+}
+
+.perfil-familia {
+    border: 1px solid #e3e3e3;
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #fff;
+}
+
+.perfil-familia-nombre {
+    margin-bottom: 6px;
+}
+
+.perfil-familia-patentes {
+    margin-top: 4px;
+}
+
+.perfil-total {
+    margin: 12px 0 0;
+    padding-top: 10px;
+    border-top: 1px solid #e3e3e3;
+}
+
+/* --------------------------------------------------------------------------
+   Compra de un plan (Alta de suscripción): resumen con los cálculos
+   -------------------------------------------------------------------------- */
+.resumen-caja {
+    max-width: 680px;
+}
+
+.resumen-compra {
+    background: #fff;
+}
+
+.resumen-compra th {
+    font-weight: 500;
+    color: #555;
+}
+
+.resumen-compra td.num {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.resumen-compra .resumen-total th,
+.resumen-compra .resumen-total td {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #222;
+    border-top: 2px solid #333;
+}
+
+.opciones-pago label {
+    font-weight: 500;
+    margin: 0 24px 0 6px;
+}
+
+/* ---------------------------------------------------------------------------
+   Pantallas medianas y chicas: el menú lateral se abre con un botón
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 991px) {
+    .app-lateral {
+        position: fixed;
+        z-index: 40;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+    }
+
+    .menu-abierto .app-lateral {
+        transform: none;
+        box-shadow: 0 0 40px rgba(20, 8, 10, 0.35);
+    }
+
+    .menu-abierto .velo-menu {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        background: rgba(20, 8, 10, 0.45);
+    }
+
+    .boton-menu {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .con-menu .marca-compacta {
+        display: flex;
+    }
+
+    .con-menu .migas {
+        display: none;
+    }
+
+    .app-barra {
+        padding: 10px 16px;
+    }
+
+    .app-contenido {
+        padding: 16px;
+    }
+
+    .hoja {
+        padding: 20px 16px 24px;
+    }
+
+    .app-pie {
+        padding: 0 16px 20px;
+    }
+}
+
+@media (max-width: 767px) {
+    .usuario {
+        display: none;
+    }
+
+    .page-header h2 {
+        font-size: 25px;
+    }
+
+    .portada {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .portada h1 {
+        font-size: 32px;
+    }
+
+    .portada-figura {
+        height: 150px;
+        padding: 20px 24px 0;
+    }
+
+    .acceso {
+        grid-template-columns: 1fr;
+        margin-top: 0;
+    }
+
+    .acceso-marca {
+        min-height: 0;
+        padding: 26px 24px;
+    }
+
+    .marca-icono-grande {
+        width: 40px;
+        height: 44px;
+        gap: 5px;
+    }
+
+    .acceso-nombre {
+        margin-top: 16px;
+        font-size: 26px;
+    }
+
+    .acceso-formulario {
+        padding: 28px 24px;
+    }
+
+    .page-header.con-icono {
+        grid-template-columns: 40px minmax(0, 1fr);
+        column-gap: 12px;
+    }
+
+    .cabecera-icono {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+
+    .usuario-avatar,
+    .usuario-bloque {
+        display: none;
+    }
+
+    .indicadores {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .indicador-valor {
+        font-size: 21px;
+    }
+
+    .acciones .btn,
+    .filtros-acciones .btn {
+        flex: 1 1 100%;
+    }
+
+    .lista-reportes {
+        grid-template-columns: 1fr;
+        gap: 2px;
+    }
+
+    .lista-reportes dd {
+        margin-bottom: 8px;
+    }
+
+    .dialogo-confirmar .modal-body {
+        padding-left: 24px;
+    }
+
+    /* Los botones de acción ocupan todo el ancho y quedan uno debajo del otro. */
+    .hoja > .btn,
+    .hoja > input.btn {
+        display: block;
+        width: 100%;
+    }
+
+    .hoja > .btn + .btn,
+    .hoja > input.btn + input.btn {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 520px) {
+    /* En el celular la barra superior deja solo las barras de la marca. */
+    .marca-compacta .marca-nombre {
+        display: none;
+    }
+
+    .app-barra {
+        gap: 10px;
+    }
+
+    .app-barra-derecha {
+        gap: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
 }

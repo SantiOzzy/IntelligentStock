@@ -15,6 +15,7 @@ namespace BE
     {
         public BEEvento()
         {
+            Activo = true;
         }
 
         public BEEvento(int? dniUsuario, string accion, string descripcion)
@@ -28,6 +29,7 @@ namespace BE
             Accion = accion;
             Descripcion = descripcion;
             Criticidad = criticidad;
+            Activo = true;
         }
 
         public int IdEvento { get; set; }
@@ -44,6 +46,17 @@ namespace BE
         public string Descripcion { get; set; }
 
         public CriticidadEvento Criticidad { get; set; }
+
+        /// Eliminación lógica: los eventos de más de 30 días (Web.config,
+        /// "DiasEventosActivos") quedan con activo = 0. No se borran: siguen
+        /// sirviendo como historial (ventas, suscripciones) y se pueden ver en
+        /// la bitácora tildando "Incluir eventos eliminados".
+        public bool Activo { get; set; }
+
+        public string Estado
+        {
+            get { return Activo ? "Activo" : "Eliminado"; }
+        }
 
         public string Fecha
         {

@@ -12,6 +12,7 @@ namespace Servicios
     {
         private const string ClaveUsuario = "UsuarioLogueado";
         private const string ClaveInconsistencias = "InconsistenciasDV";
+        private const string ClaveVersionPermisos = "VersionPermisos";
 
         private static HttpSessionState Sesion
         {
@@ -59,6 +60,26 @@ namespace Servicios
             {
                 BEUsuario usuario = UsuarioActual;
                 return usuario == null ? string.Empty : usuario.NombreUsuario;
+            }
+        }
+
+        /// Versión de la estructura de permisos con la que se cargaron los
+        /// permisos del usuario de la sesión (ver BLLPermiso.VersionPermisos).
+        /// Null si todavía no se anotó.
+        public static long? VersionPermisos
+        {
+            get
+            {
+                HttpSessionState sesion = Sesion;
+                return sesion == null ? null : sesion[ClaveVersionPermisos] as long?;
+            }
+            set
+            {
+                HttpSessionState sesion = Sesion;
+                if (sesion != null)
+                {
+                    sesion[ClaveVersionPermisos] = value;
+                }
             }
         }
 

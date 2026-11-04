@@ -13,12 +13,35 @@ namespace BLL
         private readonly BLLEvento bllEvento = new BLLEvento();
         private readonly BLLDigitoVerificador bllDV = new BLLDigitoVerificador();
 
-        /// Carpeta que propone la pantalla de respaldo. Si el motor informa su
-        /// carpeta de backups se usa esa; si no, se cae en App_Data\Backups.
-        public string RutaPorDefecto(string rutaAlternativa)
+        /// Carpeta de las copias de seguridad: App_Data\Respaldos del sitio. La
+        /// aplicación la prepara para que el motor pueda escribir y leer ahí
+        /// (ver DALRespaldo.PrepararCarpetaParaElMotor), y como está dentro del
+        /// sitio la aplicación también puede descargar lo que genera el motor.
+        public static string CarpetaDeRespaldos
         {
-            string delMotor = dalRespaldo.ObtenerRutaPorDefecto();
-            return string.IsNullOrEmpty(delMotor) ? rutaAlternativa : delMotor.TrimEnd('\\');
+            get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Respaldos"); }
+        }
+
+        /// Carpeta que propone la pantalla de respaldo.
+        public string RutaPorDefecto()
+        {
+            return CarpetaDeRespaldos;
+        }
+
+        /// Carpeta donde la pantalla de restore deja el archivo subido, ya
+        /// preparada para que el motor lo pueda leer.
+        public string PrepararCarpetaDeRestauracion()
+        {
+            string carpeta = Path.Combine(CarpetaDeRespaldos, "Restauracion");
+            try
+            {
+                dalRespaldo.PrepararCarpetaParaElMotor(carpeta);
+            }
+            catch (Exception)
+            {
+                // Si no se pudo dar el permiso, el motor lo informa al restaurar.
+            }
+            return carpeta;
         }
 
         /// Genera el archivo .bak y devuelve la ruta completa.
@@ -32,13 +55,10 @@ namespace BLL
             carpetaDestino = carpetaDestino.Trim().TrimEnd('\\');
 
             // La carpeta la crea la aplicación, pero el archivo lo escribe el
-            // motor: que exista no garantiza que SQL Server pueda escribir en ella.
+            // motor: además de crearla se le da permiso a la cuenta del servicio.
             try
             {
-                if (!Directory.Exists(carpetaDestino))
-                {
-                    Directory.CreateDirectory(carpetaDestino);
-                }
+                dalRespaldo.PrepararCarpetaParaElMotor(carpetaDestino);
             }
             catch (UnauthorizedAccessException)
             {
@@ -54,7 +74,20 @@ namespace BLL
                                    DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".bak";
             string rutaCompleta = Path.Combine(carpetaDestino, nombreArchivo);
 
-            dalRespaldo.RealizarBackUp(rutaCompleta);
+            try
+            {
+                dalRespaldo.RealizarBackUp(rutaCompleta);
+            }
+            catch (ApplicationException ex)
+            {
+                if (EsFaltaDePermisoDelMotor(ex))
+                {
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR022",
+                        "SQL Server no tiene permiso para escribir en " + carpetaDestino + ". " +
+                        ComoDarPermiso(carpetaDestino)), ex);
+                }
+                throw;
+            }
 
             bllEvento.RegistrarDelUsuarioActual("BackUp de base de datos",
                 "Se generó la copia de seguridad " + nombreArchivo + ".");
@@ -92,11 +125,16 @@ namespace BLL
                     throw new ApplicationException(AdministradorErrores.Mensaje("ERR016",
                         "Detalle del motor: " + motor.Message), ex);
                 }
+                if (EsFaltaDePermisoDelMotor(ex))
+                {
+                    string carpeta = Path.GetDirectoryName(rutaArchivo);
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR022",
+                        "SQL Server no tiene permiso para leer el archivo en " + carpeta + ". " +
+                        ComoDarPermiso(carpeta)), ex);
+                }
                 if (motor != null && (motor.Number == 3201 || motor.Number == 3013))
                 {
-                    bool porPermisos = motor.Message.IndexOf("error 5", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                       motor.Message.IndexOf("(5)", StringComparison.Ordinal) >= 0;
-                    throw new ApplicationException(AdministradorErrores.Mensaje(porPermisos ? "ERR022" : "ERR016",
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR016",
                         "Detalle del motor: " + motor.Message), ex);
                 }
                 throw;
@@ -104,6 +142,37 @@ namespace BLL
 
             bllEvento.RegistrarDelUsuarioActual("Restore de base de datos",
                 "Se restauró la base de datos desde el archivo " + Path.GetFileName(rutaArchivo) + ".");
+        }
+
+        /// El motor no pudo abrir el archivo por permisos: "Operating system
+        /// error 5" (acceso denegado) en los errores 3201 (backup/restore) o 3013.
+        private static bool EsFaltaDePermisoDelMotor(ApplicationException ex)
+        {
+            SqlException motor = ex.InnerException as SqlException;
+            if (motor == null || (motor.Number != 3201 && motor.Number != 3013))
+            {
+                return false;
+            }
+            foreach (SqlError error in motor.Errors)
+            {
+                if (error.Message.IndexOf("error 5", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return true;
+                }
+            }
+            return motor.Message.IndexOf("error 5", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// Explica cómo dar el permiso a mano cuando la aplicación no pudo.
+        private string ComoDarPermiso(string carpeta)
+        {
+            string cuenta = dalRespaldo.ObtenerCuentaDelServicio();
+            if (string.IsNullOrEmpty(cuenta))
+            {
+                cuenta = @"NT Service\MSSQL$SQLEXPRESS";
+            }
+            return "Para solucionarlo, ejecute una vez en una consola de Windows abierta como administrador: " +
+                   "icacls \"" + carpeta + "\" /grant \"" + cuenta + ":(OI)(CI)M\"";
         }
 
         /// Restaura la base ejecutando un script .sql.
