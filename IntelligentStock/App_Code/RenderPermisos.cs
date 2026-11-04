@@ -5,8 +5,9 @@ using System.Web;
 using BE;
 
 /// Utilidades de presentacion para dibujar el arbol del Composite.
-/// Se usa en el alta y la modificacion de usuario (para mostrar que otorga el rol),
-/// y en las consultas de familias y patentes.
+/// Se usa en las consultas de familias y patentes y en la baja y la
+/// modificación de familias. Lo que otorga un perfil (familias, permisos de
+/// cada una y particulares) lo muestra el control Controles/PermisosDelPerfil.ascx.
 public static class RenderPermisos
 {
     // Recorre el arbol en profundidad. Como Familia y Patente comparten la
@@ -39,83 +40,6 @@ public static class RenderPermisos
         return Arbol(rol.Permisos);
     }
 
-    /// Lo que otorga un perfil, separado como pide el punto 14: a qué familias
-    /// pertenece, qué permisos da cada familia (con los de sus subfamilias) y
-    /// cuáles son particulares del perfil (patentes asignadas directamente,
-    /// fuera de cualquier familia). Se usa en el alta y la modificación de
-    /// usuario y en la consulta de permisos por rol.
-    public static string ResumenDelPerfil(BERol rol)
-    {
-        if (rol == null)
-        {
-            return "<em>Sin permisos asignados.</em>";
-        }
-
-        List<Componente> familias = new List<Componente>();
-        List<Patente> particulares = new List<Patente>();
-        foreach (Componente componente in rol.Permisos)
-        {
-            if (componente.Tipo == 'F')
-            {
-                familias.Add(componente);
-            }
-            else
-            {
-                componente.ListarPatentes(particulares);
-            }
-        }
-
-        StringBuilder html = new StringBuilder();
-        html.Append("<div class=\"perfil-permisos\">");
-
-        html.Append("<h4 class=\"perfil-titulo\">Familias del perfil <span class=\"badge\">")
-            .Append(familias.Count).Append("</span></h4>");
-        if (familias.Count == 0)
-        {
-            html.Append("<p><em>El perfil no pertenece a ninguna familia.</em></p>");
-        }
-        foreach (Componente familia in familias)
-        {
-            html.Append("<div class=\"perfil-familia\"><div class=\"perfil-familia-nombre\">")
-                .Append("<span class=\"label label-primary\">Familia</span> <strong>")
-                .Append(HttpUtility.HtmlEncode(familia.Nombre)).Append("</strong></div>");
-
-            List<string> subfamilias = new List<string>();
-            foreach (Componente hijo in familia.Hijos)
-            {
-                if (hijo.Tipo == 'F')
-                {
-                    subfamilias.Add(HttpUtility.HtmlEncode(hijo.Nombre));
-                }
-            }
-            if (subfamilias.Count > 0)
-            {
-                html.Append("<div class=\"campo-ayuda\">Incluye las familias: <span>")
-                    .Append(string.Join(", ", subfamilias.ToArray())).Append("</span></div>");
-            }
-
-            html.Append("<div class=\"perfil-familia-patentes\">").Append(PatentesEfectivas(familia)).Append("</div></div>");
-        }
-
-        html.Append("<h4 class=\"perfil-titulo\">Permisos particulares <span class=\"badge\">")
-            .Append(particulares.Count).Append("</span></h4>")
-            .Append("<p class=\"campo-ayuda\">Patentes asignadas directamente al perfil, fuera de cualquier familia.</p>");
-        html.Append(particulares.Count == 0
-            ? "<p><em>Ninguno: todos los permisos del perfil vienen de sus familias.</em></p>"
-            : "<div class=\"perfil-familia-patentes\">" + RenderizarPatentes(particulares) + "</div>");
-
-        // Una patente puede llegar por más de una familia: se cuenta una vez.
-        HashSet<string> distintas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (Patente patente in rol.ObtenerPatentes())
-        {
-            distintas.Add(patente.Nombre);
-        }
-        html.Append("<p class=\"perfil-total\">Patentes que habilita el perfil en total: <strong>")
-            .Append(distintas.Count).Append("</strong></p>");
-        html.Append("</div>");
-        return html.ToString();
-    }
-
     /// Lista plana de las patentes efectivas, util cuando interesa el resultado
     /// y no la estructura que lo produjo.
     public static string PatentesEfectivas(BERol rol)
@@ -146,7 +70,7 @@ public static class RenderPermisos
         StringBuilder html = new StringBuilder();
         foreach (Patente patente in patentes)
         {
-            html.Append("<span class=\"label label-default\" style=\"margin-right:4px; display:inline-block; margin-bottom:4px\">");
+            html.Append("<span class=\"label label-default perfil-patente\">");
             html.Append(HttpUtility.HtmlEncode(patente.Nombre));
             html.Append("</span>");
         }

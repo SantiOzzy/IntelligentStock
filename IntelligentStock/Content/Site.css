@@ -1770,11 +1770,11 @@ body.cargando {
 }
 
 .perfil-familia {
-    border: 1px solid #e3e3e3;
+    border: 1px solid var(--linea);
     border-radius: 6px;
     padding: 10px 12px;
     margin-bottom: 10px;
-    background: #fff;
+    background: var(--superficie);
 }
 
 .perfil-familia-nombre {
@@ -1788,7 +1788,146 @@ body.cargando {
 .perfil-total {
     margin: 12px 0 0;
     padding-top: 10px;
-    border-top: 1px solid #e3e3e3;
+    border-top: 1px solid var(--linea);
+}
+
+.perfil-patente {
+    display: inline-block;
+    margin: 0 4px 4px 0;
+}
+
+.perfil-aviso {
+    color: var(--tenue);
+    font-style: italic;
+}
+
+/* --------------------------------------------------------------------------
+   Controles personalizados (carpeta Controles)
+   -------------------------------------------------------------------------- */
+
+/* IndicadorStock.ascx: cantidad pintada según el estado del inventario. */
+.indicador-stock {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    padding: 4px 12px;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    background: var(--lienzo);
+    line-height: 1.3;
+}
+
+.indicador-stock-cantidad {
+    font-family: var(--letra-titulos);
+    font-size: 16px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.indicador-stock-unidad {
+    margin-left: 3px;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.indicador-stock-estado {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+
+.indicador-stock-critico { background: var(--peligro-fondo); border-color: var(--peligro-borde); color: var(--peligro); }
+.indicador-stock-precaucion { background: var(--aviso-fondo); border-color: var(--aviso-borde); color: var(--aviso); }
+.indicador-stock-optimo { background: var(--exito-fondo); border-color: var(--exito-borde); color: var(--exito); }
+
+/* EstadoSensorIoT.ascx: tarjeta con los datos técnicos del sensor. */
+.tarjeta-sensor {
+    max-width: 320px;
+    margin-bottom: 15px;
+    padding: 14px 16px;
+    background: var(--superficie);
+    border: 1px solid var(--linea);
+    border-left: 4px solid var(--guinda);
+    border-radius: 10px;
+}
+
+.tarjeta-sensor-titulo {
+    margin-bottom: 8px;
+    font-family: var(--letra-titulos);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--guinda);
+}
+
+.tarjeta-sensor-datos {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 10px;
+    margin: 0;
+}
+
+.tarjeta-sensor-datos dt {
+    font-weight: 600;
+    color: var(--tenue);
+}
+
+.tarjeta-sensor-datos dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.tarjeta-sensor-limite {
+    font-weight: 600;
+    color: var(--peligro);
+}
+
+/* ImpactoEconomico.ascx: lo que cuesta (o puede costar) una contingencia. */
+.impacto-economico {
+    max-width: 280px;
+    margin-bottom: 15px;
+    padding: 14px 16px;
+    border: 1px solid var(--linea);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.impacto-economico-titulo,
+.impacto-economico-monto,
+.impacto-economico-detalle {
+    display: block;
+}
+
+.impacto-economico-titulo {
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.impacto-economico-monto {
+    font-family: var(--letra-titulos);
+    font-size: 26px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.impacto-economico-detalle {
+    font-size: 12px;
+}
+
+.impacto-economico-riesgo { background: var(--aviso-fondo); border-color: var(--aviso-borde); color: var(--aviso); }
+.impacto-economico-perdida { background: var(--peligro-fondo); border-color: var(--peligro-borde); color: var(--peligro); }
+
+/* Bitácora: consulta XPath con la que se filtró un mes archivado. */
+.consulta-xpath {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 12.5px;
+    color: var(--tinta);
+    overflow-wrap: anywhere;
+}
+
+/* BuscadorInsumo.ascx: lista que se filtra mientras se escribe. */
+.buscador-insumo-lista {
+    margin-top: 4px;
 }
 
 /* --------------------------------------------------------------------------

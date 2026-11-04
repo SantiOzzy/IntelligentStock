@@ -12,6 +12,12 @@ using Servicios;
 /// Clase base de todos los formularios del sistema. Pertenece a la capa de
 /// presentacion. Antes de que la pagina se cargue controla que exista una
 /// sesion activa y que el rol del usuario tenga la patente que la habilita.
+///
+/// Patrón Template Method: OnPreInit ejecuta siempre los mismos pasos y en el
+/// mismo orden (Autorizar: base consistente, cuenta vigente, sesión iniciada y
+/// patente). Lo que cambia de un formulario a otro son los pasos variables,
+/// que cada página redefine: PatenteRequerida, RequiereSesion y
+/// PermitidoConBaseInconsistente. Ningún formulario puede saltearse el control.
 public abstract class PaginaBase : Page
 {
     /// Patente que habilita el formulario. Vacio si solo requiere sesion.
@@ -34,7 +40,7 @@ public abstract class PaginaBase : Page
 
     protected BEUsuario UsuarioActual
     {
-        get { return SessionManager.UsuarioActual; }
+        get { return SessionManager.ObtenerInstancia().UsuarioActual; }
     }
 
     protected override void OnPreInit(EventArgs e)
@@ -126,13 +132,13 @@ public abstract class PaginaBase : Page
     private void Autorizar()
     {
         // La base quedo marcada como inconsistente durante el inicio de sesión.
-        if (SessionManager.BaseDeDatosInconsistente && !PermitidoConBaseInconsistente)
+        if (SessionManager.ObtenerInstancia().BaseDeDatosInconsistente && !PermitidoConBaseInconsistente)
         {
             Redirigir("~/ReparacionDV.aspx");
             return;
         }
 
-        BEUsuario usuario = SessionManager.UsuarioActual;
+        BEUsuario usuario = SessionManager.ObtenerInstancia().UsuarioActual;
 
         // Si mientras tenía la sesión abierta le dieron de baja la cuenta, un
         // administrador se la bloqueó o le cambiaron el rol, se aplica ya, en
@@ -149,11 +155,11 @@ public abstract class PaginaBase : Page
                         ? "un administrador bloqueó la cuenta"
                         : "la cuenta fue dada de baja") + " mientras estaba conectado.",
                     CriticidadEvento.Advertencia);
-                SessionManager.CerrarSesion();
+                SessionManager.ObtenerInstancia().CerrarSesion();
                 Redirigir("~/IniciarSesion.aspx?motivo=" + motivoDeCierre);
                 return;
             }
-            usuario = SessionManager.UsuarioActual;
+            usuario = SessionManager.ObtenerInstancia().UsuarioActual;
         }
 
         if (!RequiereSesion)
@@ -238,20 +244,20 @@ public abstract class PaginaBase : Page
         }
 
         long version = BLLPermiso.VersionPermisos;
-        if (!SessionManager.VersionPermisos.HasValue)
+        if (!SessionManager.ObtenerInstancia().VersionPermisos.HasValue)
         {
             // Primer pedido después de iniciar sesión: los permisos se
             // acaban de cargar.
-            SessionManager.VersionPermisos = version;
+            SessionManager.ObtenerInstancia().VersionPermisos = version;
         }
 
-        if (actual.IdRol != usuario.IdRol || SessionManager.VersionPermisos.Value != version)
+        if (actual.IdRol != usuario.IdRol || SessionManager.ObtenerInstancia().VersionPermisos.Value != version)
         {
             try
             {
                 bllUsuario.CargarRol(actual);
-                SessionManager.UsuarioActual = actual;
-                SessionManager.VersionPermisos = version;
+                SessionManager.ObtenerInstancia().UsuarioActual = actual;
+                SessionManager.ObtenerInstancia().VersionPermisos = version;
             }
             catch (Exception)
             {
@@ -321,8 +327,8 @@ public abstract class PaginaBase : Page
     /// completo. Devuelve true si la marcó.
     private static bool MarcarBaseInconsistente()
     {
-        BEUsuario usuario = SessionManager.UsuarioActual;
-        if (usuario == null || SessionManager.BaseDeDatosInconsistente)
+        BEUsuario usuario = SessionManager.ObtenerInstancia().UsuarioActual;
+        if (usuario == null || SessionManager.ObtenerInstancia().BaseDeDatosInconsistente)
         {
             return false;
         }
@@ -340,7 +346,7 @@ public abstract class PaginaBase : Page
                 return false;
             }
 
-            SessionManager.Inconsistencias = inconsistencias;
+            SessionManager.ObtenerInstancia().Inconsistencias = inconsistencias;
             return true;
         }
         catch (Exception)

@@ -6,15 +6,39 @@ using BE;
 
 namespace Servicios
 {
-    /// Punto unico de acceso a los datos de la sesion del usuario logueado.
-    /// Evita que cada formulario tenga que conocer las claves de Session.
-    public static class SessionManager
+    /// Patrón Singleton: punto único de acceso a los datos de la sesión del
+    /// usuario logueado. Evita que cada formulario tenga que conocer las claves
+    /// de Session.
+    ///
+    /// Hay una sola instancia en toda la aplicación, creada la primera vez que
+    /// se usa la clase (inicialización estática: el CLR garantiza que se crea
+    /// una sola vez aunque lleguen varios pedidos al mismo tiempo, sin lock).
+    /// El constructor es privado, así que nadie más puede crear otra, y se
+    /// obtiene con SessionManager.ObtenerInstancia().
+    ///
+    /// La instancia no guarda datos en campos propios: en una aplicación web
+    /// es compartida por todos los usuarios conectados, así que si guardara
+    /// "el usuario logueado" en un campo, todos verían al mismo. Cada dato se
+    /// lee y se escribe en la Session de ASP.NET del pedido actual, que es
+    /// propia de cada usuario.
+    public sealed class SessionManager
     {
+        private static readonly SessionManager instancia = new SessionManager();
+
+        private SessionManager()
+        {
+        }
+
+        public static SessionManager ObtenerInstancia()
+        {
+            return instancia;
+        }
+
         private const string ClaveUsuario = "UsuarioLogueado";
         private const string ClaveInconsistencias = "InconsistenciasDV";
         private const string ClaveVersionPermisos = "VersionPermisos";
 
-        private static HttpSessionState Sesion
+        private HttpSessionState Sesion
         {
             get
             {
@@ -22,7 +46,7 @@ namespace Servicios
             }
         }
 
-        public static BEUsuario UsuarioActual
+        public BEUsuario UsuarioActual
         {
             get
             {
@@ -39,13 +63,13 @@ namespace Servicios
             }
         }
 
-        public static bool HaySesionActiva
+        public bool HaySesionActiva
         {
             get { return UsuarioActual != null; }
         }
 
         /// DNI del usuario logueado, o null si todavia no inicio sesion.
-        public static int? DniActual
+        public int? DniActual
         {
             get
             {
@@ -54,7 +78,7 @@ namespace Servicios
             }
         }
 
-        public static string NombreUsuarioActual
+        public string NombreUsuarioActual
         {
             get
             {
@@ -66,7 +90,7 @@ namespace Servicios
         /// Versión de la estructura de permisos con la que se cargaron los
         /// permisos del usuario de la sesión (ver BLLPermiso.VersionPermisos).
         /// Null si todavía no se anotó.
-        public static long? VersionPermisos
+        public long? VersionPermisos
         {
             get
             {
@@ -84,7 +108,7 @@ namespace Servicios
         }
 
         /// Inconsistencias de DV detectadas durante el ultimo intento de login.
-        public static List<Inconsistencia> Inconsistencias
+        public List<Inconsistencia> Inconsistencias
         {
             get
             {
@@ -101,7 +125,7 @@ namespace Servicios
             }
         }
 
-        public static bool BaseDeDatosInconsistente
+        public bool BaseDeDatosInconsistente
         {
             get
             {
@@ -110,7 +134,7 @@ namespace Servicios
             }
         }
 
-        public static void LimpiarInconsistencias()
+        public void LimpiarInconsistencias()
         {
             HttpSessionState sesion = Sesion;
             if (sesion != null)
@@ -122,7 +146,7 @@ namespace Servicios
         /// Cierra la sesión. Además de vaciarla, la abandona y vence la cookie
         /// con su identificador: el próximo pedido arranca una sesión nueva y
         /// nadie puede seguir usando el identificador anterior.
-        public static void CerrarSesion()
+        public void CerrarSesion()
         {
             HttpSessionState sesion = Sesion;
             if (sesion != null)

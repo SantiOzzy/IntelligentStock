@@ -1,4 +1,5 @@
 ﻿<%@ Page Title="Alta de usuario" Language="C#" MasterPageFile="~/Site.master" AutoEventWireup="true" CodeFile="AltaUsuario.aspx.cs" Inherits="AltaUsuario" %>
+<%@ Register Src="~/Controles/PermisosDelPerfil.ascx" TagPrefix="uc" TagName="PermisosDelPerfil" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" Runat="Server">
 
@@ -150,7 +151,7 @@
     <div class="panel panel-default">
         <div class="panel-heading"><strong>Permisos que otorga el perfil seleccionado</strong></div>
         <div class="panel-body">
-            <asp:Literal ID="litPermisos" runat="server" Mode="PassThrough"></asp:Literal>
+            <uc:PermisosDelPerfil ID="ucPermisosPerfil" runat="server" />
         </div>
     </div>
 

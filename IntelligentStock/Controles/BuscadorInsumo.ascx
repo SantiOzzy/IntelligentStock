@@ -1,8 +1,8 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="BuscadorInsumo.ascx.cs" Inherits="Controles_BuscadorInsumo" %>
 <asp:TextBox ID="txtNombreInsumo" runat="server" CssClass="form-control" MaxLength="100"
     placeholder="Escriba parte del nombre para filtrar la lista..." autocomplete="off"></asp:TextBox>
-<asp:ListBox ID="lstInsumos" runat="server" CssClass="form-control" Rows="6" SelectionMode="Single"
-    style="margin-top: 4px;"></asp:ListBox>
+<asp:ListBox ID="lstInsumos" runat="server" CssClass="form-control buscador-insumo-lista" Rows="6"
+    SelectionMode="Single"></asp:ListBox>
 <asp:Label ID="lblResultado" runat="server"></asp:Label>
 <script type="text/javascript">
     // Filtra la lista mientras se escribe, sin ir al servidor. No distingue

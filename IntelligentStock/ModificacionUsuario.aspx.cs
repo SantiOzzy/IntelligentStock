@@ -222,7 +222,7 @@ public partial class ModificacionUsuario : PaginaBase
     {
         if (ddlRol.Items.Count == 0)
         {
-            litPermisos.Text = "<em>No hay roles cargados en el sistema.</em>";
+            ucPermisosPerfil.MostrarAviso("No hay roles cargados en el sistema.");
             return;
         }
 
@@ -234,14 +234,14 @@ public partial class ModificacionUsuario : PaginaBase
             {
                 if (rol.Id == idRol)
                 {
-                    litPermisos.Text = RenderPermisos.ResumenDelPerfil(rol);
+                    ucPermisosPerfil.Mostrar(rol);
                     return;
                 }
             }
         }
         catch (Exception ex)
         {
-            litPermisos.Text = "<em>" + ex.Message + "</em>";
+            ucPermisosPerfil.MostrarAviso(ex.Message);
         }
     }
 
@@ -256,6 +256,6 @@ public partial class ModificacionUsuario : PaginaBase
 
         BEUsuario actualizado = bllUsuario.ObtenerPorDNI(dni);
         bllUsuario.CargarRol(actualizado);
-        SessionManager.UsuarioActual = actualizado;
+        SessionManager.ObtenerInstancia().UsuarioActual = actualizado;
     }
 }

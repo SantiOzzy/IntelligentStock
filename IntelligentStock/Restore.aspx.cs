@@ -22,16 +22,16 @@ public partial class Restore : PaginaBase
     // ese caso el control se hace contra el perfil dentro del Page_Load.
     protected override string PatenteRequerida
     {
-        get { return SessionManager.BaseDeDatosInconsistente ? string.Empty : "Restore"; }
+        get { return SessionManager.ObtenerInstancia().BaseDeDatosInconsistente ? string.Empty : "Restore"; }
     }
 
     protected void Page_Load(object sender, EventArgs e)
     {
         // Redirect(url, true) corta el pedido: con false la página seguía y el
         // botón Restaurar se podía disparar igual.
-        if (SessionManager.BaseDeDatosInconsistente && !bllUsuario.EsAdministrador(UsuarioActual))
+        if (SessionManager.ObtenerInstancia().BaseDeDatosInconsistente && !bllUsuario.EsAdministrador(UsuarioActual))
         {
-            SessionManager.CerrarSesion();
+            SessionManager.ObtenerInstancia().CerrarSesion();
             Response.Redirect("~/IniciarSesion.aspx", true);
         }
     }
@@ -80,7 +80,7 @@ public partial class Restore : PaginaBase
             bllRespaldo.RecalcularIntegridad();
 
             // La tabla Usuario pudo haber cambiado por completo: se corta la sesion.
-            SessionManager.CerrarSesion();
+            SessionManager.ObtenerInstancia().CerrarSesion();
 
             Response.Redirect("~/IniciarSesion.aspx?motivo=restore", false);
             Context.ApplicationInstance.CompleteRequest();
@@ -118,7 +118,7 @@ public partial class Restore : PaginaBase
 
     protected void btnVolver_Click(object sender, EventArgs e)
     {
-        string destino = SessionManager.BaseDeDatosInconsistente
+        string destino = SessionManager.ObtenerInstancia().BaseDeDatosInconsistente
             ? "~/ReparacionDV.aspx"
             : "~/IniciarSesion.aspx";
 

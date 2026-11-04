@@ -264,7 +264,7 @@ namespace BLL
         /// CU-008-044 Alta de suscripción, a nombre del usuario con la sesión activa.
         public BESuscripcion Alta(string plan, string token, DateTime? fechaInicio)
         {
-            return Alta(plan, token, fechaInicio, SessionManager.DniActual);
+            return Alta(plan, token, fechaInicio, SessionManager.ObtenerInstancia().DniActual);
         }
 
         /// CU-008-044 Alta de suscripción. Valida los datos, cobra el primer
@@ -385,7 +385,7 @@ namespace BLL
         /// CU-008-045 Baja de suscripción, a nombre del usuario con la sesión activa.
         public DateTime Baja(int idSuscripcion, out bool pasarelaNotificada)
         {
-            return Baja(idSuscripcion, SessionManager.DniActual, out pasarelaNotificada);
+            return Baja(idSuscripcion, SessionManager.ObtenerInstancia().DniActual, out pasarelaNotificada);
         }
 
         public DateTime Baja(int idSuscripcion, int? dniUsuario)
@@ -520,6 +520,12 @@ namespace BLL
         /// CU-008-044 Compra de un plan (alta de suscripción), a nombre del
         /// usuario con la sesión activa.
         ///
+        /// Patrón Facade: la pantalla llama solo a este método, que coordina los
+        /// subsistemas de la compra (TarjetaCredito, PasarelaPagos,
+        /// FacturacionElectronica, GeneradorFactura, DALArchivoFactura,
+        /// EnviadorCorreo, el dígito verificador y la bitácora) en el orden
+        /// correcto. La pantalla no conoce a ninguno de ellos.
+        ///
         /// El pedido trae el plan, los meses, la fecha de inicio, los datos de
         /// facturación del cliente, el medio de pago y las cuotas. Los datos de
         /// la tarjeta llegan aparte porque no se guardan: se validan, se le
@@ -539,7 +545,7 @@ namespace BLL
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR002"));
             }
 
-            int? dniUsuario = SessionManager.DniActual;
+            int? dniUsuario = SessionManager.ObtenerInstancia().DniActual;
 
             // 1. Datos del cliente y de la compra
             BECompraPlan compra = Calcular(pedido.Plan, pedido.Meses);

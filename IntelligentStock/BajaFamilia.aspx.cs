@@ -183,7 +183,7 @@ public partial class BajaFamilia : PaginaBase
             litArbolRolBaja.Text = RenderPermisos.ArbolDelRol(rol);
 
             bool esWebMaster = string.Equals(rol.Nombre, "WebMaster", StringComparison.OrdinalIgnoreCase);
-            BEUsuario actual = SessionManager.UsuarioActual;
+            BEUsuario actual = SessionManager.ObtenerInstancia().UsuarioActual;
             bool esRolPropio = actual != null && actual.IdRol == idRol;
 
             btnEliminarRolBaja.Enabled = !esWebMaster && !esRolPropio;

@@ -273,7 +273,7 @@ namespace BLL
                     "El usuario " + usuario.NombreUsuario + " cerró su sesión.");
             }
 
-            SessionManager.CerrarSesion();
+            SessionManager.ObtenerInstancia().CerrarSesion();
         }
 
         private void RegistrarIntentoFallido(BEUsuario usuario, bool baseConsistente)
@@ -1048,7 +1048,7 @@ namespace BLL
 
         private static void VerificarQueNoSeaLaPropiaCuenta(int dni, string detalle)
         {
-            int? actual = SessionManager.DniActual;
+            int? actual = SessionManager.ObtenerInstancia().DniActual;
             if (actual.HasValue && actual.Value == dni)
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR012", detalle));
@@ -1126,7 +1126,7 @@ namespace BLL
         {
             rolDestino = roles.Find(delegate(BERol r) { return r.Id == idRol; });
 
-            BEUsuario actor = SessionManager.UsuarioActual;
+            BEUsuario actor = SessionManager.ObtenerInstancia().UsuarioActual;
 
             // El usuario de contingencia existe para reconstruir el acceso
             // cuando no queda ninguna cuenta que sirva (por ejemplo, si

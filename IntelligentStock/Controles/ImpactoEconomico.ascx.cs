@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Web.UI;
 
 // Componente personalizado ImpactoEconomico.
@@ -11,7 +10,8 @@ using System.Web.UI;
 //   - "Pérdida confirmada" (rojo oscuro): al registrar un ajuste de stock
 //     negativo, lo que ya se perdió.
 // Si el monto es cero (por ejemplo, el insumo todavía no tiene precio cargado)
-// el panel no se muestra.
+// el panel no se muestra. Los colores salen de las clases del diseño
+// (Site.css, .impacto-economico).
 public partial class Controles_ImpactoEconomico : UserControl
 {
     /// Cantidad afectada por el precio unitario.
@@ -43,20 +43,12 @@ public partial class Controles_ImpactoEconomico : UserControl
         if (esRiesgo)
         {
             lblTitulo.Text = "Valor en riesgo";
-            lblTitulo.ForeColor = Color.DarkGoldenrod;
-            pnlImpacto.BackColor = Color.LightYellow;
-            pnlImpacto.BorderColor = Color.Khaki;
-            lblMonto.ForeColor = Color.DarkOrange;
-            lblDetalle.ForeColor = Color.DarkGoldenrod;
+            pnlImpacto.CssClass = "impacto-economico impacto-economico-riesgo";
         }
         else
         {
             lblTitulo.Text = "Pérdida confirmada";
-            lblTitulo.ForeColor = ColorTranslator.FromHtml("#721c24");
-            pnlImpacto.BackColor = ColorTranslator.FromHtml("#f8d7da");
-            pnlImpacto.BorderColor = ColorTranslator.FromHtml("#f5c6cb");
-            lblMonto.ForeColor = ColorTranslator.FromHtml("#721c24");
-            lblDetalle.ForeColor = ColorTranslator.FromHtml("#721c24");
+            pnlImpacto.CssClass = "impacto-economico impacto-economico-perdida";
         }
 
         pnlImpacto.Visible = true;

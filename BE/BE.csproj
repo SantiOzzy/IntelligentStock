@@ -45,6 +45,7 @@
     <Compile Include="BEConsumoVenta.cs" />
     <Compile Include="BEDetalleOrdenCompra.cs" />
     <Compile Include="BEDetalleReceta.cs" />
+    <Compile Include="BEEstadisticaVentas.cs" />
     <Compile Include="BEEvento.cs" />
     <Compile Include="BEGastoProveedor.cs" />
     <Compile Include="BEInsumo.cs" />

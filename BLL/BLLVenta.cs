@@ -204,6 +204,91 @@ namespace BLL
             return ventas;
         }
 
+        /// Período máximo de las estadísticas de ventas.
+        public const int DiasMaximosEstadisticas = 366;
+
+        /// Estadísticas de ventas entre desde y hasta (inclusive): unidades y
+        /// operaciones, promedio diario, receta más vendida, día de más ventas
+        /// y el detalle por receta. Las publica WebServiceVentas.
+        public BEEstadisticaVentas Estadisticas(DateTime desde, DateTime hasta)
+        {
+            desde = desde.Date;
+            hasta = hasta.Date;
+
+            if (desde > hasta)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "La fecha de inicio no puede ser posterior a la fecha de fin."));
+            }
+            if ((hasta - desde).TotalDays >= DiasMaximosEstadisticas)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "El período no puede superar un año."));
+            }
+
+            BEEstadisticaVentas estadistica = new BEEstadisticaVentas();
+            estadistica.Desde = desde;
+            estadistica.Hasta = hasta;
+            estadistica.Dias = (int)(hasta - desde).TotalDays + 1;
+
+            Dictionary<int, BEVentaPorReceta> porReceta = new Dictionary<int, BEVentaPorReceta>();
+            Dictionary<DateTime, decimal> porDia = new Dictionary<DateTime, decimal>();
+
+            foreach (BEVenta venta in TraerVentas(desde, hasta))
+            {
+                // Los eventos de continuación solo agregan insumos de una venta.
+                if (venta.Cantidad <= 0)
+                {
+                    continue;
+                }
+
+                BEVentaPorReceta fila;
+                if (!porReceta.TryGetValue(venta.IdReceta, out fila))
+                {
+                    fila = new BEVentaPorReceta();
+                    fila.IdReceta = venta.IdReceta;
+                    porReceta[venta.IdReceta] = fila;
+                }
+                fila.Receta = venta.NombreReceta;
+                fila.UnidadesVendidas += venta.Cantidad;
+                fila.OperacionesDeVenta++;
+
+                decimal delDia;
+                porDia.TryGetValue(venta.Fecha.Date, out delDia);
+                porDia[venta.Fecha.Date] = delDia + venta.Cantidad;
+
+                estadistica.UnidadesVendidas += venta.Cantidad;
+                estadistica.OperacionesDeVenta++;
+            }
+
+            estadistica.PromedioDiario = Math.Round(estadistica.UnidadesVendidas / estadistica.Dias, 2);
+
+            foreach (BEVentaPorReceta fila in porReceta.Values)
+            {
+                fila.PromedioDiario = Math.Round(fila.UnidadesVendidas / estadistica.Dias, 2);
+                fila.PorcentajeDelTotal = estadistica.UnidadesVendidas == 0
+                    ? 0
+                    : Math.Round(fila.UnidadesVendidas * 100 / estadistica.UnidadesVendidas, 1);
+                estadistica.Recetas.Add(fila);
+            }
+            estadistica.Recetas.Sort(delegate(BEVentaPorReceta a, BEVentaPorReceta b)
+            {
+                return b.UnidadesVendidas.CompareTo(a.UnidadesVendidas);
+            });
+            estadistica.RecetaMasVendida = estadistica.Recetas.Count > 0 ? estadistica.Recetas[0].Receta : string.Empty;
+
+            foreach (KeyValuePair<DateTime, decimal> dia in porDia)
+            {
+                if (!estadistica.DiaConMasVentas.HasValue || dia.Value > estadistica.UnidadesDelDiaConMasVentas)
+                {
+                    estadistica.DiaConMasVentas = dia.Key;
+                    estadistica.UnidadesDelDiaConMasVentas = dia.Value;
+                }
+            }
+
+            return estadistica;
+        }
+
         /// Lee una venta del texto del evento. Devuelve null si el texto no
         /// tiene el formato esperado.
         public static BEVenta Interpretar(string descripcion)

@@ -1,4 +1,5 @@
 ﻿<%@ Page Title="Consulta de familias" Language="C#" MasterPageFile="~/Site.master" AutoEventWireup="true" CodeFile="ConsultaFamilia.aspx.cs" Inherits="ConsultaFamilia" %>
+<%@ Register Src="~/Controles/PermisosDelPerfil.ascx" TagPrefix="uc" TagName="PermisosDelPerfil" %>
 <%@ Import Namespace="BE" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="MainContent" Runat="Server">
@@ -36,7 +37,7 @@
                         <asp:DropDownList ID="ddlRoles" runat="server" CssClass="form-control"
                             AutoPostBack="true" OnSelectedIndexChanged="ddlRoles_SelectedIndexChanged"></asp:DropDownList>
                     </div>
-                    <asp:Literal ID="litArbolRol" runat="server" Mode="PassThrough"></asp:Literal>
+                    <uc:PermisosDelPerfil ID="ucPermisosPerfil" runat="server" />
                     <hr />
                     <p><strong>Patentes efectivas</strong></p>
                     <asp:Literal ID="litPatentesRol" runat="server" Mode="PassThrough"></asp:Literal>

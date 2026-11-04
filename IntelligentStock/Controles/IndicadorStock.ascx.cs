@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Web.UI;
 
 // Componente personalizado IndicadorStock.
@@ -9,6 +8,8 @@ using System.Web.UI;
 //   - rojo     "CRÍTICO"     si el stock está en el mínimo o por debajo
 //   - amarillo "PRECAUCIÓN"  si está a menos de un 50% por encima del mínimo
 //   - verde    "ÓPTIMO"      en cualquier otro caso
+// Los colores salen de las clases del diseño (Site.css, .indicador-stock),
+// así el control se ve igual que el resto del sistema.
 //
 // Se usa dentro de las grillas, enlazando las propiedades con Eval(). Los
 // valores se guardan en el ViewState para que el indicador se siga viendo bien
@@ -50,26 +51,17 @@ public partial class Controles_IndicadorStock : UserControl
 
         if (StockActual <= StockMinimo)
         {
-            pnlFondo.BackColor = Color.LightCoral;
-            lblCantidad.ForeColor = Color.DarkRed;
-            lblUnidad.ForeColor = Color.DarkRed;
-            lblEstado.ForeColor = Color.DarkRed;
+            pnlFondo.CssClass = "indicador-stock indicador-stock-critico";
             lblEstado.Text = "CRÍTICO";
         }
         else if (StockActual <= StockMinimo * FactorPrecaucion)
         {
-            pnlFondo.BackColor = Color.LightGoldenrodYellow;
-            lblCantidad.ForeColor = Color.DarkOrange;
-            lblUnidad.ForeColor = Color.DarkOrange;
-            lblEstado.ForeColor = Color.DarkOrange;
+            pnlFondo.CssClass = "indicador-stock indicador-stock-precaucion";
             lblEstado.Text = "PRECAUCIÓN";
         }
         else
         {
-            pnlFondo.BackColor = Color.LightGreen;
-            lblCantidad.ForeColor = Color.DarkGreen;
-            lblUnidad.ForeColor = Color.DarkGreen;
-            lblEstado.ForeColor = Color.DarkGreen;
+            pnlFondo.CssClass = "indicador-stock indicador-stock-optimo";
             lblEstado.Text = "ÓPTIMO";
         }
     }

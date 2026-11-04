@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
+using System.Xml.XPath;
 using BE;
 
 namespace DAL
@@ -26,6 +27,10 @@ namespace DAL
     ///       &lt;Descripcion&gt;El usuario admin inició sesión.&lt;/Descripcion&gt;
     ///     &lt;/Evento&gt;
     ///   &lt;/Bitacora&gt;
+    ///
+    /// Filtrado de eventos: la bitácora consulta un mes archivado con XPath
+    /// (XPathDocument / XPathNavigator) por usuario, criticidad o texto, sin
+    /// pasar por la base de datos (ver Filtrar).
     public class DALArchivoBitacora
     {
         private const string Prefijo = "Bitacora_";
@@ -112,6 +117,129 @@ namespace DAL
                 string ruta = Path.Combine(Carpeta, Path.GetFileName(nombreArchivo));
                 return File.Exists(ruta) ? File.ReadAllBytes(ruta) : null;
             }
+        }
+
+        // Para buscar sin distinguir mayúsculas: XPath 1.0 no tiene lower-case().
+        private const string Mayusculas = "ABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÜÑ";
+        private const string Minusculas = "abcdefghijklmnopqrstuvwxyzáéíóúüñ";
+
+        /// Arma la consulta XPath de los filtros. Los vacíos no se aplican.
+        /// Ejemplo: /Bitacora/Evento[@criticidad='Grave'][Usuario='admin']
+        public static string ConsultaXPath(string usuario, string criticidad, string texto)
+        {
+            StringBuilder consulta = new StringBuilder("/Bitacora/Evento");
+            if (!string.IsNullOrEmpty(criticidad))
+            {
+                consulta.Append("[@criticidad=").Append(Literal(criticidad)).Append("]");
+            }
+            if (!string.IsNullOrEmpty(usuario))
+            {
+                consulta.Append("[Usuario=").Append(Literal(usuario.Trim())).Append("]");
+            }
+            if (!string.IsNullOrEmpty(texto))
+            {
+                string buscado = Literal(texto.Trim().ToLowerInvariant());
+                consulta.Append("[contains(translate(Accion,'").Append(Mayusculas).Append("','").Append(Minusculas)
+                        .Append("'),").Append(buscado).Append(") or contains(translate(Descripcion,'")
+                        .Append(Mayusculas).Append("','").Append(Minusculas).Append("'),").Append(buscado).Append(")]");
+            }
+            return consulta.ToString();
+        }
+
+        /// Eventos de un mes archivado que cumplen la consulta XPath, del más
+        /// nuevo al más viejo. Devuelve null si el archivo no existe.
+        public List<BEEvento> Filtrar(string nombreArchivo, string consultaXPath)
+        {
+            if (string.IsNullOrEmpty(nombreArchivo))
+            {
+                return null;
+            }
+
+            List<BEEvento> eventos = new List<BEEvento>();
+            lock (candado)
+            {
+                string ruta = Path.Combine(Carpeta, Path.GetFileName(nombreArchivo));
+                if (!File.Exists(ruta))
+                {
+                    return null;
+                }
+
+                XPathDocument documento = new XPathDocument(ruta);
+                XPathNavigator navegador = documento.CreateNavigator();
+                XPathNodeIterator nodos = navegador.Select(consultaXPath);
+                while (nodos.MoveNext())
+                {
+                    eventos.Add(LeerEvento(nodos.Current));
+                }
+            }
+
+            eventos.Reverse();
+            return eventos;
+        }
+
+        private static BEEvento LeerEvento(XPathNavigator nodo)
+        {
+            BEEvento evento = new BEEvento();
+            evento.Activo = false;
+
+            int id;
+            int.TryParse(nodo.GetAttribute("id", string.Empty), NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
+            evento.IdEvento = id;
+
+            DateTime fecha;
+            DateTime.TryParseExact(nodo.GetAttribute("fecha", string.Empty), FormatoFecha,
+                                   CultureInfo.InvariantCulture, DateTimeStyles.None, out fecha);
+            evento.FechaHora = fecha;
+
+            CriticidadEvento criticidad;
+            evento.Criticidad = Enum.TryParse(nodo.GetAttribute("criticidad", string.Empty), true, out criticidad)
+                ? criticidad
+                : CriticidadEvento.Informativa;
+
+            XPathNavigator usuario = nodo.SelectSingleNode("Usuario");
+            if (usuario != null)
+            {
+                int dni;
+                if (int.TryParse(usuario.GetAttribute("dni", string.Empty), out dni))
+                {
+                    evento.DniUsuario = dni;
+                }
+                // "(sistema)" es lo que se archiva cuando el evento no tiene usuario.
+                evento.NombreUsuario = usuario.Value == "(sistema)" ? string.Empty : usuario.Value;
+            }
+
+            XPathNavigator accion = nodo.SelectSingleNode("Accion");
+            evento.Accion = accion == null ? string.Empty : accion.Value;
+            XPathNavigator descripcion = nodo.SelectSingleNode("Descripcion");
+            evento.Descripcion = descripcion == null ? string.Empty : descripcion.Value;
+            return evento;
+        }
+
+        /// Un texto como literal de XPath 1.0, que no tiene caracteres de escape:
+        /// si tiene comillas simples va entre dobles, y si tiene de los dos
+        /// tipos se arma con concat().
+        private static string Literal(string valor)
+        {
+            if (valor.IndexOf('\'') < 0)
+            {
+                return "'" + valor + "'";
+            }
+            if (valor.IndexOf('"') < 0)
+            {
+                return "\"" + valor + "\"";
+            }
+
+            StringBuilder partes = new StringBuilder("concat(");
+            string[] trozos = valor.Split('\'');
+            for (int i = 0; i < trozos.Length; i++)
+            {
+                if (i > 0)
+                {
+                    partes.Append(", \"'\", ");
+                }
+                partes.Append("'").Append(trozos[i]).Append("'");
+            }
+            return partes.Append(")").ToString();
         }
 
         private static void AgregarAlArchivo(string ruta, string periodo, List<BEEvento> eventos)

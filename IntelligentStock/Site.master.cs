@@ -49,7 +49,7 @@ public partial class SiteMaster : MasterPage
         if (!IsPostBack)
         {
             ViewState[AntiXsrfTokenKey] = Page.ViewStateUserKey;
-            ViewState[AntiXsrfUserNameKey] = SessionManager.NombreUsuarioActual;
+            ViewState[AntiXsrfUserNameKey] = SessionManager.ObtenerInstancia().NombreUsuarioActual;
         }
         else
         {
@@ -83,9 +83,9 @@ public partial class SiteMaster : MasterPage
     /// </summary>
     private void ArmarMenu()
     {
-        BEUsuario usuario = SessionManager.UsuarioActual;
+        BEUsuario usuario = SessionManager.ObtenerInstancia().UsuarioActual;
 
-        if (usuario == null || SessionManager.BaseDeDatosInconsistente)
+        if (usuario == null || SessionManager.ObtenerInstancia().BaseDeDatosInconsistente)
         {
             tieneMenu = false;
             litMenu.Text = string.Empty;

@@ -267,7 +267,7 @@ public partial class ModificacionFamilia : PaginaBase
     /// </summary>
     private bool EsComponenteDelRolActual(int idComponente)
     {
-        BEUsuario actual = SessionManager.UsuarioActual;
+        BEUsuario actual = SessionManager.ObtenerInstancia().UsuarioActual;
         if (actual == null)
         {
             return false;
@@ -537,7 +537,7 @@ public partial class ModificacionFamilia : PaginaBase
             return true;
         }
 
-        BEUsuario actual = SessionManager.UsuarioActual;
+        BEUsuario actual = SessionManager.ObtenerInstancia().UsuarioActual;
         return actual != null && actual.IdRol == idRol;
     }
 

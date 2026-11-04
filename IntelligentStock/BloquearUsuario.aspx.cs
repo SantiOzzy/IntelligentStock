@@ -63,7 +63,7 @@ public partial class BloquearUsuario : PaginaBase
     {
         try
         {
-            int? propio = SessionManager.DniActual;
+            int? propio = SessionManager.ObtenerInstancia().DniActual;
             List<BEUsuario> candidatos = new List<BEUsuario>();
 
             foreach (BEUsuario usuario in bllUsuario.TraerUsuarios())

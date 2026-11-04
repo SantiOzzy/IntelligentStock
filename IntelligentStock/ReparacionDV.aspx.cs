@@ -36,7 +36,7 @@ public partial class ReparacionDV : PaginaBase
         if (!bllUsuario.EsAdministrador(UsuarioActual))
         {
             // Un usuario comun no puede ver el detalle de la base: se lo saca.
-            SessionManager.CerrarSesion();
+            SessionManager.ObtenerInstancia().CerrarSesion();
             Response.Redirect("~/IniciarSesion.aspx", true);
             return;
         }
@@ -44,7 +44,7 @@ public partial class ReparacionDV : PaginaBase
         // A esta pantalla se llega únicamente cuando el inicio de sesión detectó
         // una inconsistencia. No figura en el menú, y si alguien escribe la URL a
         // mano se lo devuelve al panel principal.
-        if (!SessionManager.BaseDeDatosInconsistente && !IsPostBack)
+        if (!SessionManager.ObtenerInstancia().BaseDeDatosInconsistente && !IsPostBack)
         {
             Response.Redirect("~/IniciarSesion.aspx", true);
             return;
@@ -59,7 +59,7 @@ public partial class ReparacionDV : PaginaBase
     private void CargarInconsistencias()
     {
         List<Inconsistencia> inconsistencias =
-            SessionManager.Inconsistencias ?? new List<Inconsistencia>();
+            SessionManager.ObtenerInstancia().Inconsistencias ?? new List<Inconsistencia>();
 
         gvInconsistencias.DataSource = inconsistencias;
         gvInconsistencias.DataBind();
@@ -75,11 +75,11 @@ public partial class ReparacionDV : PaginaBase
     {
         // Si la base sigue marcada como rota hay que cortar la sesion; si no,
         // se vuelve al panel como en cualquier otra pantalla.
-        if (SessionManager.BaseDeDatosInconsistente)
+        if (SessionManager.ObtenerInstancia().BaseDeDatosInconsistente)
         {
             bllEvento.RegistrarDelUsuarioActual("Reparación de dígito verificador",
                 "El administrador canceló la reparación y cerró la sesión.");
-            SessionManager.CerrarSesion();
+            SessionManager.ObtenerInstancia().CerrarSesion();
         }
 
         Response.Redirect("~/IniciarSesion.aspx", false);
@@ -104,7 +104,7 @@ public partial class ReparacionDV : PaginaBase
                 "El administrador recalculó los dígitos verificadores ignorando la inconsistencia detectada.");
 
             // Con los digitos al dia la marca de la sesion ya no corresponde.
-            SessionManager.LimpiarInconsistencias();
+            SessionManager.ObtenerInstancia().LimpiarInconsistencias();
 
             gvInconsistencias.DataSource = new List<Inconsistencia>();
             gvInconsistencias.DataBind();

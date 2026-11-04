@@ -93,12 +93,12 @@ namespace BLL
         /// Registra el evento a nombre del usuario que tiene la sesion activa.
         public void RegistrarDelUsuarioActual(string accion, string descripcion)
         {
-            Registrar(SessionManager.DniActual, accion, descripcion, CriticidadEvento.Informativa);
+            Registrar(SessionManager.ObtenerInstancia().DniActual, accion, descripcion, CriticidadEvento.Informativa);
         }
 
         public void RegistrarDelUsuarioActual(string accion, string descripcion, CriticidadEvento criticidad)
         {
-            Registrar(SessionManager.DniActual, accion, descripcion, criticidad);
+            Registrar(SessionManager.ObtenerInstancia().DniActual, accion, descripcion, criticidad);
         }
 
         /// Se controla al registrar un evento, para no necesitar un proceso
@@ -242,6 +242,24 @@ namespace BLL
         public List<string> ListarArchivos()
         {
             return dalArchivo.Listar();
+        }
+
+        /// Filtrado de eventos de un mes archivado, con una consulta XPath sobre
+        /// el XML (no pasa por la base). Los filtros vacíos no se aplican.
+        /// consulta devuelve la expresión XPath que se usó.
+        public List<BEEvento> FiltrarArchivo(string nombreArchivo, string nombreUsuario, CriticidadEvento? criticidad,
+            string texto, out string consulta)
+        {
+            consulta = DALArchivoBitacora.ConsultaXPath(nombreUsuario,
+                criticidad.HasValue ? criticidad.Value.ToString() : null, texto);
+
+            List<BEEvento> eventos = dalArchivo.Filtrar(nombreArchivo, consulta);
+            if (eventos == null)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR013",
+                    "No se encontró el archivo " + nombreArchivo + "."));
+            }
+            return eventos;
         }
 
         /// Contenido de un archivo mensual, o null si no existe.

@@ -305,7 +305,7 @@ namespace BLL
                     "El rol " + rol.Nombre + " es parte del sistema y no se puede eliminar."));
             }
 
-            BEUsuario actual = SessionManager.UsuarioActual;
+            BEUsuario actual = SessionManager.ObtenerInstancia().UsuarioActual;
             if (actual != null && actual.IdRol == idRol)
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR012",
@@ -518,7 +518,7 @@ namespace BLL
             // Una familia que forma parte del rol propio o del WebMaster no se
             // puede eliminar: el sistema podría quedar sin nadie que administre
             // los permisos (CU-003-006, paso 6).
-            BEUsuario actor = SessionManager.UsuarioActual;
+            BEUsuario actor = SessionManager.ObtenerInstancia().UsuarioActual;
             foreach (BERol rol in TraerRoles())
             {
                 if (!RolIncluyeComponente(rol, id))

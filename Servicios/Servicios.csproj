@@ -48,7 +48,11 @@
     <Compile Include="EnviadorCorreo.cs" />
     <Compile Include="ExportadorReporte.cs" />
     <Compile Include="FacturacionElectronica.cs" />
+    <Compile Include="FormatoReporteCsv.cs" />
+    <Compile Include="FormatoReporteExcel.cs" />
+    <Compile Include="FormatoReportePdf.cs" />
     <Compile Include="GeneradorFactura.cs" />
+    <Compile Include="IFormatoReporte.cs" />
     <Compile Include="LimitadorDeEventos.cs" />
     <Compile Include="MenuSistema.cs" />
     <Compile Include="PasarelaPagos.cs" />

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Web.UI;
 using BE;
 
@@ -10,6 +9,7 @@ using BE;
 // que leyeron con BLLSensor, así la presentación queda separada del acceso a
 // datos. Lo usan Consulta de sensores (CU-007-042) y Procesar alerta térmica
 // (CU-007-043): si mañana se agrega un dato del sensor, se cambia solo acá.
+// El estado se muestra con las etiquetas de estado del diseño (Site.css).
 public partial class Controles_EstadoSensorIoT : UserControl
 {
     public void CargarDatosSensor(string modelo, string macAddress, double temperaturaMaxima)
@@ -18,6 +18,7 @@ public partial class Controles_EstadoSensorIoT : UserControl
         lblMacAddress.Text = macAddress;
         lblTempMaxima.Text = temperaturaMaxima.ToString("0.0") + " °C";
         lblEstado.Text = string.Empty;
+        lblEstado.CssClass = string.Empty;
     }
 
     /// Carga todos los datos del sensor, incluido su estado y si tiene alertas
@@ -35,17 +36,18 @@ public partial class Controles_EstadoSensorIoT : UserControl
         if (!sensor.Activo)
         {
             lblEstado.Text = "Inactivo";
-            lblEstado.ForeColor = Color.Gray;
+            lblEstado.CssClass = "estado estado-neutro";
         }
         else if (sensor.AlertasAbiertas > 0)
         {
-            lblEstado.Text = "Activo, con " + sensor.AlertasAbiertas + " alerta(s) abierta(s)";
-            lblEstado.ForeColor = Color.DarkOrange;
+            lblEstado.Text = "Activo, con " + sensor.AlertasAbiertas +
+                (sensor.AlertasAbiertas == 1 ? " alerta abierta" : " alertas abiertas");
+            lblEstado.CssClass = "estado estado-aviso";
         }
         else
         {
             lblEstado.Text = "Activo, sin alertas abiertas";
-            lblEstado.ForeColor = Color.DarkGreen;
+            lblEstado.CssClass = "estado estado-exito";
         }
 
         Visible = true;

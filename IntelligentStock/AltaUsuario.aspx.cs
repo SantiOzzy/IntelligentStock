@@ -124,7 +124,7 @@ public partial class AltaUsuario : PaginaBase
     {
         if (ddlRol.Items.Count == 0)
         {
-            litPermisos.Text = "<em>No hay roles cargados en el sistema.</em>";
+            ucPermisosPerfil.MostrarAviso("No hay roles cargados en el sistema.");
             return;
         }
 
@@ -136,16 +136,16 @@ public partial class AltaUsuario : PaginaBase
             {
                 if (rol.Id == idRol)
                 {
-                    litPermisos.Text = RenderPermisos.ResumenDelPerfil(rol);
+                    ucPermisosPerfil.Mostrar(rol);
                     return;
                 }
             }
 
-            litPermisos.Text = "<em>Sin permisos asignados.</em>";
+            ucPermisosPerfil.Mostrar(null);
         }
         catch (Exception ex)
         {
-            litPermisos.Text = "<em>" + ex.Message + "</em>";
+            ucPermisosPerfil.MostrarAviso(ex.Message);
         }
     }
 

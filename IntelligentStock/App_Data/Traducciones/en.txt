@@ -1330,3 +1330,12 @@ Se alteró la fila 3 [dni=12345678] de la tabla Usuario. No fue posible aislar u
 Se alteró la fila 4 [dni=12453464] de la tabla Usuario. No fue posible aislar una única columna.	Row 4 [dni=12453464] of the Usuario table was altered. It was not possible to isolate a single column.
 Se alteró la fila 5 [dni=89999999] de la tabla Usuario. No fue posible aislar una única columna.	Row 5 [dni=89999999] of the Usuario table was altered. It was not possible to isolate a single column.
 La tabla TokenRecuperacion no tiene dígitos verificadores guardados, pero el resto de las tablas sí: alguien los borró. Antes de recalcular, revise sus datos o restaure una copia de seguridad.	The TokenRecuperacion table has no stored check digits, but the other tables do: someone deleted them. Before recalculating, review the data or restore a backup.
+Antes de pasar a eliminados, los eventos se archivan en un archivo XML por mes. Cada mes se puede descargar o filtrar con una consulta XPath sobre el archivo, sin pasar por la base de datos.	Before being marked as deleted, events are archived in one XML file per month. Each month can be downloaded or filtered with an XPath query on the file, without going through the database.
+Consulta XPath:	XPath query:
+Filtrar el mes	Filter the month
+No hay eventos archivados que cumplan la consulta.	No archived events match the query.
+Sin permisos asignados.	No permissions assigned.
+No hay roles cargados en el sistema.	There are no roles in the system.
+CRÍTICO	CRITICAL
+Activo, con {0} alerta abierta	Active, with {0} open alert
+Activo, con {0} alertas abiertas	Active, with {0} open alerts

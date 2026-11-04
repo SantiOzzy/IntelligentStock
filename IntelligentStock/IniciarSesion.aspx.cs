@@ -31,7 +31,7 @@ public partial class IniciarSesion : PaginaBase
             return;
         }
 
-        if (SessionManager.HaySesionActiva)
+        if (SessionManager.ObtenerInstancia().HaySesionActiva)
         {
             MostrarPanelPrincipal();
             AvisarSiVieneDeUnAccesoDenegado();
@@ -67,14 +67,14 @@ public partial class IniciarSesion : PaginaBase
             {
                 if (resultado.EsAdministrador)
                 {
-                    SessionManager.UsuarioActual = resultado.Usuario;
-                    SessionManager.Inconsistencias = resultado.Inconsistencias;
+                    SessionManager.ObtenerInstancia().UsuarioActual = resultado.Usuario;
+                    SessionManager.ObtenerInstancia().Inconsistencias = resultado.Inconsistencias;
                     Response.Redirect("~/ReparacionDV.aspx", false);
                     Context.ApplicationInstance.CompleteRequest();
                     return;
                 }
 
-                SessionManager.CerrarSesion();
+                SessionManager.ObtenerInstancia().CerrarSesion();
                 txtClave.Text = string.Empty;
                 MostrarMensaje(lblMensaje,
                     "El sistema no se encuentra disponible en este momento. " +
@@ -82,8 +82,8 @@ public partial class IniciarSesion : PaginaBase
                 return;
             }
 
-            SessionManager.UsuarioActual = resultado.Usuario;
-            SessionManager.LimpiarInconsistencias();
+            SessionManager.ObtenerInstancia().UsuarioActual = resultado.Usuario;
+            SessionManager.ObtenerInstancia().LimpiarInconsistencias();
 
             Response.Redirect("~/IniciarSesion.aspx", false);
             Context.ApplicationInstance.CompleteRequest();

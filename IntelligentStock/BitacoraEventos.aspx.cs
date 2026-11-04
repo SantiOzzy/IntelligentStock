@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Web;
 using System.Web.UI.WebControls;
 using BE;
 using BLL;
@@ -10,10 +11,12 @@ using Servicios;
 // Al abrir se muestran los 200 eventos activos mas recientes. Los filtros son
 // opcionales y se combinan entre si. Los eventos de más de 30 días están
 // eliminados (eliminación lógica): se ven tildando "Incluir eventos
-// eliminados", y cada mes archivado se puede descargar como XML.
+// eliminados", y cada mes archivado se puede descargar como XML o filtrar
+// con una consulta XPath sobre el archivo (Filtrado de eventos).
 public partial class BitacoraEventos : PaginaBase
 {
     private const string ClaveEventos = "EventosBitacora";
+    private const string ClaveEventosArchivo = "EventosBitacoraArchivo";
 
     /// Posición de la columna Estado en la grilla.
     private const int ColumnaEstado = 6;
@@ -66,12 +69,15 @@ public partial class BitacoraEventos : PaginaBase
     {
         ddlUsuario.Items.Clear();
         ddlUsuario.Items.Add(new ListItem("(todos)", string.Empty));
+        ddlUsuarioArchivo.Items.Clear();
+        ddlUsuarioArchivo.Items.Add(new ListItem("(todos)", string.Empty));
 
         try
         {
             foreach (BEUsuario usuario in bllUsuario.TraerUsuarios())
             {
                 ddlUsuario.Items.Add(new ListItem(usuario.NombreUsuario, usuario.NombreUsuario));
+                ddlUsuarioArchivo.Items.Add(new ListItem(usuario.NombreUsuario, usuario.NombreUsuario));
             }
         }
         catch (Exception ex)
@@ -184,6 +190,47 @@ public partial class BitacoraEventos : PaginaBase
         {
             e.Row.CssClass = "evento-eliminado";
         }
+    }
+
+    // Filtrado de eventos de un mes archivado: consulta XPath sobre el XML.
+    protected void btnFiltrarArchivo_Click(object sender, EventArgs e)
+    {
+        OcultarMensaje(lblMensaje);
+
+        CriticidadEvento? criticidad = null;
+        if (!string.IsNullOrEmpty(ddlCriticidadArchivo.SelectedValue))
+        {
+            criticidad = (CriticidadEvento)Enum.Parse(typeof(CriticidadEvento), ddlCriticidadArchivo.SelectedValue);
+        }
+
+        try
+        {
+            string consulta;
+            List<BEEvento> eventos = bllEvento.FiltrarArchivo(ddlArchivo.SelectedValue,
+                ddlUsuarioArchivo.SelectedValue, criticidad, txtTextoArchivo.Text, out consulta);
+
+            Session[ClaveEventosArchivo] = eventos;
+            gvArchivo.PageIndex = 0;
+            gvArchivo.DataSource = eventos;
+            gvArchivo.DataBind();
+
+            litConsultaXPath.Text = HttpUtility.HtmlEncode(consulta);
+            litResumenArchivo.Text = Textos.Contar(eventos.Count, "evento encontrado.", "eventos encontrados.");
+            phResultadoArchivo.Visible = true;
+        }
+        catch (Exception ex)
+        {
+            phResultadoArchivo.Visible = false;
+            MostrarMensaje(lblMensaje, ex.Message, true);
+            CargarArchivos();
+        }
+    }
+
+    protected void gvArchivo_PageIndexChanging(object sender, GridViewPageEventArgs e)
+    {
+        gvArchivo.PageIndex = e.NewPageIndex;
+        gvArchivo.DataSource = Session[ClaveEventosArchivo];
+        gvArchivo.DataBind();
     }
 
     protected void btnDescargarArchivo_Click(object sender, EventArgs e)
