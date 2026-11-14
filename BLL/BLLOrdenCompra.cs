@@ -12,6 +12,11 @@ namespace BLL
     /// Órdenes de compra: generación predictiva (CU-006-033), consulta
     /// (CU-006-034), anulación (CU-006-035) y recepción con la factura del
     /// proveedor (CU-006-036).
+    ///
+    /// Qué se puede hacer con una orden según su estado lo deciden las clases
+    /// del patrón State (EstadoOrdenCompra y sus subclases): esta clase es el
+    /// contexto que les delega la anulación, la recepción y el armado del
+    /// gasto por proveedor.
     public class BLLOrdenCompra
     {
         private const string TablaOrden = "OrdenCompra";
@@ -136,23 +141,10 @@ namespace BLL
                     lista.Add(gasto);
                 }
 
-                switch (orden.EstadoBase)
-                {
-                    case BEOrdenCompra.EstadoPendiente:
-                        gasto.OrdenesPendientes++;
-                        break;
-                    case BEOrdenCompra.EstadoRecibida:
-                        gasto.OrdenesRecibidas++;
-                        decimal importe;
-                        if (importePorOrden.TryGetValue(orden.IdOrdenCompra, out importe))
-                        {
-                            gasto.ImporteRecibido += importe;
-                        }
-                        break;
-                    default:
-                        gasto.OrdenesAnuladas++;
-                        break;
-                }
+                // State: cada estado sabe cómo cuenta la orden en el gasto del proveedor.
+                decimal importe;
+                importePorOrden.TryGetValue(orden.IdOrdenCompra, out importe);
+                EstadoOrdenCompra.De(orden).AcumularEn(gasto, importe);
             }
 
             lista.Sort(delegate(BEGastoProveedor a, BEGastoProveedor b) { return b.ImporteRecibido.CompareTo(a.ImporteRecibido); });
@@ -252,7 +244,7 @@ namespace BLL
             orden.CuitProveedor = proveedor.Cuit;
             orden.NombreProveedor = proveedor.Nombre;
             orden.Fecha = fechaOrden;
-            orden.Estado = BEOrdenCompra.EstadoPendiente;
+            orden.Estado = EstadoOrdenCompra.Pendiente.Nombre;
             foreach (BESugerenciaCompra sugerencia in sugerencias)
             {
                 BEDetalleOrdenCompra detalle = new BEDetalleOrdenCompra();
@@ -305,15 +297,10 @@ namespace BLL
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR013"));
             }
-            if (!orden.Pendiente)
-            {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR021",
-                    "La orden " + orden.Numero + " está " + orden.EstadoBase.ToLower() + ": solo se anulan órdenes pendientes."));
-            }
-
-            // En el estado entra una versión corta del motivo; el texto completo
-            // queda en la bitácora.
-            string estado = Recortar(BEOrdenCompra.EstadoAnulada + BEOrdenCompra.Separador + motivo, LargoEstado);
+            // State: el estado actual de la orden decide si se puede anular (si no,
+            // lanza #ERR021) y cómo queda guardada. En la columna entra una versión
+            // corta del motivo; el texto completo queda en la bitácora.
+            string estado = Recortar(EstadoOrdenCompra.De(orden).Anular(orden, motivo), LargoEstado);
 
             if (!bllDV.EjecutarControlado(() => dalOrden.Anular(idOrden, estado), TablaOrden))
             {
@@ -362,11 +349,9 @@ namespace BLL
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR013"));
             }
-            if (!orden.Pendiente)
-            {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR021",
-                    "La orden " + orden.Numero + " está " + orden.EstadoBase.ToLower() + ": solo se reciben órdenes pendientes."));
-            }
+            // State: el estado actual de la orden decide si se puede recibir (si no,
+            // lanza #ERR021) y cómo queda guardada.
+            string estado = EstadoOrdenCompra.De(orden).Recibir(orden, comprobante);
             if (orden.Detalles.Count == 0)
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR017",
@@ -388,15 +373,13 @@ namespace BLL
             // El mismo comprobante no se puede registrar dos veces para el mismo proveedor.
             foreach (BEOrdenCompra otra in TraerOrdenes())
             {
-                if (otra.CuitProveedor == orden.CuitProveedor && otra.EstadoBase == BEOrdenCompra.EstadoRecibida &&
+                if (otra.CuitProveedor == orden.CuitProveedor && EstadoOrdenCompra.De(otra) == EstadoOrdenCompra.Recibida &&
                     string.Equals(otra.DetalleEstado, comprobante, StringComparison.OrdinalIgnoreCase))
                 {
                     throw new ApplicationException(AdministradorErrores.Mensaje("ERR006",
                         "El comprobante " + comprobante + " ya se registró con la orden " + otra.Numero + "."));
                 }
             }
-
-            string estado = BEOrdenCompra.EstadoRecibida + BEOrdenCompra.Separador + comprobante;
 
             if (!bllDV.EjecutarControlado(() => dalOrden.Recibir(idOrden, estado), TablaOrden, TablaInsumo))
             {

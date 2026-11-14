@@ -122,6 +122,10 @@
     <Compile Include="BLLUsuario.cs" />
     <Compile Include="BLLVenta.cs" />
     <Compile Include="ControladorStock.cs" />
+    <Compile Include="EstadoOrdenAnulada.cs" />
+    <Compile Include="EstadoOrdenCompra.cs" />
+    <Compile Include="EstadoOrdenPendiente.cs" />
+    <Compile Include="EstadoOrdenRecibida.cs" />
     <Compile Include="HistorialConsumo.cs" />
     <Compile Include="IObserverStock.cs" />
     <Compile Include="NotificadorEmailStock.cs" />
