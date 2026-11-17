@@ -11,7 +11,7 @@ using Servicios;
 /// Es el puente entre la aplicación y el motor predictivo de ML.NET: recibe la
 /// cantidad de días a proyectar y devuelve, para cada insumo que haga falta
 /// pedir, la cantidad sugerida. Usa la misma lógica que el formulario
-/// GenerarOrdenCompra.aspx (BLLOrdenCompra.CalcularSugerencias). Como los demás
+/// GenerarOrdenCompraPredictiva.aspx (BLLOrdenCompra.CalcularSugerencias). Como los demás
 /// servicios web, solo atiende a los orígenes autorizados (R9).
 [WebService(Namespace = "http://smartsoft.com/")]
 [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]

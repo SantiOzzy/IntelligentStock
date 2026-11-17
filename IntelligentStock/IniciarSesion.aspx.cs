@@ -69,7 +69,7 @@ public partial class IniciarSesion : PaginaBase
                 {
                     SessionManager.ObtenerInstancia().UsuarioActual = resultado.Usuario;
                     SessionManager.ObtenerInstancia().Inconsistencias = resultado.Inconsistencias;
-                    Response.Redirect("~/ReparacionDV.aspx", false);
+                    Response.Redirect("~/RepararDigitoVerificador.aspx", false);
                     Context.ApplicationInstance.CompleteRequest();
                     return;
                 }

@@ -134,7 +134,7 @@ public abstract class PaginaBase : Page
         // La base quedo marcada como inconsistente durante el inicio de sesión.
         if (SessionManager.ObtenerInstancia().BaseDeDatosInconsistente && !PermitidoConBaseInconsistente)
         {
-            Redirigir("~/ReparacionDV.aspx");
+            Redirigir("~/RepararDigitoVerificador.aspx");
             return;
         }
 

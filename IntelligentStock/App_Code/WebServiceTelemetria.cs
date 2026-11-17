@@ -10,7 +10,7 @@ using Servicios;
 /// temperatura (en este trabajo, el sistema externo de telemetría es
 /// simulado). Cada lectura se autentica por la IP de origen (R9) y, si supera
 /// la temperatura máxima permitida del sensor, genera una alerta térmica que
-/// después el técnico procesa en ProcesarAlertaTermica.aspx (CU-007-043).
+/// después el técnico procesa en ProcesarAlertaTermicaIoT.aspx (CU-007-043).
 ///
 /// Para probarlo desde el mismo equipo: abrir WebServiceTelemetria.asmx en el
 /// navegador, elegir RegistrarLectura, completar la MAC de un sensor activo y
