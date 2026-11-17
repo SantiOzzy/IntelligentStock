@@ -24,6 +24,11 @@ namespace BLL
     ///   - Antes de marcarlos se archivan en un XML por mes
     ///     (App_Data\Bitacora\Bitacora_AAAA-MM.xml, ver DALArchivoBitacora),
     ///     que se descarga desde la bitácora.
+    ///
+    /// La tabla Evento tiene dígitos verificadores como las demás tablas: cada
+    /// evento se graba a través de BLLDigitoVerificador.EjecutarEnBitacora, que
+    /// actualiza los dígitos sin dejar de registrar el evento aunque la
+    /// bitácora tenga una alteración.
     public class BLLEvento
     {
         /// Cantidad de eventos que se muestran al abrir la bitacora.
@@ -39,6 +44,11 @@ namespace BLL
         /// Día en que se hizo el último mantenimiento. Los eventos vencen por
         /// fecha, así que alcanza con revisarlos una vez por día.
         private static DateTime ultimoMantenimiento = DateTime.MinValue;
+
+        /// Si el mantenimiento falla (por ejemplo, porque la bitácora tiene una
+        /// alteración y todavía no se reparó), se vuelve a intentar desde este
+        /// momento y no al día siguiente.
+        private static DateTime proximoIntento = DateTime.MinValue;
 
         private readonly DALEvento dalEvento = new DALEvento();
         private readonly DALArchivoBitacora dalArchivo = new DALArchivoBitacora();
@@ -80,7 +90,8 @@ namespace BLL
 
             try
             {
-                dalEvento.RegistrarEvento(new BEEvento(dniUsuario, accion, descripcion, criticidad));
+                BEEvento evento = new BEEvento(dniUsuario, accion, descripcion, criticidad);
+                new BLLDigitoVerificador().EjecutarEnBitacora(delegate { dalEvento.RegistrarEvento(evento); });
                 AplicarPolitica();
             }
             catch (Exception)
@@ -105,12 +116,20 @@ namespace BLL
         /// aparte, pero una sola vez por día.
         private void AplicarPolitica()
         {
-            if (ultimoMantenimiento == DateTime.Today)
+            if (ultimoMantenimiento == DateTime.Today || DateTime.Now < proximoIntento)
             {
                 return;
             }
 
-            lock (candadoMantenimiento)
+            // Si otro pedido ya está haciendo el mantenimiento, no se lo espera:
+            // ese pedido puede estar esperando a su vez el control de dígitos
+            // verificadores que tiene tomado este.
+            if (!System.Threading.Monitor.TryEnter(candadoMantenimiento))
+            {
+                return;
+            }
+
+            try
             {
                 if (ultimoMantenimiento == DateTime.Today)
                 {
@@ -118,16 +137,33 @@ namespace BLL
                 }
 
                 // Se anota antes de empezar: el mantenimiento registra su propio
-                // evento (y así no vuelve a entrar acá), y si algo falla se
-                // reintenta al día siguiente y no en cada evento.
+                // evento (y así no vuelve a entrar acá). Si algo falla se
+                // reintenta un minuto después, no en cada evento: así, cuando el
+                // administrador repara la bitácora, el mantenimiento del día se
+                // hace en el próximo evento y no recién al día siguiente.
                 ultimoMantenimiento = DateTime.Today;
-                EliminarEventosVencidos();
+                try
+                {
+                    EliminarEventosVencidos();
+                }
+                catch (Exception)
+                {
+                    ultimoMantenimiento = DateTime.MinValue;
+                    proximoIntento = DateTime.Now.AddMinutes(1);
+                    throw;
+                }
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(candadoMantenimiento);
             }
         }
 
         /// Pasa a eliminados (eliminación lógica) los eventos de más de
         /// DiasActivos días, después de archivarlos en el XML de su mes.
-        /// Devuelve cuántos eventos se marcaron.
+        /// Devuelve cuántos eventos se marcaron. Si la bitácora tiene una
+        /// alteración no se hace nada (#ERR007): marcar las filas recalcularía
+        /// sus dígitos y taparía la alteración.
         public int EliminarEventosVencidos()
         {
             DateTime limite = InicioVentanaActiva;
@@ -136,6 +172,9 @@ namespace BLL
             {
                 return 0;
             }
+
+            BLLDigitoVerificador bllDV = new BLLDigitoVerificador();
+            bllDV.VerificarAntesDeModificar(BLLDigitoVerificador.TablaBitacora);
 
             // Primero el archivo: si no se puede escribir, los eventos siguen
             // activos y no se pierde nada.
@@ -147,7 +186,9 @@ namespace BLL
                 hastaId = Math.Max(hastaId, evento.IdEvento);
             }
 
-            int marcados = dalEvento.EliminarEventosLogicamente(limite, hastaId);
+            int marcados = bllDV.EjecutarControlado<int>(
+                delegate { return dalEvento.EliminarEventosLogicamente(limite, hastaId); },
+                BLLDigitoVerificador.TablaBitacora);
 
             string destino = archivos.Count <= 3
                 ? string.Join(", ", archivos)

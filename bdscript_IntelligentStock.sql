@@ -76,6 +76,8 @@ CREATE TABLE Evento (
     -- Informativa / Advertencia / Grave (BE.CriticidadEvento). Se usa para
     -- filtrar la bitácora; ver 07-Plan-pendiente / apéndice de políticas.
     criticidad VARCHAR(20) NOT NULL DEFAULT 'Informativa',
+    -- Como el resto de las tablas, tiene dígitos verificadores (se guardan
+    -- en DV, DVH_Fila y DVV_Columna).
     -- Eliminación lógica: los eventos de más de 30 días (Web.config,
     -- DiasEventosActivos) quedan con activo = 0 después de archivarse en
     -- App_Data\Bitacora\Bitacora_AAAA-MM.xml. No se borran nunca.
@@ -116,8 +118,8 @@ GO
 -- pide un enlace por correo y con ese enlace define una contraseña nueva.
 -- Se guarda el SHA-256 del token, no el token en claro: si alguien leyera
 -- esta tabla no podría usar los enlaces pendientes.
--- Igual que Evento y DV, no se somete al control de dígito verificador:
--- cambia en cada solicitud y es información transitoria.
+-- Tiene dígitos verificadores como el resto de las tablas: un enlace
+-- insertado por fuera del sistema se detecta antes de usarlo.
 CREATE TABLE TokenRecuperacion (
     tokenHash VARCHAR(64) PRIMARY KEY,
     dni_usuario INT NOT NULL FOREIGN KEY REFERENCES Usuario(dni),
@@ -399,8 +401,8 @@ GO
 -- Tablas que tienen fila en DV. La lista de tablas controladas está fija en
 -- BLLDigitoVerificador (así, borrar la fila de una tabla acá no la saca del
 -- control); este procedimiento solo suma las que se hayan agregado aparte.
--- Evento y DV quedan afuera a propósito: la bitácora cambia todo el tiempo
--- y DV es justamente la tabla de control.
+-- Quedan afuera solo DV, DVH_Fila y DVV_Columna, que son las tablas donde
+-- se guardan los dígitos.
 CREATE PROCEDURE TraerTablasDV
 AS
 BEGIN
@@ -1771,6 +1773,7 @@ INSERT INTO DV (tabla, DVH, DVV) VALUES ('Sensor', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('Alerta', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('Suscripcion', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('TokenRecuperacion', '', '')
+INSERT INTO DV (tabla, DVH, DVV) VALUES ('Evento', '', '')
 GO
 
 USE [master]

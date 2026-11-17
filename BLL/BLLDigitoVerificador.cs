@@ -33,6 +33,8 @@ namespace BLL
     /// recién ahí se recalculan sus dígitos (R3). Si se recalculara sin
     /// verificar antes, cualquier alta o modificación normal sobre una tabla
     /// "blanquearía" una alteración hecha por fuera del sistema en otra fila.
+    /// La bitácora (tabla Evento) se escribe a través de EjecutarEnBitacora,
+    /// que no detiene el registro del evento pero tampoco blanquea nada.
     ///
     /// Los dígitos solo se recalculan sin verificar en dos casos, los dos
     /// explícitos y registrados en la bitácora: la reparación que hace el
@@ -46,18 +48,22 @@ namespace BLL
         ///
         /// TokenRecuperacion está incluida porque un enlace de recuperación
         /// permite cambiar una contraseña: uno insertado por fuera del sistema
-        /// se detecta antes de usarlo. Quedan afuera a propósito Evento (la
-        /// bitácora se escribe en cada operación, también en los intentos
-        /// fallidos: si una fila alterada la bloqueara, el sistema dejaría de
-        /// registrar justamente los eventos de seguridad) y DV, DVH_Fila y
-        /// DVV_Columna, que son las tablas de control.
+        /// se detecta antes de usarlo. Evento (la bitácora) también está
+        /// incluida, pero se escribe con EjecutarEnBitacora y no con
+        /// EjecutarControlado: un evento se graba aunque la bitácora tenga una
+        /// alteración, para no dejar de registrar justamente los eventos de
+        /// seguridad. Quedan afuera solo DV, DVH_Fila y DVV_Columna, que son
+        /// las tablas donde se guardan los dígitos.
         private static readonly string[] TablasControladas = new string[]
         {
             "Usuario", "Rol", "Familia", "RolFamilia", "RelacionFamilia",
             "Proveedor", "Insumo", "OrdenCompra", "DetalleOrdenCompra",
             "Receta", "DetalleReceta", "Sensor", "Alerta", "Suscripcion",
-            "TokenRecuperacion"
+            "TokenRecuperacion", TablaBitacora
         };
+
+        /// Tabla de la bitácora de eventos.
+        public const string TablaBitacora = "Evento";
 
         private readonly DALDigitoVerificador dalDV = new DALDigitoVerificador();
 
@@ -254,6 +260,94 @@ namespace BLL
                     "dígitos verificadores (pudieron haberse modificado por fuera del sistema). Un " +
                     "administrador tiene que revisarlo desde Reparar dígito verificador."));
             }
+        }
+
+        /// R4 + R3 de la bitácora (tabla Evento). Es como EjecutarControlado,
+        /// con una diferencia: el evento se graba siempre, aunque la bitácora
+        /// tenga una alteración, porque si se detuviera el sistema dejaría de
+        /// registrar justamente los eventos de seguridad.
+        ///   - Si la bitácora está íntegra, se graba y se recalculan sus
+        ///     dígitos, como en cualquier operación.
+        ///   - Si no lo está, se graba y solo se agrega el DVH de las filas que
+        ///     acaba de grabar esta escritura. Los dígitos de las demás filas
+        ///     quedan como estaban, así que la fila alterada, agregada o borrada
+        ///     por fuera del sistema se sigue detectando hasta que el
+        ///     administrador la revise y la repare.
+        public void EjecutarEnBitacora(Action escritura)
+        {
+            lock (candado)
+            {
+                if (!dalDV.ExisteTabla(TablaBitacora))
+                {
+                    escritura();
+                    return;
+                }
+
+                bool integra = VerificarTablaSinBloqueo(TablaBitacora).Count == 0;
+                ICollection<string> filasAnteriores = integra ? null : ClavesDeFilas(TablaBitacora);
+
+                escritura();
+
+                try
+                {
+                    if (integra)
+                    {
+                        RecalcularTablaSinBloqueo(TablaBitacora);
+                    }
+                    else
+                    {
+                        AgregarDigitosDeFilasNuevas(TablaBitacora, filasAnteriores);
+                    }
+                }
+                catch (Exception)
+                {
+                    // El evento ya quedó grabado. Si no se pudieron guardar sus
+                    // dígitos, aparece como fila agregada en la próxima
+                    // verificación y se resuelve desde Reparar dígito verificador.
+                }
+            }
+        }
+
+        /// Guarda el DVH de las filas que no estaban antes de la escritura (las
+        /// que acaba de grabar el sistema) y recalcula los DVV, que no
+        /// identifican filas. El DVH de las demás filas y el DVH de la tabla no
+        /// se tocan: una alteración anterior sigue apareciendo como fila
+        /// alterada, agregada o eliminada. Si la tabla todavía no tiene
+        /// dígitos calculados no se graba nada (sigue figurando "Sin dígitos
+        /// verificadores").
+        private void AgregarDigitosDeFilasNuevas(string tabla, ICollection<string> filasAnteriores)
+        {
+            ObjetoDV dvAlmacenado = dalDV.ObtenerDV(tabla);
+            Dictionary<string, string> dvhAlmacenados = dalDV.ObtenerDVHFilas(tabla);
+            if (SinCalcular(dvAlmacenado, dvhAlmacenados, dalDV.ObtenerDVVColumnas(tabla)))
+            {
+                return;
+            }
+
+            DataTable contenido = dalDV.ObtenerContenido(tabla);
+            List<string> clavePrimaria = dalDV.ObtenerClavePrimaria(tabla);
+
+            Dictionary<string, string> dvhFilas = new Dictionary<string, string>(dvhAlmacenados, StringComparer.Ordinal);
+            foreach (KeyValuePair<string, string> par in CalcularDVHFilas(contenido, clavePrimaria))
+            {
+                if (!filasAnteriores.Contains(par.Key) && !dvhFilas.ContainsKey(par.Key))
+                {
+                    dvhFilas[par.Key] = par.Value;
+                }
+            }
+
+            Dictionary<string, string> dvvColumnas = CalcularDVVColumnas(contenido);
+
+            dalDV.GuardarDVHFilas(tabla, dvhFilas);
+            dalDV.GuardarDVVColumnas(tabla, dvvColumnas);
+            dalDV.GuardarDVVTabla(tabla, ConsolidarDVV(contenido, dvvColumnas));
+        }
+
+        /// Claves de las filas que tiene hoy una tabla.
+        private ICollection<string> ClavesDeFilas(string tabla)
+        {
+            DataTable contenido = dalDV.ObtenerContenido(tabla);
+            return NumerarFilas(contenido, dalDV.ObtenerClavePrimaria(tabla)).Keys;
         }
 
         private void RecalcularTablas(string[] tablas)
