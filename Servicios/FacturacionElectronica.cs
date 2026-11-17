@@ -22,25 +22,28 @@ namespace Servicios
         public string IpOrigen { get; set; }
     }
 
-    /// Servicio de factura electrónica de ARCA (ex AFIP), simulado.
+    /// Factura electrónica (CAE de ARCA) a través de un proveedor de
+    /// facturación electrónica, simulado.
     ///
-    /// En producción, cada factura se autoriza así:
-    ///   1. El emisor tiene un certificado digital X.509 que ARCA le emite para
-    ///      su CUIT: genera una clave privada RSA, arma el pedido de certificado
-    ///      (CSR), lo sube con clave fiscal y lo asocia al servicio "wsfe".
-    ///   2. Con ese certificado firma un ticket de acceso (TRA, en formato CMS)
-    ///      y lo presenta al servicio de autenticación WSAA, que le devuelve un
-    ///      token y una firma válidos por 12 horas.
-    ///   3. Con el token y la firma llama a FECAESolicitar del servicio WSFEv1
-    ///      con los datos del comprobante (tipo, punto de venta, número, CUIT
-    ///      del cliente, importes) y recibe el CAE y su vencimiento.
-    ///   4. El CAE se imprime en la factura junto con un código QR.
+    /// Cada factura necesita el CAE de ARCA (ex AFIP). Para pedirlo al servicio
+    /// web de factura electrónica (WSFEv1) hay que autenticarse en el servicio
+    /// WSAA con un certificado digital X.509 emitido para una CUIT. La empresa
+    /// no guarda ese certificado en el sistema: delega la factura electrónica en
+    /// un proveedor de facturación, al que autoriza en ARCA con su clave fiscal
+    /// (Administrador de Relaciones). El proveedor tiene el certificado, firma
+    /// el ticket de acceso para WSAA, llama a FECAESolicitar de WSFEv1 y
+    /// devuelve el CAE y su vencimiento; este servicio le envía los datos de
+    /// cada comprobante (tipo, punto de venta, número, documento del cliente,
+    /// importe y fecha). El certificado es la firma fiscal de la empresa y no
+    /// debe quedar en el servidor web, que está expuesto a internet (ver
+    /// "Factura electrónica y certificado digital" en las estrategias de
+    /// programación).
     ///
-    /// Para el trabajo no hay certificado ni conexión con ARCA: este servicio
-    /// controla los datos, devuelve un CAE ficticio de 14 dígitos con
-    /// vencimiento a 10 días y la factura lleva la leyenda "sin validez fiscal".
-    /// Igual que con la pasarela de cobros, la respuesta se acepta solo si
-    /// viene de un origen autorizado (R9).
+    /// Para el trabajo la conexión con el proveedor está simulada: controla los
+    /// datos, devuelve un CAE ficticio de 14 dígitos con vencimiento a 10 días y
+    /// la factura lleva la leyenda "sin validez fiscal". Igual que con la
+    /// pasarela de cobros, la respuesta se acepta solo si viene de un origen
+    /// autorizado (R9).
     public static class FacturacionElectronica
     {
         private const string IpServicioSimulado = "127.0.0.1";
