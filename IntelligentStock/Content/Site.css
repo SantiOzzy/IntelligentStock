@@ -682,6 +682,13 @@ fieldset[disabled] .form-control {
     border-radius: 0 8px 8px 0;
 }
 
+/* Edge le agrega a las contraseñas su propio botón para verlas: se oculta,
+   porque el sitio ya pone el suyo (Site.master) y quedaban dos ojos. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
 /* ---------------------------------------------------------------------------
    Botones
    --------------------------------------------------------------------------- */
