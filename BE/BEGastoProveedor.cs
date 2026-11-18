@@ -17,7 +17,7 @@ namespace BE
 
         public int OrdenesAnuladas { get; set; }
 
-        /// Lo recibido, valorizado al precio unitario actual de cada insumo.
+        /// Lo recibido, valorizado al precio que facturó el proveedor.
         public decimal ImporteRecibido { get; set; }
     }
 }

@@ -81,7 +81,8 @@ namespace BE
             get { return string.IsNullOrEmpty(NombreProveedor) ? CuitProveedor : NombreProveedor + " (" + CuitProveedor + ")"; }
         }
 
-        /// Importe estimado: cantidad pedida por el precio unitario actual de cada insumo.
+        /// Importe de la orden: suma de cada renglón por su precio (el facturado si
+        /// la orden se recibió, el estimado al generarla si no).
         public decimal ImporteEstimado
         {
             get

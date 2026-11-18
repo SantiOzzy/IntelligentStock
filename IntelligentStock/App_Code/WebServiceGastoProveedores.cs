@@ -11,8 +11,9 @@ using Servicios;
 /// Calcula, para un rango de fechas, cuántas órdenes tiene cada proveedor
 /// (pendientes, recibidas y anuladas) y el importe de lo recibido, ordenado de
 /// mayor a menor. Es la misma información del reporte gerencial "Órdenes por
-/// proveedor". Lo recibido se valoriza al precio unitario actual de cada
-/// insumo. Como los demás servicios web, solo atiende a orígenes autorizados (R9).
+/// proveedor". Lo recibido se valoriza al precio que facturó el proveedor en
+/// cada renglón. Como los demás servicios web, solo atiende a orígenes
+/// autorizados (R9).
 [WebService(Namespace = "http://smartsoft.com/")]
 [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
 public class WebServiceGastoProveedores : WebService

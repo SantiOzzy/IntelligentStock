@@ -10,8 +10,9 @@ using Servicios;
 // CU-006-034 Consultar orden de compra.
 //
 // Lista las órdenes de compra filtrando por proveedor, estado y rango de
-// fechas. "Ver detalle" muestra los insumos de la orden con su importe
-// estimado (cantidad por el precio unitario actual del insumo).
+// fechas. "Ver detalle" muestra los insumos de la orden con su importe:
+// cantidad por el precio de cada renglón (el facturado si la orden se
+// recibió, el estimado al generarla si no).
 public partial class ConsultarOrdenCompra : PaginaBase
 {
     private BLLOrdenCompra bllOrden = new BLLOrdenCompra();
