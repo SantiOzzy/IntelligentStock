@@ -111,7 +111,8 @@
                     <div class="col-md-3 form-group">
                         <label class="control-label">&nbsp;</label><br />
                         <asp:Button ID="btnDescargarArchivo" runat="server" Text="Descargar XML"
-                            CssClass="btn btn-default" OnClick="btnDescargarArchivo_Click" CausesValidation="false" />
+                            CssClass="btn btn-default" OnClick="btnDescargarArchivo_Click" CausesValidation="false"
+                            data-descarga="true" />
                     </div>
                 </div>
                 <div class="row">

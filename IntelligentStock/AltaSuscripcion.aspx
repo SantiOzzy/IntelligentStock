@@ -206,7 +206,7 @@
         <asp:Literal ID="litResultado" runat="server" Mode="PassThrough"></asp:Literal>
         <div class="acciones">
             <asp:Button ID="btnDescargar" runat="server" Text="Descargar factura (PDF)" CssClass="btn btn-primary"
-                OnClick="btnDescargar_Click" CausesValidation="false" />
+                OnClick="btnDescargar_Click" CausesValidation="false" data-descarga="true" />
             <asp:Button ID="btnReenviar" runat="server" Text="Reenviar por correo" CssClass="btn btn-default"
                 OnClick="btnReenviar_Click" CausesValidation="false" />
             <asp:Button ID="btnVolver" runat="server" Text="Volver al panel" CssClass="btn btn-default"

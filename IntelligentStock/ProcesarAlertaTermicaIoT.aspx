@@ -80,7 +80,7 @@
     <asp:Button ID="btnAceptar" runat="server" Text="Procesar alerta" CssClass="btn btn-primary"
         ValidationGroup="Procesar" OnClick="btnAceptar_Click" />
     <asp:Button ID="btnExportar" runat="server" Text="Exportar alertas (XML)" CssClass="btn btn-default"
-        OnClick="btnExportar_Click" CausesValidation="false" />
+        OnClick="btnExportar_Click" CausesValidation="false" data-descarga="true" />
     <asp:Button ID="btnCancelar" runat="server" Text="Cancelar" CssClass="btn btn-default"
         OnClick="btnCancelar_Click" CausesValidation="false" />
 

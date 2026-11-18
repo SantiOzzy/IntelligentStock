@@ -414,8 +414,14 @@
                         }
                     }, 0);
                 }
-                // Si la respuesta es una descarga, la página no se recarga.
-                setTimeout(liberar, 6000);
+                // Si la respuesta es una descarga, la página no se recarga: esos
+                // botones (data-descarga) se liberan a los pocos segundos. Los
+                // demás quedan bloqueados hasta que llega la página nueva, aunque
+                // el servidor tarde: en una computadora lenta, liberarlos antes
+                // permitía mandar dos veces el mismo formulario.
+                if (boton && $(boton).is("[data-descarga]")) {
+                    setTimeout(liberar, 6000);
+                }
             });
             if (typeof window.__doPostBack === "function") {
                 var postBackOriginal = window.__doPostBack;

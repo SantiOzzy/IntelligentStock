@@ -71,7 +71,7 @@
 
                     <asp:Button ID="btnDescargar" runat="server" Text="Descargar el último archivo generado"
                         CssClass="btn btn-default" OnClick="btnDescargar_Click"
-                        CausesValidation="false" Visible="false" />
+                        CausesValidation="false" Visible="false" data-descarga="true" />
 
                 </div>
             </div>

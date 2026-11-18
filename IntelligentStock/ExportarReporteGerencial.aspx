@@ -92,7 +92,7 @@
 
     <div class="acciones">
         <asp:Button ID="btnAceptar" runat="server" Text="Exportar" CssClass="btn btn-primary"
-            OnClick="btnAceptar_Click" ValidationGroup="Reporte" />
+            OnClick="btnAceptar_Click" ValidationGroup="Reporte" data-descarga="true" />
         <asp:Button ID="btnCancelar" runat="server" Text="Cancelar" CssClass="btn btn-default"
             OnClick="btnCancelar_Click" CausesValidation="false" />
     </div>
