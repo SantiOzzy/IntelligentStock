@@ -148,6 +148,17 @@ namespace BE
         /// Motivo por el que no se mandó (sin SMTP configurado, sin conexión...).
         public string MotivoNoEnviada { get; set; }
 
+        /// Los planes se cobran en dólares estadounidenses.
+        public const string Moneda = "USD";
+
+        private static readonly CultureInfo FormatoArgentino = CultureInfo.GetCultureInfo("es-AR");
+
+        /// Importe para mostrar: "USD 1.234,56".
+        public static string Importe(decimal valor)
+        {
+            return Moneda + " " + valor.ToString("N2", FormatoArgentino);
+        }
+
         public string DescripcionMedioPago
         {
             get
@@ -159,7 +170,7 @@ namespace BE
 
                 string texto = MarcaTarjeta + " terminada en " + UltimosDigitos;
                 return Cuotas > 1
-                    ? texto + ", " + Cuotas + " cuotas sin interés de " + ImporteCuota.ToString("C")
+                    ? texto + ", " + Cuotas + " cuotas sin interés de " + Importe(ImporteCuota)
                     : texto + ", en un pago";
             }
         }

@@ -102,15 +102,15 @@ Cada plato vendido descuenta solo los insumos de su receta.	Each dish sold deduc
 Cadena de frío	Cold chain
 Sensores de temperatura que avisan cuando una heladera o cámara se sale de rango.	Temperature sensors that warn you when a fridge or cold room goes out of range.
 Reportes gerenciales	Management reports
-Abono mensual en pesos, con todas las actualizaciones incluidas.	Monthly fee in pesos, with all updates included.
-Básico	Basic
+Abono mensual en dólares, con todas las actualizaciones incluidas.	Monthly fee in US dollars, with all updates included.
+Plata	Silver
 por mes	per month
 Aviso de stock mínimo por correo	Minimum stock alert by email
 Soporte por correo electrónico	Email support
 El más elegido	Most popular
 Proveedores y órdenes de compra	Suppliers and purchase orders
 Compras sugeridas según la demanda	Purchases suggested from demand
-Empresarial	Enterprise
+Platino	Platinum
 Exportación de datos para auditoría	Data export for audits
 Soporte prioritario	Priority support
 Contacto	Contact
@@ -128,11 +128,11 @@ Planes	Plans
 Para locales chicos que quieren ordenar su stock.	For small venues that want to keep their stock in order.
 Inventario de insumos y recetas	Ingredient and recipe inventory
 Descuento de stock por venta	Stock deduction for each sale
-Profesional	Professional
+Oro	Gold
 Para restaurantes que compran seguido a sus proveedores.	For restaurants that buy from their suppliers often.
-Todo lo del plan Básico	Everything in the Basic plan
+Todo lo del plan Plata	Everything in the Silver plan
 Para cocinas con cámaras de frío y varios turnos.	For kitchens with cold rooms and several shifts.
-Todo lo del plan Profesional	Everything in the Professional plan
+Todo lo del plan Oro	Everything in the Gold plan
 Sensores de temperatura y alertas de frío	Temperature sensors and cold alerts
 ¿Quiere sumar otro local o cambiar de plan? Escríbanos a	Want to add another venue or change plans? Write to us at
 contacto@intelligentstock.com.ar	contacto@intelligentstock.com.ar
@@ -800,7 +800,7 @@ Confirmar compra	Confirm purchase
 Descargar factura (PDF)	Download invoice (PDF)
 Reenviar por correo	Resend by email
 Volver al panel	Back to the dashboard
-Compra de un plan de IntelligentStock. Los precios están en pesos argentinos (ARS) y no incluyen IVA.	Purchase of an IntelligentStock plan. Prices are in Argentine pesos (ARS) and do not include VAT.
+Compra de un plan de IntelligentStock. Los precios están en dólares estadounidenses (USD) y no incluyen IVA.	Purchase of an IntelligentStock plan. Prices are in US dollars (USD) and do not include VAT.
 1. Plan	1. Plan
 Pagando 3, 6 o 12 meses juntos hay descuento.	Paying 3, 6 or 12 months at once gets a discount.
 2. Datos de facturación	2. Billing information
@@ -808,7 +808,7 @@ Responsable Inscripto y Monotributista reciben factura A; Exento y Consumidor Fi
 3. Medio de pago	3. Payment method
 Pago en efectivo o por transferencia. Al contado no hay cobros automáticos: el plan cubre los meses pagados.	Payment in cash or by bank transfer. There are no automatic charges: the plan covers the months paid.
 Visa, Mastercard o American Express. Se controla el dígito de control y no se guarda.	Visa, Mastercard or American Express. The check digit is verified and the number is not stored.
-Pasarela de cobros simulada. Tarjetas de prueba: 4111 1111 1111 1111 (se aprueba) y 4000 0000 0000 0002 (la rechaza la entidad emisora). Con tarjeta, al terminar los meses pagados la pasarela sigue cobrando el abono todos los meses hasta que se dé de baja la suscripción.	Simulated payment gateway. Test cards: 4111 1111 1111 1111 (approved) and 4000 0000 0000 0002 (declined by the issuer). With a card, once the months paid are over, the gateway keeps charging the monthly fee until the subscription is cancelled.
+Pasarela de cobros simulada. Tarjetas de prueba: 4111 1111 1111 1111 (se aprueba) y 4000 0000 0000 0002 (la rechaza la entidad emisora). Con tarjeta, al terminar los meses pagados el sistema cobra el abono de cada mes con la misma tarjeta y manda la factura por correo, hasta que se dé de baja la suscripción.	Simulated payment gateway. Test cards: 4111 1111 1111 1111 (approved) and 4000 0000 0000 0002 (declined by the issuer). With a card, once the months paid are over, the system charges the monthly fee to the same card every month and emails the invoice, until the subscription is cancelled.
 Resumen de la compra	Purchase summary
 Compra realizada	Purchase completed
 Se va a registrar el pago, activar la suscripción y emitir la factura. ¿Continuar?	The payment will be recorded, the subscription activated and the invoice issued. Continue?
@@ -816,9 +816,9 @@ Se va a registrar el pago, activar la suscripción y emitir la factura. ¿Contin
 3 meses (5 % de descuento)	3 months (5% discount)
 6 meses (10 % de descuento)	6 months (10% discount)
 12 meses (15 % de descuento)	12 months (15% discount)
-Básico ($ 15.000 por mes + IVA)	Basic ($15,000 per month + VAT)
-Profesional ($ 30.000 por mes + IVA)	Professional ($30,000 per month + VAT)
-Empresarial ($ 60.000 por mes + IVA)	Enterprise ($60,000 per month + VAT)
+Plata (USD 50 por mes + IVA)	Silver (USD 50 per month + VAT)
+Oro (USD 100 por mes + IVA)	Gold (USD 100 per month + VAT)
+Platino (USD 200 por mes + IVA)	Platinum (USD 200 per month + VAT)
 Responsable Inscripto	Registered VAT taxpayer
 Monotributista	Monotributista (simplified regime)
 Exento	VAT exempt
@@ -1339,3 +1339,4 @@ No hay roles cargados en el sistema.	There are no roles in the system.
 CRÍTICO	CRITICAL
 Activo, con {0} alerta abierta	Active, with {0} open alert
 Activo, con {0} alertas abiertas	Active, with {0} open alerts
+La implementación (instalación de los sensores e integración con el sistema de ventas del local) se cotiza aparte, desde USD 1.800 en el plan Plata, USD 4.000 en el Oro y USD 7.500 en el Platino.	Implementation (installing the sensors and connecting the venue's sales system) is quoted separately, from USD 1,800 on the Silver plan, USD 4,000 on Gold and USD 7,500 on Platinum.

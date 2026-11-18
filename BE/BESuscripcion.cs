@@ -114,7 +114,7 @@ namespace BE
 
         public string AbonoTexto
         {
-            get { return AbonoMensual.ToString("C"); }
+            get { return BECompraPlan.Importe(AbonoMensual); }
         }
     }
 }

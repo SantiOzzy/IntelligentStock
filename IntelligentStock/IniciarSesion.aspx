@@ -220,11 +220,11 @@
 
         <section class="bienvenida-seccion" aria-labelledby="tituloPlanes">
             <h2 id="tituloPlanes">Planes</h2>
-            <p class="bienvenida-lectura">Abono mensual en pesos, con todas las actualizaciones incluidas.</p>
+            <p class="bienvenida-lectura">Abono mensual en dólares, con todas las actualizaciones incluidas.</p>
             <div class="planes">
                 <article class="plan">
-                    <h3>Básico</h3>
-                    <p class="plan-precio"><%: PrecioDelPlan("Básico") %> <span>por mes</span></p>
+                    <h3>Plata</h3>
+                    <p class="plan-precio"><%: PrecioDelPlan("Plata") %> <span>por mes</span></p>
                     <p class="plan-para">Para locales chicos que quieren ordenar su stock.</p>
                     <ul>
                         <li>Inventario de insumos y recetas</li>
@@ -235,28 +235,29 @@
                 </article>
                 <article class="plan plan-destacado">
                     <p class="plan-marca">El más elegido</p>
-                    <h3>Profesional</h3>
-                    <p class="plan-precio"><%: PrecioDelPlan("Profesional") %> <span>por mes</span></p>
+                    <h3>Oro</h3>
+                    <p class="plan-precio"><%: PrecioDelPlan("Oro") %> <span>por mes</span></p>
                     <p class="plan-para">Para restaurantes que compran seguido a sus proveedores.</p>
                     <ul>
-                        <li>Todo lo del plan Básico</li>
+                        <li>Todo lo del plan Plata</li>
                         <li>Proveedores y órdenes de compra</li>
                         <li>Compras sugeridas según la demanda</li>
                         <li>Reportes gerenciales</li>
                     </ul>
                 </article>
                 <article class="plan">
-                    <h3>Empresarial</h3>
-                    <p class="plan-precio"><%: PrecioDelPlan("Empresarial") %> <span>por mes</span></p>
+                    <h3>Platino</h3>
+                    <p class="plan-precio"><%: PrecioDelPlan("Platino") %> <span>por mes</span></p>
                     <p class="plan-para">Para cocinas con cámaras de frío y varios turnos.</p>
                     <ul>
-                        <li>Todo lo del plan Profesional</li>
+                        <li>Todo lo del plan Oro</li>
                         <li>Sensores de temperatura y alertas de frío</li>
                         <li>Exportación de datos para auditoría</li>
                         <li>Soporte prioritario</li>
                     </ul>
                 </article>
             </div>
+            <p class="bienvenida-lectura">La implementación (instalación de los sensores e integración con el sistema de ventas del local) se cotiza aparte, desde USD 1.800 en el plan Plata, USD 4.000 en el Oro y USD 7.500 en el Platino.</p>
         </section>
 
         <section class="bienvenida-seccion bienvenida-contacto" aria-labelledby="tituloContacto">

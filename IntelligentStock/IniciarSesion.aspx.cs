@@ -281,7 +281,7 @@ public partial class IniciarSesion : PaginaBase
     /// la lista fija de BLLSuscripcion (no consulta la base de datos).
     protected string PrecioDelPlan(string plan)
     {
-        return "$ " + BLLSuscripcion.PrecioDelPlan(plan).ToString("N0");
+        return BECompraPlan.Moneda + " " + BLLSuscripcion.PrecioDelPlan(plan).ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("es-AR"));
     }
 
     private void AvisarSiVieneDeUnAccesoDenegado()

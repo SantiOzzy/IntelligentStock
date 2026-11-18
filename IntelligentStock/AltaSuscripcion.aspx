@@ -10,7 +10,7 @@
 
     <asp:Panel ID="pnlCompra" runat="server">
 
-        <p class="help-block">Compra de un plan de IntelligentStock. Los precios están en pesos argentinos (ARS) y no incluyen IVA.</p>
+        <p class="help-block">Compra de un plan de IntelligentStock. Los precios están en dólares estadounidenses (USD) y no incluyen IVA.</p>
 
         <h3 class="seccion-titulo">1. Plan</h3>
         <div class="row">
@@ -111,7 +111,6 @@
         </asp:Panel>
 
         <asp:Panel ID="pnlTarjeta" runat="server" Visible="false">
-            <p class="campo-ayuda">Con tarjeta, cuando terminan los meses pagados el sistema cobra solo el abono de cada mes con la misma tarjeta y manda la factura por correo, hasta que se dé de baja la suscripción.</p>
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -182,8 +181,9 @@
                 </div>
             </div>
             <p class="campo-ayuda">Pasarela de cobros simulada. Tarjetas de prueba: 4111 1111 1111 1111 (se aprueba) y
-                4000 0000 0000 0002 (la rechaza la entidad emisora). Con tarjeta, al terminar los meses pagados la
-                pasarela sigue cobrando el abono todos los meses hasta que se dé de baja la suscripción.</p>
+                4000 0000 0000 0002 (la rechaza la entidad emisora). Con tarjeta, al terminar los meses pagados el
+                sistema cobra el abono de cada mes con la misma tarjeta y manda la factura por correo, hasta que se dé
+                de baja la suscripción.</p>
         </asp:Panel>
 
         <h3 class="seccion-titulo">Resumen de la compra</h3>

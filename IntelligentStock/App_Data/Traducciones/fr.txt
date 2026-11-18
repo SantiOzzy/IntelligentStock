@@ -102,15 +102,15 @@ Cada plato vendido descuenta solo los insumos de su receta.	Chaque plat vendu d�
 Cadena de frío	Chaîne du froid
 Sensores de temperatura que avisan cuando una heladera o cámara se sale de rango.	Des capteurs de température qui préviennent quand un réfrigérateur ou une chambre froide sort de sa plage.
 Reportes gerenciales	Rapports de gestion
-Abono mensual en pesos, con todas las actualizaciones incluidas.	Abonnement mensuel en pesos, toutes les mises à jour incluses.
-Básico	Essentiel
+Abono mensual en dólares, con todas las actualizaciones incluidas.	Abonnement mensuel en dollars, toutes les mises à jour incluses.
+Plata	Argent
 por mes	par mois
 Aviso de stock mínimo por correo	Alerte de stock minimum par e-mail
 Soporte por correo electrónico	Assistance par e-mail
 El más elegido	Le plus choisi
 Proveedores y órdenes de compra	Fournisseurs et bons de commande
 Compras sugeridas según la demanda	Achats suggérés selon la demande
-Empresarial	Entreprise
+Platino	Platine
 Exportación de datos para auditoría	Export des données pour l'audit
 Soporte prioritario	Assistance prioritaire
 Contacto	Contact
@@ -128,11 +128,11 @@ Planes	Forfaits
 Para locales chicos que quieren ordenar su stock.	Pour les petits établissements qui veulent mettre de l'ordre dans leur stock.
 Inventario de insumos y recetas	Inventaire des ingrédients et des recettes
 Descuento de stock por venta	Déduction du stock à chaque vente
-Profesional	Professionnel
+Oro	Or
 Para restaurantes que compran seguido a sus proveedores.	Pour les restaurants qui achètent souvent à leurs fournisseurs.
-Todo lo del plan Básico	Tout le forfait Essentiel
+Todo lo del plan Plata	Tout le forfait Argent
 Para cocinas con cámaras de frío y varios turnos.	Pour les cuisines avec chambres froides et plusieurs services.
-Todo lo del plan Profesional	Tout le forfait Professionnel
+Todo lo del plan Oro	Tout le forfait Or
 Sensores de temperatura y alertas de frío	Capteurs de température et alertes de froid
 ¿Quiere sumar otro local o cambiar de plan? Escríbanos a	Vous voulez ajouter un établissement ou changer de forfait ? Écrivez-nous à
 contacto@intelligentstock.com.ar	contacto@intelligentstock.com.ar
@@ -390,3 +390,4 @@ Reparación de dígito verificador	Réparation des chiffres de contrôle
 Restore de base de datos	Restauration de la base de données
 Solicitud rechazada por servicio web	Demande refusée par le service web
 Venta	Vente
+La implementación (instalación de los sensores e integración con el sistema de ventas del local) se cotiza aparte, desde USD 1.800 en el plan Plata, USD 4.000 en el Oro y USD 7.500 en el Platino.	La mise en place (installation des capteurs et intégration avec le système de vente de l'établissement) fait l'objet d'un devis à part, à partir de 1 800 USD pour le forfait Argent, 4 000 USD pour l'Or et 7 500 USD pour le Platine.

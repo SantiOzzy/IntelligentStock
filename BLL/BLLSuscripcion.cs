@@ -78,9 +78,9 @@ namespace BLL
         /// Hasta cuánto tiempo hacia adelante se puede programar el inicio.
         public const int DiasMaximosHastaElInicio = 365;
 
-        /// Planes comerciales y su abono mensual en pesos, sin IVA.
-        private static readonly string[] NombresPlanes = new string[] { "Básico", "Profesional", "Empresarial" };
-        private static readonly decimal[] PreciosPlanes = new decimal[] { 15000m, 30000m, 60000m };
+        /// Planes comerciales y su abono mensual en dólares (USD), sin IVA.
+        private static readonly string[] NombresPlanes = new string[] { "Plata", "Oro", "Platino" };
+        private static readonly decimal[] PreciosPlanes = new decimal[] { 50m, 100m, 200m };
 
         private readonly DALSuscripcion dalSuscripcion = new DALSuscripcion();
         private readonly BLLDigitoVerificador bllDV = new BLLDigitoVerificador();
@@ -272,7 +272,7 @@ namespace BLL
 
             bllEvento.Registrar(dniUsuario, AccionAlta,
                 "Se activó la suscripción N° " + suscripcion.IdSuscripcion + " al plan " + plan + " por 1 mes (" +
-                abono.ToString("C") + " con IVA) desde el " + suscripcion.FechaInicioTexto +
+                BECompraPlan.Importe(abono) + " con IVA) desde el " + suscripcion.FechaInicioTexto +
                 ", pedida por el servicio web (sin factura). Transacción de la pasarela: " +
                 respuesta.CodigoTransaccion + ".");
 
@@ -630,8 +630,8 @@ namespace BLL
                 compra.DocumentoCliente + ", " + compra.CondicionIva + "): " +
                 (compra.EsAbonoMensual ? "abono mensual del " + compra.FechaInicio.ToString("dd/MM/yyyy") + ", " : string.Empty) +
                 "plan " + compra.Plan + " x " + compra.Meses + (compra.Meses == 1 ? " mes" : " meses") +
-                ", neto " + compra.NetoGravado.ToString("C") + ", IVA " +
-                compra.Iva.ToString("C") + ", total " + compra.Total.ToString("C") + ". Pago: " +
+                ", neto " + BECompraPlan.Importe(compra.NetoGravado) + ", IVA " +
+                BECompraPlan.Importe(compra.Iva) + ", total " + BECompraPlan.Importe(compra.Total) + ". Pago: " +
                 (compra.MedioPago == BECompraPlan.MedioTarjeta
                     ? compra.MarcaTarjeta + " *" + compra.UltimosDigitos + " en " + compra.Cuotas + " cuota(s)"
                     : "contado") +
@@ -677,7 +677,7 @@ namespace BLL
                         "IntelligentStock - Factura " + compra.TipoFactura + " " + compra.NumeroFactura,
                         "Hola, " + compra.RazonSocial + ".\n\n" + detalle +
                         " Adjuntamos la factura " + compra.TipoFactura + " " + compra.NumeroFactura + " por " +
-                        compra.Total.ToString("C") + ".\n\n" +
+                        BECompraPlan.Importe(compra.Total) + ".\n\n" +
                         "Forma de pago: " + compra.DescripcionMedioPago + ".\n\n" +
                         "Este es un comprobante simulado, sin validez fiscal, generado para el trabajo final de ingeniería.",
                         pdf, compra.ArchivoFactura, "application/pdf");
@@ -975,7 +975,7 @@ namespace BLL
             {
                 bllEvento.Registrar(null, AccionCobro,
                     "La pasarela rechazó el cobro del abono " + periodo + " de la suscripción N° " +
-                    suscripcion.IdSuscripcion + " (plan " + abono.Plan + ", " + abono.Total.ToString("C") + "): " +
+                    suscripcion.IdSuscripcion + " (plan " + abono.Plan + ", " + BECompraPlan.Importe(abono.Total) + "): " +
                     respuesta.Motivo + " Se vuelve a intentar mañana. [#ERR024]", CriticidadEvento.Advertencia);
                 AvisarRechazo(cliente, abono, periodo, respuesta.Motivo);
                 return false;
@@ -997,7 +997,7 @@ namespace BLL
             suscripcion.PagadoHasta = hasta;
             bllEvento.Registrar(null, AccionCobro,
                 "Se cobró el abono " + periodo + " de la suscripción N° " + suscripcion.IdSuscripcion + " (plan " +
-                abono.Plan + "): " + abono.Total.ToString("C") + " con IVA, con la tarjeta guardada. Transacción de " +
+                abono.Plan + "): " + BECompraPlan.Importe(abono.Total) + " con IVA, con la tarjeta guardada. Transacción de " +
                 "la pasarela: " + respuesta.CodigoTransaccion + ". Próximo cobro: " + hasta.ToString("dd/MM/yyyy") + ".");
 
             // Factura del abono, con los datos de facturación de la compra.
@@ -1059,7 +1059,7 @@ namespace BLL
                     "IntelligentStock - No se pudo cobrar el abono del plan " + abono.Plan,
                     "Hola, " + cliente.RazonSocial + ".\n\n" +
                     "No pudimos cobrar el abono mensual del plan " + abono.Plan + " de IntelligentStock " + periodo +
-                    " (" + abono.Total.ToString("C") + " con IVA) con la tarjeta " + cliente.MarcaTarjeta +
+                    " (" + BECompraPlan.Importe(abono.Total) + " con IVA) con la tarjeta " + cliente.MarcaTarjeta +
                     " terminada en " + cliente.UltimosDigitos + ": " + motivo + "\n\n" +
                     "Vamos a volver a intentar el cobro mañana. El servicio sigue funcionando normalmente.\n\n" +
                     "Este es un aviso simulado, generado para el trabajo final de ingeniería.");

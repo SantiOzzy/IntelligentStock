@@ -58,7 +58,8 @@ public partial class AltaSuscripcion : PaginaBase
         ddlPlan.Items.Clear();
         foreach (KeyValuePair<string, decimal> plan in BLLSuscripcion.TraerPlanes())
         {
-            ddlPlan.Items.Add(new ListItem(plan.Key + " ($ " + plan.Value.ToString("N0", Pesos) + " por mes + IVA)", plan.Key));
+            ddlPlan.Items.Add(new ListItem(plan.Key + " (" + BECompraPlan.Moneda + " " + plan.Value.ToString("N0", Pesos) +
+                                           " por mes + IVA)", plan.Key));
         }
 
         ddlMeses.Items.Clear();
@@ -288,7 +289,7 @@ public partial class AltaSuscripcion : PaginaBase
 
     private static string Importe(decimal valor)
     {
-        return "$ " + valor.ToString("N2", Pesos);
+        return BECompraPlan.Importe(valor);
     }
 
     private static void Fila(StringBuilder html, string etiqueta, string valor, bool total)

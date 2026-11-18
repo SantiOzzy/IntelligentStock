@@ -102,15 +102,15 @@ Cada plato vendido descuenta solo los insumos de su receta.	Ogni piatto venduto 
 Cadena de frío	Catena del freddo
 Sensores de temperatura que avisan cuando una heladera o cámara se sale de rango.	Sensori di temperatura che avvisano quando un frigorifero o una cella esce dall'intervallo.
 Reportes gerenciales	Report gestionali
-Abono mensual en pesos, con todas las actualizaciones incluidas.	Canone mensile in pesos, con tutti gli aggiornamenti inclusi.
-Básico	Base
+Abono mensual en dólares, con todas las actualizaciones incluidas.	Canone mensile in dollari, con tutti gli aggiornamenti inclusi.
+Plata	Argento
 por mes	al mese
 Aviso de stock mínimo por correo	Avviso di scorta minima via e-mail
 Soporte por correo electrónico	Assistenza via e-mail
 El más elegido	Il più scelto
 Proveedores y órdenes de compra	Fornitori e ordini di acquisto
 Compras sugeridas según la demanda	Acquisti suggeriti in base alla domanda
-Empresarial	Business
+Platino	Platino
 Exportación de datos para auditoría	Esportazione dei dati per la revisione
 Soporte prioritario	Assistenza prioritaria
 Contacto	Contatti
@@ -128,11 +128,11 @@ Planes	Piani
 Para locales chicos que quieren ordenar su stock.	Per locali piccoli che vogliono mettere ordine nella giacenza.
 Inventario de insumos y recetas	Inventario di ingredienti e ricette
 Descuento de stock por venta	Scarico della giacenza per vendita
-Profesional	Professionale
+Oro	Oro
 Para restaurantes que compran seguido a sus proveedores.	Per ristoranti che acquistano spesso dai fornitori.
-Todo lo del plan Básico	Tutto il piano Base
+Todo lo del plan Plata	Tutto il piano Argento
 Para cocinas con cámaras de frío y varios turnos.	Per cucine con celle frigorifere e più turni.
-Todo lo del plan Profesional	Tutto il piano Professionale
+Todo lo del plan Oro	Tutto il piano Oro
 Sensores de temperatura y alertas de frío	Sensori di temperatura e allarmi del freddo
 ¿Quiere sumar otro local o cambiar de plan? Escríbanos a	Vuoi aggiungere un altro locale o cambiare piano? Scrivici a
 contacto@intelligentstock.com.ar	contacto@intelligentstock.com.ar
@@ -390,3 +390,4 @@ Reparación de dígito verificador	Riparazione delle cifre di controllo
 Restore de base de datos	Ripristino del database
 Solicitud rechazada por servicio web	Richiesta rifiutata dal servizio web
 Venta	Vendita
+La implementación (instalación de los sensores e integración con el sistema de ventas del local) se cotiza aparte, desde USD 1.800 en el plan Plata, USD 4.000 en el Oro y USD 7.500 en el Platino.	L'implementazione (installazione dei sensori e integrazione con il sistema di vendita del locale) si preventiva a parte, a partire da 1.800 USD per il piano Argento, 4.000 USD per l'Oro e 7.500 USD per il Platino.

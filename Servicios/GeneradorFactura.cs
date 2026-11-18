@@ -118,7 +118,10 @@ namespace Servicios
             string[] fila;
             string descripcion = "IntelligentStock - plan " + compra.Plan + " (abono mensual, del " + Fecha(compra.FechaInicio) +
                                  " al " + Fecha(compra.PagadoHasta.AddDays(-1)) + ")";
-            string codigo = "PLAN-" + Quitar(compra.Plan).ToUpperInvariant().Substring(0, Math.Min(3, compra.Plan.Length));
+            // "PLATA", "ORO", "PLATINO": el nombre completo, porque Plata y
+            // Platino empiezan igual.
+            string codigo = Quitar(compra.Plan).ToUpperInvariant();
+            codigo = codigo.Substring(0, Math.Min(8, codigo.Length));
 
             if (letraA)
             {
@@ -185,6 +188,7 @@ namespace Servicios
                 ? "Forma de pago: " + compra.DescripcionMedioPago + ". Transacción de la pasarela: " + compra.CodigoTransaccion + "."
                 : "Forma de pago: contado (efectivo o transferencia).";
             y = TextoPartido(p, "F1", 8f, Izq + 10f, y, pago, Der - Izq - 20f, 10f);
+            Texto(p, "F1", 8f, Izq + 10f, y - 12f, "Moneda: dólar estadounidense (" + BECompraPlan.Moneda + ").");
 
             // Totales
             float yTot = 300f;
@@ -192,14 +196,14 @@ namespace Servicios
             List<KeyValuePair<string, string>> totales = new List<KeyValuePair<string, string>>();
             if (letraA)
             {
-                totales.Add(Par("Importe neto gravado: $", Numero(compra.NetoGravado)));
-                totales.Add(Par("IVA 21%: $", Numero(compra.Iva)));
-                totales.Add(Par("Importe otros tributos: $", "0,00"));
+                totales.Add(Par("Importe neto gravado: " + BECompraPlan.Moneda, Numero(compra.NetoGravado)));
+                totales.Add(Par("IVA 21%: " + BECompraPlan.Moneda, Numero(compra.Iva)));
+                totales.Add(Par("Importe otros tributos: " + BECompraPlan.Moneda, "0,00"));
             }
             else
             {
-                totales.Add(Par("Subtotal: $", Numero(compra.Total)));
-                totales.Add(Par("Importe otros tributos: $", "0,00"));
+                totales.Add(Par("Subtotal: " + BECompraPlan.Moneda, Numero(compra.Total)));
+                totales.Add(Par("Importe otros tributos: " + BECompraPlan.Moneda, "0,00"));
             }
 
             float yt = yTot + 80f;
@@ -209,7 +213,7 @@ namespace Servicios
                 Derecha(p, "F2", 9f, Der - 10f, yt, t.Value);
                 yt -= 16f;
             }
-            Derecha(p, "F2", 11f, 470f, yTot + 4f, "Importe total: $");
+            Derecha(p, "F2", 11f, 470f, yTot + 4f, "Importe total: " + BECompraPlan.Moneda);
             Derecha(p, "F2", 11f, Der - 10f, yTot + 4f, Numero(compra.Total));
 
             if (!letraA)
@@ -217,8 +221,8 @@ namespace Servicios
                 // Régimen de Transparencia Fiscal al Consumidor: la factura B
                 // informa el IVA que contiene el precio.
                 Texto(p, "F2", 8f, Izq + 10f, yTot + 80f, "Régimen de Transparencia Fiscal al Consumidor (Ley 27.743)");
-                Texto(p, "F1", 8f, Izq + 10f, yTot + 66f, "IVA contenido: $ " + Numero(compra.Iva));
-                Texto(p, "F1", 8f, Izq + 10f, yTot + 54f, "Otros impuestos nacionales indirectos: $ 0,00");
+                Texto(p, "F1", 8f, Izq + 10f, yTot + 66f, "IVA contenido: " + BECompraPlan.Importe(compra.Iva));
+                Texto(p, "F1", 8f, Izq + 10f, yTot + 54f, "Otros impuestos nacionales indirectos: " + BECompraPlan.Importe(0m));
             }
             else if (compra.CondicionIva == BECompraPlan.CondicionMonotributista)
             {

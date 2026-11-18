@@ -102,15 +102,15 @@ Cada plato vendido descuenta solo los insumos de su receta.	Cada prato vendido b
 Cadena de frío	Cadeia de frio
 Sensores de temperatura que avisan cuando una heladera o cámara se sale de rango.	Sensores de temperatura que avisam quando uma geladeira ou câmara sai da faixa.
 Reportes gerenciales	Relatórios gerenciais
-Abono mensual en pesos, con todas las actualizaciones incluidas.	Mensalidade em pesos, com todas as atualizações incluídas.
-Básico	Básico
+Abono mensual en dólares, con todas las actualizaciones incluidas.	Mensalidade em dólares, com todas as atualizações incluídas.
+Plata	Prata
 por mes	por mês
 Aviso de stock mínimo por correo	Aviso de estoque mínimo por e-mail
 Soporte por correo electrónico	Suporte por e-mail
 El más elegido	O mais escolhido
 Proveedores y órdenes de compra	Fornecedores e ordens de compra
 Compras sugeridas según la demanda	Compras sugeridas pela demanda
-Empresarial	Empresarial
+Platino	Platina
 Exportación de datos para auditoría	Exportação de dados para auditoria
 Soporte prioritario	Suporte prioritário
 Contacto	Contato
@@ -128,11 +128,11 @@ Planes	Planos
 Para locales chicos que quieren ordenar su stock.	Para estabelecimentos pequenos que querem organizar o estoque.
 Inventario de insumos y recetas	Estoque de insumos e receitas
 Descuento de stock por venta	Baixa de estoque por venda
-Profesional	Profissional
+Oro	Ouro
 Para restaurantes que compran seguido a sus proveedores.	Para restaurantes que compram com frequência dos fornecedores.
-Todo lo del plan Básico	Tudo do plano Básico
+Todo lo del plan Plata	Tudo do plano Prata
 Para cocinas con cámaras de frío y varios turnos.	Para cozinhas com câmaras frias e vários turnos.
-Todo lo del plan Profesional	Tudo do plano Profissional
+Todo lo del plan Oro	Tudo do plano Ouro
 Sensores de temperatura y alertas de frío	Sensores de temperatura e alertas de frio
 ¿Quiere sumar otro local o cambiar de plan? Escríbanos a	Quer somar outro estabelecimento ou mudar de plano? Escreva para
 contacto@intelligentstock.com.ar	contacto@intelligentstock.com.ar
@@ -390,3 +390,4 @@ Reparación de dígito verificador	Reparo do dígito verificador
 Restore de base de datos	Restauração do banco de dados
 Solicitud rechazada por servicio web	Solicitação recusada pelo serviço web
 Venta	Venda
+La implementación (instalación de los sensores e integración con el sistema de ventas del local) se cotiza aparte, desde USD 1.800 en el plan Plata, USD 4.000 en el Oro y USD 7.500 en el Platino.	A implantação (instalação dos sensores e integração com o sistema de vendas do local) é orçada à parte, a partir de USD 1.800 no plano Prata, USD 4.000 no Ouro e USD 7.500 no Platina.
