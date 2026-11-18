@@ -195,6 +195,30 @@ CREATE TABLE DetalleReceta (
     PRIMARY KEY (id_receta, id_insumo)
 )
 GO
+-- Ventas registradas (CU-006-037): cuántas unidades de una receta se vendieron
+-- en un día y de dónde llegó el dato (carga manual, cierre del día, archivo
+-- del punto de venta o servicio web). Es el historial que usan la predicción
+-- de demanda (CU-006-033) y el reporte gerencial (CU-006-038).
+CREATE TABLE Venta (
+    id_venta INT PRIMARY KEY IDENTITY(1,1),
+    id_receta INT NOT NULL FOREIGN KEY REFERENCES Receta(id_receta),
+    cantidad DECIMAL(10,2) NOT NULL,
+    fecha DATE NOT NULL,
+    origen VARCHAR(30) NOT NULL,
+    fechaRegistro DATETIME NOT NULL DEFAULT GETDATE()
+)
+GO
+-- Lo que se descontó de cada insumo en una venta, según la receta de ese
+-- momento: si después la receta cambia, el historial de consumo no cambia.
+CREATE TABLE ConsumoVenta (
+    id_venta INT FOREIGN KEY REFERENCES Venta(id_venta),
+    id_insumo INT FOREIGN KEY REFERENCES Insumo(id_insumo),
+    cantidad DECIMAL(12,2) NOT NULL,
+    PRIMARY KEY (id_venta, id_insumo)
+)
+GO
+CREATE INDEX IX_Venta_Fecha ON Venta (fecha)
+GO
 
 -- Tabla Sensor
 CREATE TABLE Sensor (
@@ -1438,6 +1462,24 @@ BEGIN
 END
 GO
 
+-- Proveedor habitual de cada insumo: el de la última orden no anulada que lo
+-- incluyó. La generación de órdenes lo usa para proponer a quién pedirle cada
+-- insumo, sin necesidad de guardar la relación insumo-proveedor aparte.
+CREATE PROCEDURE TraerProveedorHabitualPorInsumo
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT X.id_insumo, X.cuitProveedor
+    FROM (SELECT D.id_insumo, O.cuitProveedor,
+                 ROW_NUMBER() OVER (PARTITION BY D.id_insumo
+                                    ORDER BY O.fecha DESC, O.id_ordenCompra DESC) AS n
+          FROM DetalleOrdenCompra D
+          INNER JOIN OrdenCompra O ON O.id_ordenCompra = D.id_ordenCompra
+          WHERE O.estado NOT LIKE 'Anulada%') X
+    WHERE X.n = 1;
+END
+GO
+
 -- CU-006-035: solo se anula una orden que sigue Pendiente. Devuelve 1 si la anuló.
 CREATE PROCEDURE AnularOrdenCompra
     @IdOrden INT,
@@ -1451,16 +1493,23 @@ BEGIN
 END
 GO
 
--- CU-006-036: al registrar la factura se suma al stock lo pedido de cada insumo
--- (R8) y la orden pasa a Recibida. DALConexion lo ejecuta dentro de una
--- transacción: o se hace todo o nada. Si la orden ya no estaba Pendiente no
--- cambia nada y devuelve 0.
+-- CU-006-036: al registrar la factura la orden pasa a Recibida y al stock
+-- ingresa lo que de verdad llegó de cada insumo (R8), que puede ser menos que
+-- lo pedido, o nada. Lo recibido llega como XML, con la cantidad y el precio
+-- unitario facturado de cada insumo:
+--   <Detalle><Insumo idInsumo="1" cantidad="2.5" precio="1200" /></Detalle>
+-- La cantidad de la orden pasa a ser la recibida (lo pedido queda en la
+-- bitácora) y el precio facturado pasa a ser el precio unitario del insumo.
+-- DALConexion lo ejecuta dentro de una transacción: o se hace todo o nada. Si
+-- la orden ya no estaba Pendiente no cambia nada y devuelve 0.
 CREATE PROCEDURE RecibirOrdenCompra
     @IdOrden INT,
-    @Estado VARCHAR(50)
+    @Estado VARCHAR(50),
+    @Detalle XML
 AS
 BEGIN
     SET NOCOUNT ON;
+    DECLARE @Recibido TABLE (id_insumo INT PRIMARY KEY, cantidad DECIMAL(8,2), precio DECIMAL(10,2) NULL);
 
     UPDATE OrdenCompra SET estado = @Estado
     WHERE id_ordenCompra = @IdOrden AND estado = 'Pendiente';
@@ -1471,77 +1520,139 @@ BEGIN
         RETURN;
     END
 
-    UPDATE I SET stock = ISNULL(I.stock, 0) + D.cantidad
+    INSERT INTO @Recibido (id_insumo, cantidad, precio)
+    SELECT X.I.value('@idInsumo', 'INT'),
+           X.I.value('@cantidad', 'DECIMAL(8,2)'),
+           X.I.value('@precio', 'DECIMAL(10,2)')
+    FROM @Detalle.nodes('/Detalle/Insumo') AS X(I);
+
+    UPDATE D SET cantidad = R.cantidad
+    FROM DetalleOrdenCompra D
+    INNER JOIN @Recibido R ON R.id_insumo = D.id_insumo
+    WHERE D.id_ordenCompra = @IdOrden;
+
+    UPDATE I SET stock = ISNULL(I.stock, 0) + ISNULL(D.cantidad, 0),
+                 precioUnitario = CASE WHEN R.precio > 0 THEN R.precio ELSE I.precioUnitario END
     FROM Insumo I
     INNER JOIN DetalleOrdenCompra D ON D.id_insumo = I.id_insumo
+    LEFT JOIN @Recibido R ON R.id_insumo = I.id_insumo
     WHERE D.id_ordenCompra = @IdOrden;
 
     SELECT 1;
 END
 GO
 
--- CU-006-037: descuenta el consumo de cada insumo de la receta vendida (R8),
--- todo en una misma transacción. Si a algún insumo no le alcanza el stock (o
--- está dado de baja) no descuenta nada y devuelve esos insumos con resultado
--- 'S' (sin stock) o 'I' (inactivo). Si descontó, devuelve cada insumo con su
--- stock anterior y el nuevo, con resultado 'OK'.
-CREATE PROCEDURE DescontarStockPorVenta
-    @IdReceta INT,
-    @Cantidad DECIMAL(10,2)
+-- CU-006-037: registra una o varias ventas y descuenta del stock lo que lleva
+-- cada receta (R8), todo en una misma transacción. Las ventas llegan como XML:
+--   <Ventas><Venta idReceta="2" cantidad="3" fecha="2026-11-17" /></Ventas>
+-- Cada venta queda en Venta y lo que consumió de cada insumo, en ConsumoVenta.
+-- La venta ya ocurrió, así que no se rechaza por falta de stock: si a un
+-- insumo no le alcanza, queda en cero y se devuelve con resultado 'F'
+-- (faltante) para que se corrija con un ajuste. Solo se rechaza todo si alguna
+-- receta lleva un insumo dado de baja: no se graba nada y se devuelven esos
+-- insumos con resultado 'I'. Si se registró, devuelve cada insumo con el total
+-- descontado y su stock anterior y nuevo.
+CREATE PROCEDURE RegistrarVentas
+    @Ventas XML,
+    @Origen VARCHAR(30)
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    DECLARE @Consumo TABLE (id_insumo INT PRIMARY KEY, consumo DECIMAL(12,2));
-    DECLARE @Antes TABLE (id_insumo INT PRIMARY KEY, stockAnterior DECIMAL(10,2));
+    DECLARE @Lineas TABLE (nro INT PRIMARY KEY, id_receta INT, cantidad DECIMAL(10,2), fecha DATE);
+    DECLARE @Consumo TABLE (nro INT, id_insumo INT, consumo DECIMAL(12,2), PRIMARY KEY (nro, id_insumo));
+    DECLARE @Total TABLE (id_insumo INT PRIMARY KEY, consumo DECIMAL(14,2));
+    DECLARE @Stock TABLE (id_insumo INT PRIMARY KEY, stockAnterior DECIMAL(10,2), stockNuevo DECIMAL(10,2));
+    DECLARE @Ids TABLE (nro INT PRIMARY KEY, id_venta INT);
 
-    INSERT INTO @Consumo (id_insumo, consumo)
-    SELECT D.id_insumo, CAST(ROUND(D.cantidad * @Cantidad, 2) AS DECIMAL(12,2))
-    FROM DetalleReceta D
-    WHERE D.id_receta = @IdReceta;
+    INSERT INTO @Lineas (nro, id_receta, cantidad, fecha)
+    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
+           X.V.value('@idReceta', 'INT'),
+           X.V.value('@cantidad', 'DECIMAL(10,2)'),
+           X.V.value('@fecha', 'DATE')
+    FROM @Ventas.nodes('/Ventas/Venta') AS X(V);
+
+    INSERT INTO @Consumo (nro, id_insumo, consumo)
+    SELECT L.nro, D.id_insumo, CAST(ROUND(ISNULL(D.cantidad, 0) * L.cantidad, 2) AS DECIMAL(12,2))
+    FROM @Lineas L
+    INNER JOIN DetalleReceta D ON D.id_receta = L.id_receta;
+
+    INSERT INTO @Total (id_insumo, consumo)
+    SELECT id_insumo, SUM(consumo) FROM @Consumo GROUP BY id_insumo;
 
     BEGIN TRANSACTION;
 
-    -- Bloquea los insumos de la receta: dos ventas al mismo tiempo no pueden
-    -- descontar el mismo stock.
+    -- Bloquea los insumos de las recetas: dos registros de ventas al mismo
+    -- tiempo no pueden descontar el mismo stock.
     IF EXISTS (SELECT 1
                FROM Insumo I WITH (UPDLOCK, HOLDLOCK)
-               INNER JOIN @Consumo C ON C.id_insumo = I.id_insumo
-               WHERE I.activo = 0 OR ISNULL(I.stock, 0) < C.consumo)
+               INNER JOIN @Total T ON T.id_insumo = I.id_insumo
+               WHERE I.activo = 0)
     BEGIN
-        SELECT I.id_insumo, I.nombre, I.unidadDeMedida, ISNULL(I.stock, 0) AS stockAnterior,
-               C.consumo, ISNULL(I.stock, 0) AS stockNuevo,
-               CASE WHEN I.activo = 0 THEN 'I' ELSE 'S' END AS resultado
-        FROM Insumo I
-        INNER JOIN @Consumo C ON C.id_insumo = I.id_insumo
-        WHERE I.activo = 0 OR ISNULL(I.stock, 0) < C.consumo
-        ORDER BY I.nombre;
+        ROLLBACK TRANSACTION;
 
-        COMMIT TRANSACTION;
+        SELECT I.id_insumo, I.nombre, I.unidadDeMedida, ISNULL(I.stock, 0) AS stockAnterior,
+               T.consumo, ISNULL(I.stock, 0) AS stockNuevo, 'I' AS resultado
+        FROM Insumo I
+        INNER JOIN @Total T ON T.id_insumo = I.id_insumo
+        WHERE I.activo = 0
+        ORDER BY I.nombre;
         RETURN;
     END
 
-    UPDATE I SET stock = ISNULL(I.stock, 0) - C.consumo
-    OUTPUT inserted.id_insumo, deleted.stock INTO @Antes (id_insumo, stockAnterior)
+    UPDATE I SET stock = CASE WHEN ISNULL(I.stock, 0) >= T.consumo THEN ISNULL(I.stock, 0) - T.consumo ELSE 0 END
+    OUTPUT inserted.id_insumo, ISNULL(deleted.stock, 0), inserted.stock INTO @Stock (id_insumo, stockAnterior, stockNuevo)
     FROM Insumo I
-    INNER JOIN @Consumo C ON C.id_insumo = I.id_insumo;
+    INNER JOIN @Total T ON T.id_insumo = I.id_insumo;
+
+    -- MERGE permite devolver, para cada línea, el id de la venta que se creó.
+    MERGE INTO Venta AS V
+    USING @Lineas AS L ON 1 = 0
+    WHEN NOT MATCHED THEN
+        INSERT (id_receta, cantidad, fecha, origen, fechaRegistro)
+        VALUES (L.id_receta, L.cantidad, L.fecha, @Origen, GETDATE())
+    OUTPUT L.nro, inserted.id_venta INTO @Ids (nro, id_venta);
+
+    INSERT INTO ConsumoVenta (id_venta, id_insumo, cantidad)
+    SELECT I.id_venta, C.id_insumo, C.consumo
+    FROM @Consumo C
+    INNER JOIN @Ids I ON I.nro = C.nro;
 
     COMMIT TRANSACTION;
 
-    SELECT I.id_insumo, I.nombre, I.unidadDeMedida, ISNULL(A.stockAnterior, 0) AS stockAnterior,
-           C.consumo, I.stock AS stockNuevo, 'OK' AS resultado
-    FROM Insumo I
-    INNER JOIN @Consumo C ON C.id_insumo = I.id_insumo
-    INNER JOIN @Antes A ON A.id_insumo = I.id_insumo
+    SELECT I.id_insumo, I.nombre, I.unidadDeMedida, S.stockAnterior, T.consumo, S.stockNuevo,
+           CASE WHEN S.stockAnterior >= T.consumo THEN 'OK' ELSE 'F' END AS resultado
+    FROM @Stock S
+    INNER JOIN Insumo I ON I.id_insumo = S.id_insumo
+    INNER JOIN @Total T ON T.id_insumo = S.id_insumo
     ORDER BY I.nombre;
 END
 GO
 
--- Eventos de una acción desde una fecha. Con 'Venta' es el historial de
--- consumo con el que se entrena la predicción de demanda (CU-006-033) y el
--- que usa el reporte gerencial. Trae activos y eliminados: la eliminación
--- lógica no le quita historial a la predicción.
+-- Ventas con fecha entre @Desde y @Hasta (inclusive), con lo que se consumió
+-- de cada insumo: una fila por venta e insumo. Es lo que leen la predicción de
+-- demanda, el reporte gerencial y el servicio web de ventas.
+CREATE PROCEDURE TraerVentas
+    @Desde DATE,
+    @Hasta DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT V.id_venta, V.id_receta, R.nombre AS nombreReceta, V.cantidad, V.fecha, V.origen, V.fechaRegistro,
+           C.id_insumo, I.nombre AS nombreInsumo, I.unidadDeMedida, C.cantidad AS consumo
+    FROM Venta V
+    INNER JOIN Receta R ON R.id_receta = V.id_receta
+    LEFT JOIN ConsumoVenta C ON C.id_venta = V.id_venta
+    LEFT JOIN Insumo I ON I.id_insumo = C.id_insumo
+    WHERE V.fecha BETWEEN @Desde AND @Hasta
+    ORDER BY V.fecha, V.id_venta, I.nombre;
+END
+GO
+
+-- Eventos de una acción desde una fecha (por ejemplo, los ajustes de stock
+-- del reporte gerencial). Trae activos y eliminados: son datos que el
+-- sistema vuelve a leer.
 CREATE PROCEDURE TraerEventosPorAccionDesde
     @Accion VARCHAR(100),
     @Desde DATETIME
@@ -1774,6 +1885,8 @@ INSERT INTO DV (tabla, DVH, DVV) VALUES ('Alerta', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('Suscripcion', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('TokenRecuperacion', '', '')
 INSERT INTO DV (tabla, DVH, DVV) VALUES ('Evento', '', '')
+INSERT INTO DV (tabla, DVH, DVV) VALUES ('Venta', '', '')
+INSERT INTO DV (tabla, DVH, DVV) VALUES ('ConsumoVenta', '', '')
 GO
 
 USE [master]

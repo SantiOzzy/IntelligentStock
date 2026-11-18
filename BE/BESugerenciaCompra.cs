@@ -6,6 +6,9 @@ namespace BE
     ///
     /// Sugerido = consumo previsto para los próximos días + stock mínimo
     ///            - stock actual - lo que ya está pedido en órdenes pendientes.
+    ///
+    /// Un perecedero no se pide para más días de los que dura (su vida útil):
+    /// lo que sobrara se tiraría.
     [Serializable]
     public class BESugerenciaCompra
     {
@@ -26,6 +29,21 @@ namespace BE
         public decimal ConsumoPrevisto { get; set; }
 
         public decimal CantidadSugerida { get; set; }
+
+        /// Lo que el usuario decide pedir (empieza siendo lo sugerido).
+        public decimal CantidadAPedir { get; set; }
+
+        /// Días de consumo que cubre la sugerencia: los proyectados, o menos si
+        /// la vida útil del insumo es más corta.
+        public int DiasCubiertos { get; set; }
+
+        public bool LimitadoPorVidaUtil { get; set; }
+
+        /// Proveedor al que se le pidió este insumo la última vez (vacío si
+        /// nunca se pidió).
+        public string CuitProveedorHabitual { get; set; }
+
+        public string ProveedorHabitual { get; set; }
 
         public decimal PrecioUnitario { get; set; }
 
@@ -62,6 +80,20 @@ namespace BE
         public string ImporteEstimadoTexto
         {
             get { return ImporteEstimado.ToString("C"); }
+        }
+
+        public string DiasCubiertosTexto
+        {
+            get
+            {
+                return DiasCubiertos + (DiasCubiertos == 1 ? " día" : " días") +
+                       (LimitadoPorVidaUtil ? " (vida útil)" : string.Empty);
+            }
+        }
+
+        public string ProveedorHabitualTexto
+        {
+            get { return string.IsNullOrEmpty(ProveedorHabitual) ? "-" : ProveedorHabitual; }
         }
     }
 }

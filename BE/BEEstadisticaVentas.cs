@@ -5,7 +5,7 @@ namespace BE
 {
     /// Estadísticas de ventas de un período (WebServiceVentas): totales,
     /// promedio diario, la receta más vendida y el detalle por receta. Salen
-    /// del historial de ventas que queda en la bitácora (acción "Venta").
+    /// de las ventas registradas (tabla Venta).
     [Serializable]
     public class BEEstadisticaVentas
     {

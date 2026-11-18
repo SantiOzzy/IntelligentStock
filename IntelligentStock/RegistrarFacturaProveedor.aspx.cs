@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Web;
 using System.Web.UI.WebControls;
 using BE;
 using BLL;
@@ -8,11 +9,13 @@ using Servicios;
 
 // CU-006-036 Registrar factura de proveedor.
 //
-// Se elige una orden Pendiente y se carga el comprobante de la factura. La
-// orden pasa a "Recibida: <comprobante>" y lo pedido de cada insumo se suma al
-// stock (R8), todo en una sola transacción. El comprobante no se puede repetir
-// para el mismo proveedor (#ERR006). El importe total de la factura queda en la
-// bitácora junto con la recepción.
+// Se elige una orden Pendiente y se carga el comprobante de la factura. En la
+// grilla se controla contra el remito cuánto llegó de cada insumo (puede ser
+// menos que lo pedido, o nada) y el precio unitario facturado. La orden pasa a
+// "Recibida: <comprobante>", lo que llegó de cada insumo se suma al stock (R8)
+// y los precios de los insumos se actualizan, todo en una sola transacción. El
+// comprobante no se puede repetir para el mismo proveedor (#ERR006). El importe
+// total de la factura y las diferencias con lo pedido quedan en la bitácora.
 public partial class RegistrarFacturaProveedor : PaginaBase
 {
     private BLLOrdenCompra bllOrden = new BLLOrdenCompra();
@@ -73,30 +76,64 @@ public partial class RegistrarFacturaProveedor : PaginaBase
             return;
         }
 
+        List<BEDetalleOrdenCompra> recibido = LeerRecibido();
+        if (recibido == null)
+        {
+            return;
+        }
+
         try
         {
             // Lo que había antes de recibir, para mostrar cómo quedó cada insumo.
             BEOrdenCompra antes = bllOrden.ObtenerPorId(idOrden);
             Dictionary<int, decimal> stockAntes = antes == null ? new Dictionary<int, decimal>() : StockDe(antes);
+            Dictionary<int, decimal> pedido = new Dictionary<int, decimal>();
+            if (antes != null)
+            {
+                foreach (BEDetalleOrdenCompra detalle in antes.Detalles)
+                {
+                    pedido[detalle.IdInsumo] = detalle.Cantidad;
+                }
+            }
 
-            BEOrdenCompra orden = bllOrden.RegistrarFactura(idOrden, txtComprobante.Text, fecha, importe);
+            string aviso;
+            BEOrdenCompra orden = bllOrden.RegistrarFactura(idOrden, txtComprobante.Text, fecha, importe, recibido, out aviso);
 
             List<object> filas = new List<object>();
+            int distintos = 0;
             foreach (BEDetalleOrdenCompra detalle in orden.Detalles)
             {
-                decimal previo;
+                decimal previo, cantidadPedida;
                 stockAntes.TryGetValue(detalle.IdInsumo, out previo);
+                pedido.TryGetValue(detalle.IdInsumo, out cantidadPedida);
+                if (cantidadPedida != detalle.Cantidad)
+                {
+                    distintos++;
+                }
                 BEInsumo insumo = bllInsumo.ObtenerPorId(detalle.IdInsumo);
-                filas.Add(Fila(detalle, previo, insumo == null ? previo + detalle.Cantidad : insumo.Stock));
+                filas.Add(new
+                {
+                    Insumo = detalle.NombreInsumo,
+                    Pedido = cantidadPedida.ToString("0.##") + " " + detalle.UnidadDeMedida,
+                    Recibido = detalle.CantidadTexto,
+                    StockAntes = previo.ToString("0.##") + " " + detalle.UnidadDeMedida,
+                    StockDespues = (insumo == null ? previo + detalle.Cantidad : insumo.Stock).ToString("0.##") + " " + detalle.UnidadDeMedida,
+                    Precio = detalle.PrecioUnitario.ToString("C")
+                });
             }
-            gvDetalle.DataSource = filas;
+            gvDetalle.DataSource = null;
             gvDetalle.DataBind();
+            gvDetalle.Visible = false;
+            gvResultado.DataSource = filas;
+            gvResultado.DataBind();
+            gvResultado.Visible = true;
 
             litIndicadores.Text = new Indicadores()
                 .Agregar("Orden recibida", orden.Numero, "destacado")
                 .Agregar("Comprobante", orden.DetalleEstado)
                 .Agregar("Importe de la factura", importe.ToString("C"))
                 .Agregar("Insumos ingresados", orden.Detalles.Count.ToString(), "exito")
+                .Agregar("Llegó distinto de lo pedido", distintos.ToString(), distintos > 0 ? "aviso" : null)
                 .ToString();
 
             txtComprobante.Text = string.Empty;
@@ -105,8 +142,10 @@ public partial class RegistrarFacturaProveedor : PaginaBase
 
             MostrarMensaje(lblMensaje,
                 "Se registró el comprobante " + orden.DetalleEstado + " de la orden " + orden.Numero + " (" +
-                orden.ProveedorTexto + "). La orden quedó Recibida y ingresaron al stock " +
-                Textos.Contar(orden.Detalles.Count, "insumo", "insumos") + ".", false);
+                orden.ProveedorTexto + "). La orden quedó Recibida, ingresó al stock lo que llegó de cada insumo y se " +
+                "actualizaron los precios unitarios." +
+                (distintos > 0 ? " " + Textos.Contar(distintos, "insumo llegó", "insumos llegaron") + " distinto de lo pedido." : string.Empty) +
+                (string.IsNullOrEmpty(aviso) ? string.Empty : " Atención: " + aviso), false);
         }
         catch (Exception ex)
         {
@@ -167,11 +206,14 @@ public partial class RegistrarFacturaProveedor : PaginaBase
         MostrarDetalle(orden, false);
     }
 
-    /// Muestra cómo va a quedar el stock de cada insumo de la orden y, si se
-    /// pide, propone como importe el estimado de la orden.
+    /// Muestra los insumos de la orden con lo pedido, para cargar lo que llegó
+    /// y el precio facturado (se proponen lo pedido y el precio actual) y, si
+    /// se pide, propone como importe el estimado de la orden.
     private void MostrarDetalle(BEOrdenCompra orden, bool proponerImporte)
     {
         litIndicadores.Text = string.Empty;
+        gvResultado.Visible = false;
+        gvDetalle.Visible = true;
         List<object> filas = new List<object>();
 
         if (orden != null)
@@ -183,7 +225,16 @@ public partial class RegistrarFacturaProveedor : PaginaBase
                 {
                     decimal actual;
                     stock.TryGetValue(detalle.IdInsumo, out actual);
-                    filas.Add(Fila(detalle, actual, actual + detalle.Cantidad));
+                    filas.Add(new
+                    {
+                        IdInsumo = detalle.IdInsumo,
+                        Insumo = detalle.NombreInsumo,
+                        Pedido = detalle.CantidadTexto,
+                        Unidad = detalle.UnidadDeMedida,
+                        CantidadInput = Numeros.ParaInput(detalle.Cantidad),
+                        PrecioInput = Numeros.ParaInput(detalle.PrecioUnitario),
+                        StockAntes = actual.ToString("0.##") + " " + detalle.UnidadDeMedida
+                    });
                 }
 
                 litIndicadores.Text = new Indicadores()
@@ -208,6 +259,41 @@ public partial class RegistrarFacturaProveedor : PaginaBase
         gvDetalle.DataBind();
     }
 
+    /// Lo que llegó de cada insumo y su precio, leído de la grilla. Devuelve
+    /// null (y muestra el error) si algún valor no es un número.
+    private List<BEDetalleOrdenCompra> LeerRecibido()
+    {
+        List<BEDetalleOrdenCompra> recibido = new List<BEDetalleOrdenCompra>();
+        foreach (GridViewRow fila in gvDetalle.Rows)
+        {
+            string insumo = HttpUtility.HtmlDecode(fila.Cells[0].Text);
+            TextBox txtRecibido = (TextBox)fila.FindControl("txtRecibido");
+            TextBox txtPrecio = (TextBox)fila.FindControl("txtPrecio");
+
+            decimal cantidad, precio;
+            if (txtRecibido == null || !Numeros.TryParseDecimal(txtRecibido.Text, out cantidad))
+            {
+                MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025",
+                    "Ingrese cuánto llegó de " + insumo + " (0 si no llegó)."), true);
+                return null;
+            }
+            if (txtPrecio == null || !Numeros.TryParseDecimal(txtPrecio.Text, out precio))
+            {
+                MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025",
+                    "Ingrese el precio unitario facturado de " + insumo + "."), true);
+                return null;
+            }
+
+            BEDetalleOrdenCompra detalle = new BEDetalleOrdenCompra();
+            detalle.IdInsumo = (int)gvDetalle.DataKeys[fila.RowIndex].Value;
+            detalle.NombreInsumo = insumo;
+            detalle.Cantidad = cantidad;
+            detalle.PrecioUnitario = precio;
+            recibido.Add(detalle);
+        }
+        return recibido;
+    }
+
     /// Stock actual de los insumos de la orden.
     private Dictionary<int, decimal> StockDe(BEOrdenCompra orden)
     {
@@ -218,17 +304,5 @@ public partial class RegistrarFacturaProveedor : PaginaBase
             stock[detalle.IdInsumo] = insumo == null ? 0m : insumo.Stock;
         }
         return stock;
-    }
-
-    private static object Fila(BEDetalleOrdenCompra detalle, decimal stockAntes, decimal stockDespues)
-    {
-        return new
-        {
-            Insumo = detalle.NombreInsumo,
-            Cantidad = detalle.CantidadTexto,
-            StockAntes = stockAntes.ToString("0.##") + " " + detalle.UnidadDeMedida,
-            StockDespues = stockDespues.ToString("0.##") + " " + detalle.UnidadDeMedida,
-            Importe = detalle.ImporteTexto
-        };
     }
 }

@@ -17,10 +17,9 @@ namespace BLL
     ///     están activos: son los que muestra la bitácora.
     ///   - Los anteriores pasan a eliminados con eliminación lógica (columna
     ///     activo = 0): no se borran de la tabla. Siguen disponibles para lo que
-    ///     el sistema vuelve a leer de la bitácora (las ventas de la predicción
-    ///     de demanda y del reporte gerencial, las altas y bajas de suscripción,
-    ///     los ajustes de stock) y se ven en la pantalla tildando "Incluir
-    ///     eventos eliminados".
+    ///     el sistema vuelve a leer de la bitácora (las altas y bajas de
+    ///     suscripción, los ajustes de stock) y se ven en la pantalla tildando
+    ///     "Incluir eventos eliminados".
     ///   - Antes de marcarlos se archivan en un XML por mes
     ///     (App_Data\Bitacora\Bitacora_AAAA-MM.xml, ver DALArchivoBitacora),
     ///     que se descarga desde la bitácora.

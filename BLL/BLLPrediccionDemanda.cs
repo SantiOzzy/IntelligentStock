@@ -17,9 +17,9 @@ namespace BLL
     /// de la semana y según cuánto se venía consumiendo en los días anteriores.
     /// Con eso estima el consumo de cada uno de los próximos días y los suma.
     ///
-    /// Datos: cada venta queda en la bitácora con lo que se consumió de cada
-    /// insumo (ver BLLVenta). Con eso se arma, para cada insumo y cada día, una
-    /// fila con:
+    /// Datos: cada venta queda registrada con lo que se consumió de cada insumo
+    /// (tablas Venta y ConsumoVenta, ver BLLVenta). Con eso se arma, para cada
+    /// insumo y cada día, una fila con:
     ///   - el insumo y el día de la semana (datos de categoría),
     ///   - el consumo promedio de los 7 y de los 28 días anteriores,
     ///   - y, como valor a aprender, lo que se consumió ese día.
@@ -28,6 +28,11 @@ namespace BLL
     /// de entrenar, el insumo y el día se pasan a columnas de 0 y 1 (one-hot) y
     /// los números se normalizan entre 0 y 1. Un 20% de las filas se separa
     /// para medir el error del modelo con datos que no vio al entrenar.
+    ///
+    /// Mientras no haya historial suficiente para el modelo (un local que
+    /// recién empieza a usar el sistema), o si ML.NET falla, se estima con el
+    /// consumo promedio diario de las ventas que haya, y si no hay ninguna, se
+    /// sugiere reponer hasta el stock mínimo. El resultado lo avisa.
     public class BLLPrediccionDemanda
     {
         /// 28 días para poder calcular el primer promedio más 7 para aprender.
@@ -41,9 +46,9 @@ namespace BLL
 
         private readonly BLLVenta bllVenta = new BLLVenta();
 
-        /// Estima el consumo de cada insumo para los próximos 'dias' días
-        /// (desde mañana). Lanza #ERR019 si no hay historial suficiente y
-        /// #ERR005 si falla ML.NET.
+        /// Estima el consumo de cada insumo para cada uno de los próximos 'dias'
+        /// días (desde mañana). Con poco historial, o si falla ML.NET, usa el
+        /// consumo promedio diario y lo informa en Aviso.
         public ResultadoPrediccion Predecir(int dias)
         {
             if (dias < 1 || dias > 90)
@@ -59,25 +64,27 @@ namespace BLL
             List<BEVenta> ventas = bllVenta.TraerVentas(hoy.AddDays(-DiasDeHistorialAUsar), ayer);
             HistorialConsumo historial = HistorialConsumo.Armar(ventas, ayer);
 
+            ResultadoPrediccion resultado = new ResultadoPrediccion();
+            resultado.DiasProyectados = dias;
+            resultado.DiasDeHistorial = historial.Dias;
+
             if (historial.Dias < DiasMinimosDeHistorial)
             {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR019",
-                    historial.Dias == 0
-                        ? "Todavía no hay ventas registradas."
-                        : "Hay " + historial.Dias + " días de ventas registradas y hacen falta al menos " +
-                          DiasMinimosDeHistorial + "."));
+                EstimarConPromedio(historial, resultado, hoy, dias, historial.Dias == 0
+                    ? "Todavía no hay ventas registradas: se sugiere reponer hasta el stock mínimo de cada insumo."
+                    : "Hay " + historial.Dias + " días de ventas registradas y el modelo de ML.NET necesita al menos " +
+                      DiasMinimosDeHistorial + ": mientras tanto se usa el consumo promedio diario de esos días.");
+                return resultado;
             }
 
             List<FilaConsumo> filas = historial.ArmarFilasDeEntrenamiento();
             if (filas.Count < FilasMinimas)
             {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR019",
-                    "Hay muy pocos datos de consumo para entrenar el modelo."));
+                EstimarConPromedio(historial, resultado, hoy, dias,
+                    "Hay muy pocos datos de consumo para entrenar el modelo de ML.NET: se usa el consumo promedio diario.");
+                return resultado;
             }
 
-            ResultadoPrediccion resultado = new ResultadoPrediccion();
-            resultado.DiasProyectados = dias;
-            resultado.DiasDeHistorial = historial.Dias;
             resultado.FilasDeEntrenamiento = filas.Count;
 
             try
@@ -90,10 +97,39 @@ namespace BLL
             }
             catch (Exception ex)
             {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR005", ex.Message));
+                // Si ML.NET falla, el local no se queda sin sugerencia de compra.
+                resultado = new ResultadoPrediccion();
+                resultado.DiasProyectados = dias;
+                resultado.DiasDeHistorial = historial.Dias;
+                EstimarConPromedio(historial, resultado, hoy, dias,
+                    AdministradorErrores.Mensaje("ERR005", ex.Message) + " Se usó el consumo promedio diario.");
             }
 
             return resultado;
+        }
+
+        /// Estimación simple: cada día se consume lo mismo que el promedio diario
+        /// de las ventas registradas (desde la primera venta hasta ayer).
+        private static void EstimarConPromedio(HistorialConsumo historial, ResultadoPrediccion resultado,
+                                               DateTime hoy, int dias, string aviso)
+        {
+            resultado.EsEstimacionSimple = true;
+            resultado.Aviso = aviso;
+            if (historial.Dias == 0)
+            {
+                return;
+            }
+
+            foreach (int idInsumo in historial.Insumos)
+            {
+                decimal promedio = (decimal)historial.Promedio(idInsumo, hoy, historial.Dias);
+                decimal[] porDia = new decimal[dias];
+                for (int k = 0; k < dias; k++)
+                {
+                    porDia[k] = promedio;
+                }
+                resultado.CargarConsumo(idInsumo, porDia);
+            }
         }
 
         private static void Entrenar(List<FilaConsumo> filas, ResultadoPrediccion resultado,
@@ -138,7 +174,7 @@ namespace BLL
                 float promedio7 = historial.Promedio(idInsumo, hoy, 7);
                 float promedio28 = historial.Promedio(idInsumo, hoy, 28);
 
-                double total = 0;
+                decimal[] porDia = new decimal[dias];
                 for (int k = 1; k <= dias; k++)
                 {
                     DateTime dia = hoy.AddDays(k);
@@ -153,11 +189,11 @@ namespace BLL
                     // Un consumo negativo no tiene sentido: se toma como cero.
                     if (!float.IsNaN(prediccion.Consumo) && prediccion.Consumo > 0)
                     {
-                        total += prediccion.Consumo;
+                        porDia[k - 1] = (decimal)prediccion.Consumo;
                     }
                 }
 
-                resultado.ConsumoPorInsumo[idInsumo] = Math.Round((decimal)total, 2);
+                resultado.CargarConsumo(idInsumo, porDia);
             }
         }
 
@@ -221,16 +257,11 @@ namespace BLL
         public float Consumo;
     }
 
-    /// Resultado de una predicción: el consumo estimado de cada insumo y los
-    /// datos del entrenamiento, para informarlos.
+    /// Resultado de una predicción: el consumo estimado de cada insumo para
+    /// cada día proyectado y los datos del entrenamiento, para informarlos.
     public class ResultadoPrediccion
     {
-        private readonly Dictionary<int, decimal> consumoPorInsumo = new Dictionary<int, decimal>();
-
-        public Dictionary<int, decimal> ConsumoPorInsumo
-        {
-            get { return consumoPorInsumo; }
-        }
+        private readonly Dictionary<int, decimal[]> consumoPorDia = new Dictionary<int, decimal[]>();
 
         public int DiasProyectados { get; set; }
 
@@ -243,16 +274,51 @@ namespace BLL
 
         public double CoeficienteR2 { get; set; }
 
+        /// No se usó el modelo de ML.NET sino el consumo promedio (o, sin
+        /// ventas, solo el stock mínimo). Aviso dice por qué.
+        public bool EsEstimacionSimple { get; set; }
+
+        public string Aviso { get; set; }
+
+        public void CargarConsumo(int idInsumo, decimal[] porDia)
+        {
+            consumoPorDia[idInsumo] = porDia;
+        }
+
+        /// Consumo estimado de todo el período proyectado.
         public decimal Consumo(int idInsumo)
         {
-            decimal consumo;
-            return consumoPorInsumo.TryGetValue(idInsumo, out consumo) ? consumo : 0m;
+            return Consumo(idInsumo, DiasProyectados);
+        }
+
+        /// Consumo estimado de los primeros 'dias' días del período (por
+        /// ejemplo, los días de vida útil de un perecedero).
+        public decimal Consumo(int idInsumo, int dias)
+        {
+            decimal[] porDia;
+            if (!consumoPorDia.TryGetValue(idInsumo, out porDia))
+            {
+                return 0m;
+            }
+
+            decimal total = 0;
+            for (int k = 0; k < dias && k < porDia.Length; k++)
+            {
+                total += porDia[k];
+            }
+            return Math.Round(total, 2);
         }
 
         public string Descripcion
         {
             get
             {
+                if (EsEstimacionSimple)
+                {
+                    return DiasDeHistorial == 0
+                        ? "Sin ventas registradas: se sugiere reponer hasta el stock mínimo."
+                        : "Estimación con el consumo promedio diario de " + DiasDeHistorial + " días de ventas.";
+                }
                 return "Modelo de regresión (ML.NET, SDCA) entrenado con " + DiasDeHistorial + " días de ventas (" +
                        FilasDeEntrenamiento + " filas); error medio absoluto por día: " +
                        ErrorMedioAbsoluto.ToString("0.##") + ".";

@@ -24,10 +24,22 @@ namespace BE
         /// Stock mínimo del insumo (para avisar si la venta lo deja en el mínimo).
         public decimal StockMinimo { get; set; }
 
-        /// El stock no alcanza para la venta.
+        /// Lo que faltó: la parte del consumo que el stock del sistema no cubría.
+        /// La venta igual se registra (ya ocurrió) y el insumo queda en cero.
+        public decimal Faltante
+        {
+            get { return ConsumoTotal > StockAnterior ? ConsumoTotal - StockAnterior : 0m; }
+        }
+
+        /// El stock del sistema no alcanzaba para la venta.
         public bool SinStock
         {
-            get { return StockResultante < 0; }
+            get { return Faltante > 0; }
+        }
+
+        public string FaltanteTexto
+        {
+            get { return Faltante > 0 ? Faltante.ToString("0.##") + " " + UnidadDeMedida : "-"; }
         }
 
         /// Alcanza, pero el insumo queda en su stock mínimo o por debajo.

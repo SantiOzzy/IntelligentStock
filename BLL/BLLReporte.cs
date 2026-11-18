@@ -18,16 +18,20 @@ namespace BLL
         public const string OrdenesPorProveedor = "Órdenes por proveedor";
         public const string AlertasTermicas = "Alertas térmicas";
         public const string AjustesDeStock = "Ajustes de stock";
+        public const string CostoPorReceta = "Costo por receta";
+        public const string ValorizacionStock = "Valorización del stock";
 
         public static readonly string[] Tipos =
         {
-            ConsumoPorInsumo, VentasPorReceta, OrdenesPorProveedor, AlertasTermicas, AjustesDeStock
+            ConsumoPorInsumo, VentasPorReceta, CostoPorReceta, ValorizacionStock, OrdenesPorProveedor,
+            AlertasTermicas, AjustesDeStock
         };
 
         /// Período máximo de un reporte.
         public const int DiasMaximos = 366;
 
         private readonly BLLVenta bllVenta = new BLLVenta();
+        private readonly BLLReceta bllReceta = new BLLReceta();
         private readonly BLLInsumo bllInsumo = new BLLInsumo();
         private readonly BLLOrdenCompra bllOrden = new BLLOrdenCompra();
         private readonly BLLAlerta bllAlerta = new BLLAlerta();
@@ -147,6 +151,12 @@ namespace BLL
                 case AlertasTermicas:
                     ArmarAlertas(reporte, inicio, fin);
                     break;
+                case CostoPorReceta:
+                    ArmarCostoPorReceta(reporte, inicio, fin);
+                    break;
+                case ValorizacionStock:
+                    ArmarValorizacion(reporte);
+                    break;
                 default:
                     ArmarAjustes(reporte, inicio, fin);
                     break;
@@ -214,11 +224,6 @@ namespace BLL
 
             foreach (BEVenta venta in bllVenta.TraerVentas(inicio, fin))
             {
-                if (venta.Cantidad <= 0)
-                {
-                    continue;
-                }
-
                 decimal cantidad;
                 cantidades.TryGetValue(venta.IdReceta, out cantidad);
                 cantidades[venta.IdReceta] = cantidad + venta.Cantidad;
@@ -244,6 +249,104 @@ namespace BLL
             reporte.Pie = "Total de unidades vendidas: " + total.ToString("0.##") + ".";
         }
 
+        /// Costo de cada receta activa (lo que cuestan sus insumos al precio
+        /// unitario actual) y lo que costó lo vendido en el período. Sirve para
+        /// fijar o revisar el precio de venta de cada plato.
+        private void ArmarCostoPorReceta(BEReporte reporte, DateTime inicio, DateTime fin)
+        {
+            Dictionary<int, BEInsumo> insumos = new Dictionary<int, BEInsumo>();
+            foreach (BEInsumo insumo in bllInsumo.TraerInsumos())
+            {
+                insumos[insumo.IdInsumo] = insumo;
+            }
+
+            Dictionary<int, decimal> vendidas = new Dictionary<int, decimal>();
+            foreach (BEVenta venta in bllVenta.TraerVentas(inicio, fin))
+            {
+                decimal previo;
+                vendidas.TryGetValue(venta.IdReceta, out previo);
+                vendidas[venta.IdReceta] = previo + venta.Cantidad;
+            }
+
+            reporte.Columnas.AddRange(new[] { "Receta", "Insumos", "Costo por unidad", "Insumo más caro",
+                                              "Unidades vendidas", "Costo de lo vendido" });
+
+            List<object[]> filas = new List<object[]>();
+            decimal total = 0;
+            int sinPrecio = 0;
+            foreach (BEReceta resumen in bllReceta.TraerActivas())
+            {
+                BEReceta receta = bllReceta.ObtenerPorId(resumen.IdReceta);
+                if (receta == null || receta.Detalles.Count == 0)
+                {
+                    continue;
+                }
+
+                decimal costo = 0, mayor = -1;
+                string masCaro = string.Empty;
+                bool faltaPrecio = false;
+                foreach (BEDetalleReceta detalle in receta.Detalles)
+                {
+                    BEInsumo insumo;
+                    insumos.TryGetValue(detalle.IdInsumo, out insumo);
+                    decimal precio = insumo == null ? 0m : insumo.PrecioUnitario;
+                    faltaPrecio = faltaPrecio || precio <= 0;
+                    decimal parcial = detalle.Cantidad * precio;
+                    costo += parcial;
+                    if (parcial > mayor)
+                    {
+                        mayor = parcial;
+                        masCaro = detalle.NombreInsumo;
+                    }
+                }
+                if (faltaPrecio)
+                {
+                    sinPrecio++;
+                }
+
+                decimal unidades;
+                vendidas.TryGetValue(receta.IdReceta, out unidades);
+                total += costo * unidades;
+                filas.Add(new object[] { receta.Nombre, receta.Detalles.Count, costo, masCaro, unidades, faltaPrecio });
+            }
+
+            filas.Sort(delegate(object[] a, object[] b) { return ((decimal)b[2]).CompareTo((decimal)a[2]); });
+            foreach (object[] fila in filas)
+            {
+                reporte.AgregarFila((string)fila[0], fila[1].ToString(),
+                    ((decimal)fila[2]).ToString("C") + ((bool)fila[5] ? " *" : string.Empty), (string)fila[3],
+                    ((decimal)fila[4]).ToString("0.##"), ((decimal)fila[2] * (decimal)fila[4]).ToString("C"));
+            }
+
+            reporte.Pie = "Costo de los insumos al precio unitario actual. Costo de lo vendido en el período: " +
+                          total.ToString("C") + "." +
+                          (sinPrecio > 0 ? " (*) La receta lleva insumos sin precio cargado: su costo real es mayor." : string.Empty);
+        }
+
+        /// Cuánto vale el stock de cada insumo activo (stock por precio unitario).
+        private void ArmarValorizacion(BEReporte reporte)
+        {
+            reporte.Subtitulo = "Stock al " + DateTime.Now.ToString("dd/MM/yyyy HH:mm") + ".";
+            reporte.Columnas.AddRange(new[] { "Insumo", "Stock", "Precio unitario", "Valor", "Vida útil", "Estado" });
+
+            List<BEInsumo> activos = bllInsumo.TraerInsumos().FindAll(delegate(BEInsumo i) { return i.Activo; });
+            activos.Sort(delegate(BEInsumo a, BEInsumo b) { return b.ValorStock.CompareTo(a.ValorStock); });
+
+            decimal total = 0, perecedero = 0;
+            foreach (BEInsumo insumo in activos)
+            {
+                total += insumo.ValorStock;
+                if (insumo.EsPerecedero)
+                {
+                    perecedero += insumo.ValorStock;
+                }
+                reporte.AgregarFila(insumo.Nombre, insumo.StockTexto, insumo.PrecioTexto, insumo.ValorStock.ToString("C"),
+                    insumo.VidaUtilTexto, insumo.BajoMinimo ? "Bajo el mínimo" : "Normal");
+            }
+
+            reporte.Pie = "Valor total del stock: " + total.ToString("C") + " (perecederos: " + perecedero.ToString("C") + ").";
+        }
+
         private void ArmarOrdenesPorProveedor(BEReporte reporte, DateTime inicio, DateTime fin)
         {
             reporte.Columnas.AddRange(new[] { "Proveedor", "CUIT", "Pendientes", "Recibidas", "Anuladas", "Importe recibido" });
@@ -256,7 +359,8 @@ namespace BLL
                     gasto.OrdenesRecibidas.ToString(), gasto.OrdenesAnuladas.ToString(), gasto.ImporteRecibido.ToString("C"));
             }
 
-            reporte.Pie = "Lo recibido se valoriza al precio unitario actual de cada insumo. Total: " + total.ToString("C") + ".";
+            reporte.Pie = "Lo recibido se valoriza con el precio unitario de cada insumo, que se actualiza con cada factura. Total: " +
+                          total.ToString("C") + ".";
         }
 
         private void ArmarAlertas(BEReporte reporte, DateTime inicio, DateTime fin)

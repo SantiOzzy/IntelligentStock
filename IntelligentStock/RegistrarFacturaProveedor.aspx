@@ -8,7 +8,7 @@
 
     <asp:Label ID="lblMensaje" runat="server" Visible="false"></asp:Label>
 
-    <p class="help-block">Elija la orden pendiente que llegó y cargue los datos de la factura. Al registrarla, la orden pasa a Recibida y lo pedido ingresa al stock.</p>
+    <p class="help-block">Elija la orden pendiente que llegó y cargue los datos de la factura. En la grilla, controle contra el remito cuánto llegó de cada insumo (si llegó menos, o nada, corríjalo) y el precio unitario facturado. Al registrarla, la orden pasa a Recibida, lo que llegó ingresa al stock y los precios de los insumos se actualizan con los de la factura.</p>
 
     <div class="row">
         <div class="col-md-6">
@@ -66,7 +66,7 @@
                 <asp:RegularExpressionValidator ID="revDecimalesImporte" runat="server" ControlToValidate="txtImporte"
                     ValidationExpression="^\d+([.,]\d{1,2})?$" ValidationGroup="Factura" Display="Dynamic"
                     CssClass="text-danger" ErrorMessage="El importe total admite hasta dos decimales."></asp:RegularExpressionValidator>
-                <span class="campo-ayuda">Se propone el importe estimado de la orden: corríjalo con el total de la factura.</span>
+                <span class="campo-ayuda">Se propone el importe estimado de la orden: corríjalo con el total de la factura. Si no coincide con la suma de los renglones, el sistema avisa.</span>
             </div>
         </div>
     </div>
@@ -75,23 +75,51 @@
 
     <h3 class="seccion-titulo">Insumos que ingresan al stock</h3>
 
-    <asp:GridView ID="gvDetalle" runat="server" AutoGenerateColumns="false"
+    <asp:GridView ID="gvDetalle" runat="server" AutoGenerateColumns="false" DataKeyNames="IdInsumo"
         CssClass="table table-bordered table-condensed table-striped" GridLines="None"
         ShowHeaderWhenEmpty="true"
         EmptyDataText="Elija una orden para ver sus insumos.">
         <Columns>
             <asp:BoundField DataField="Insumo" HeaderText="Insumo" />
-            <asp:BoundField DataField="Cantidad" HeaderText="Cantidad recibida" />
+            <asp:BoundField DataField="Pedido" HeaderText="Pedido" />
+            <asp:TemplateField HeaderText="Llegó" ItemStyle-Width="170px">
+                <ItemTemplate>
+                    <div class="input-group input-group-sm">
+                        <asp:TextBox ID="txtRecibido" runat="server" CssClass="form-control" TextMode="Number"
+                            min="0" step="0.01" max="999999.99" Text='<%# Eval("CantidadInput") %>'></asp:TextBox>
+                        <span class="input-group-addon"><%# HttpUtility.HtmlEncode(Eval("Unidad")) %></span>
+                    </div>
+                </ItemTemplate>
+            </asp:TemplateField>
+            <asp:TemplateField HeaderText="Precio unitario facturado" ItemStyle-Width="170px">
+                <ItemTemplate>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-addon">$</span>
+                        <asp:TextBox ID="txtPrecio" runat="server" CssClass="form-control" TextMode="Number"
+                            min="0" step="0.01" max="99999999.99" Text='<%# Eval("PrecioInput") %>'></asp:TextBox>
+                    </div>
+                </ItemTemplate>
+            </asp:TemplateField>
+            <asp:BoundField DataField="StockAntes" HeaderText="Stock actual" />
+        </Columns>
+    </asp:GridView>
+
+    <asp:GridView ID="gvResultado" runat="server" AutoGenerateColumns="false" Visible="false"
+        CssClass="table table-bordered table-condensed table-striped" GridLines="None">
+        <Columns>
+            <asp:BoundField DataField="Insumo" HeaderText="Insumo" />
+            <asp:BoundField DataField="Pedido" HeaderText="Pedido" />
+            <asp:BoundField DataField="Recibido" HeaderText="Llegó" ItemStyle-Font-Bold="true" />
             <asp:BoundField DataField="StockAntes" HeaderText="Stock antes" />
             <asp:BoundField DataField="StockDespues" HeaderText="Stock después" ItemStyle-Font-Bold="true" />
-            <asp:BoundField DataField="Importe" HeaderText="Importe estimado" />
+            <asp:BoundField DataField="Precio" HeaderText="Precio unitario" />
         </Columns>
     </asp:GridView>
 
     <div class="acciones">
         <asp:Button ID="btnAceptar" runat="server" Text="Registrar factura" CssClass="btn btn-primary"
             OnClick="btnAceptar_Click"
-            OnClientClick="return confirm('Se va a registrar la factura, la orden va a quedar Recibida y lo pedido va a ingresar al stock. ¿Continuar?');" ValidationGroup="Factura" />
+            OnClientClick="return confirm('Se va a registrar la factura, la orden va a quedar Recibida y lo que llegó va a ingresar al stock. ¿Continuar?');" ValidationGroup="Factura" />
         <asp:Button ID="btnCancelar" runat="server" Text="Cancelar" CssClass="btn btn-default"
             OnClick="btnCancelar_Click" CausesValidation="false" />
     </div>

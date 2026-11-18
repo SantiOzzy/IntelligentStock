@@ -82,7 +82,7 @@ namespace DAL
         }
 
         /// Eventos de una acción desde una fecha, del más viejo al más nuevo,
-        /// activos o eliminados (con "Venta" es el historial de la predicción).
+        /// activos o eliminados (por ejemplo, los ajustes de stock del reporte gerencial).
         public List<BEEvento> TraerEventosPorAccionDesde(string accion, DateTime desde)
         {
             SqlParameter[] parametros = new SqlParameter[]

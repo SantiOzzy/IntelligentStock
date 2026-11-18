@@ -58,7 +58,7 @@ namespace BLL
         {
             "Usuario", "Rol", "Familia", "RolFamilia", "RelacionFamilia",
             "Proveedor", "Insumo", "OrdenCompra", "DetalleOrdenCompra",
-            "Receta", "DetalleReceta", "Sensor", "Alerta", "Suscripcion",
+            "Receta", "DetalleReceta", "Venta", "ConsumoVenta", "Sensor", "Alerta", "Suscripcion",
             "TokenRecuperacion", TablaBitacora
         };
 

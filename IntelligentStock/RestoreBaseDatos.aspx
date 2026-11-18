@@ -16,8 +16,19 @@
                     <div class="form-group">
                         <asp:Label ID="lblArchivo" runat="server" CssClass="control-label"
                             Text="Archivo de restauración (.bak o .sql) (*)"></asp:Label>
-                        <br />
-                        <asp:FileUpload ID="fuArchivo" runat="server" CssClass="form-control" />
+                        <%-- El selector de archivos del navegador queda oculto: lo abre el botón Examinar
+                             y el nombre del archivo elegido se muestra en el cuadro de al lado. --%>
+                        <div class="input-group">
+                            <input type="text" id="txtArchivoElegido" class="form-control" readonly="readonly"
+                                placeholder="Ningún archivo elegido" onclick="document.getElementById('fuArchivo').click();" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default"
+                                    onclick="document.getElementById('fuArchivo').click();">Examinar…</button>
+                            </span>
+                        </div>
+                        <asp:FileUpload ID="fuArchivo" runat="server" ClientIDMode="Static" accept=".bak,.sql"
+                            style="display: none;"
+                            onchange="document.getElementById('txtArchivoElegido').value = this.files.length ? this.files[0].name : '';" />
                         <span class="help-block">
                             Se admite una copia de seguridad de SQL Server (<code>.bak</code>)
                             o un script de recreación (<code>.sql</code>).

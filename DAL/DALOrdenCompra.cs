@@ -111,16 +111,46 @@ namespace DAL
             return dalCon.EjecutarYTraerId("AnularOrdenCompra", parametros) > 0;
         }
 
-        /// Suma al stock lo pedido y pasa la orden a Recibida, todo junto, si
-        /// sigue Pendiente. Devuelve false si no.
-        public bool Recibir(int idOrden, string estado)
+        /// Si la orden sigue Pendiente, la pasa a Recibida y suma al stock lo que
+        /// llegó de cada insumo (con el precio facturado), todo junto. Devuelve
+        /// false si la orden ya no estaba Pendiente.
+        public bool Recibir(int idOrden, string estado, List<BEDetalleOrdenCompra> recibido)
         {
+            StringBuilder xml = new StringBuilder("<Detalle>");
+            foreach (BEDetalleOrdenCompra detalle in recibido)
+            {
+                xml.Append("<Insumo idInsumo=\"")
+                   .Append(detalle.IdInsumo.ToString(CultureInfo.InvariantCulture))
+                   .Append("\" cantidad=\"")
+                   .Append(detalle.Cantidad.ToString(CultureInfo.InvariantCulture))
+                   .Append("\" precio=\"")
+                   .Append(detalle.PrecioUnitario.ToString(CultureInfo.InvariantCulture))
+                   .Append("\" />");
+            }
+            xml.Append("</Detalle>");
+
+            SqlParameter parametroDetalle = new SqlParameter("@Detalle", SqlDbType.Xml);
+            parametroDetalle.Value = xml.ToString();
+
             SqlParameter[] parametros = new SqlParameter[]
             {
                 new SqlParameter("@IdOrden", idOrden),
-                new SqlParameter("@Estado", estado)
+                new SqlParameter("@Estado", estado),
+                parametroDetalle
             };
             return dalCon.EjecutarYTraerId("RecibirOrdenCompra", parametros) > 0;
+        }
+
+        /// Proveedor habitual de cada insumo (el de la última orden no anulada
+        /// que lo incluyó), por id de insumo.
+        public Dictionary<int, string> TraerProveedorHabitual()
+        {
+            Dictionary<int, string> habitual = new Dictionary<int, string>();
+            foreach (DataRow fila in dalCon.ConsultaProcAlmacenado("TraerProveedorHabitualPorInsumo", null).Rows)
+            {
+                habitual[Convert.ToInt32(fila["id_insumo"])] = Convert.ToString(fila["cuitProveedor"]);
+            }
+            return habitual;
         }
 
         private static BEOrdenCompra Mapear(DataRow fila)

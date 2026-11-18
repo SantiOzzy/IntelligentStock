@@ -13,6 +13,13 @@ namespace BLL
     /// (CU-006-034), anulación (CU-006-035) y recepción con la factura del
     /// proveedor (CU-006-036).
     ///
+    /// La predicción propone qué insumos hacen falta. Como cada proveedor
+    /// vende lo suyo, el usuario arma una orden por proveedor: elige cuáles de
+    /// los insumos sugeridos le pide a cada uno (el sistema propone el que se
+    /// usó la última vez) y puede ajustar las cantidades. La orden se le envía
+    /// al proveedor por correo y, al llegar la mercadería, se registra lo que
+    /// llegó de verdad y a qué precio.
+    ///
     /// Qué se puede hacer con una orden según su estado lo deciden las clases
     /// del patrón State (EstadoOrdenCompra y sus subclases): esta clase es el
     /// contexto que les delega la anulación, la recepción y el armado del
@@ -115,7 +122,7 @@ namespace BLL
 
         /// Compras por proveedor en un período (WebServiceGastoProveedores y
         /// reporte gerencial). Lo recibido se valoriza al precio unitario
-        /// actual de cada insumo.
+        /// actual de cada insumo, que se actualiza con el de cada factura.
         public List<BEGastoProveedor> GastoPorProveedor(DateTime desde, DateTime hasta)
         {
             Dictionary<int, decimal> importePorOrden = new Dictionary<int, decimal>();
@@ -162,6 +169,12 @@ namespace BLL
         {
             prediccion = new BLLPrediccionDemanda().Predecir(dias);
             Dictionary<int, decimal> pendientes = dalOrden.TraerCantidadesPendientes();
+            Dictionary<int, string> habitual = dalOrden.TraerProveedorHabitual();
+            Dictionary<string, string> proveedores = new Dictionary<string, string>();
+            foreach (BEProveedor proveedor in bllProveedor.TraerActivos())
+            {
+                proveedores[proveedor.Cuit] = proveedor.Nombre;
+            }
 
             List<BESugerenciaCompra> sugerencias = new List<BESugerenciaCompra>();
             foreach (BEInsumo insumo in bllInsumo.TraerActivos())
@@ -169,7 +182,16 @@ namespace BLL
                 decimal pendiente;
                 pendientes.TryGetValue(insumo.IdInsumo, out pendiente);
 
-                decimal consumo = prediccion.Consumo(insumo.IdInsumo);
+                // Un perecedero se pide solo para los días que dura: lo que se
+                // compre para después se tira.
+                int diasCubiertos = dias;
+                bool limitado = false;
+                if (insumo.DiasDeVidaUtil.HasValue && insumo.DiasDeVidaUtil.Value > 0 && insumo.DiasDeVidaUtil.Value < dias)
+                {
+                    diasCubiertos = insumo.DiasDeVidaUtil.Value;
+                    limitado = true;
+                }
+                decimal consumo = prediccion.Consumo(insumo.IdInsumo, diasCubiertos);
 
                 // Lo que se va a consumir, más el mínimo de seguridad, menos lo que
                 // hay y lo que ya está pedido.
@@ -188,7 +210,17 @@ namespace BLL
                 sugerencia.CantidadPendiente = pendiente;
                 sugerencia.ConsumoPrevisto = consumo;
                 sugerencia.CantidadSugerida = Math.Min(CantidadMaxima, Math.Ceiling(faltante * 100m) / 100m);
+                sugerencia.CantidadAPedir = sugerencia.CantidadSugerida;
                 sugerencia.PrecioUnitario = insumo.PrecioUnitario;
+                sugerencia.DiasCubiertos = diasCubiertos;
+                sugerencia.LimitadoPorVidaUtil = limitado;
+
+                string cuit;
+                if (habitual.TryGetValue(insumo.IdInsumo, out cuit) && proveedores.ContainsKey(cuit))
+                {
+                    sugerencia.CuitProveedorHabitual = cuit;
+                    sugerencia.ProveedorHabitual = proveedores[cuit];
+                }
                 sugerencias.Add(sugerencia);
             }
 
@@ -204,11 +236,15 @@ namespace BLL
             return sugerencias;
         }
 
-        /// Genera la orden con las cantidades que sugiere la predicción y la deja
-        /// Pendiente. Devuelve la orden grabada con su detalle.
-        public BEOrdenCompra GenerarPredictiva(string cuit, DateTime? fecha, out List<BESugerenciaCompra> sugerencias,
-                                               out ResultadoPrediccion prediccion)
+        /// Genera la orden con lo que el usuario eligió pedirle a este proveedor
+        /// de la propuesta (los insumos marcados, con la cantidad que haya
+        /// ajustado) y la deja Pendiente. Si se pide, se la envía al proveedor por
+        /// correo con la orden en PDF; si no se puede enviar, la orden queda
+        /// generada igual y 'resultadoCorreo' dice por qué.
+        public BEOrdenCompra GenerarPredictiva(string cuit, DateTime? fecha, List<BESugerenciaCompra> pedido,
+                                               bool enviarPorCorreo, out string resultadoCorreo)
         {
+            resultadoCorreo = null;
             if (string.IsNullOrEmpty(cuit))
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR002", "Elija el proveedor."));
@@ -237,35 +273,141 @@ namespace BLL
                     "La fecha de la orden no puede estar a más de 60 días."));
             }
 
-            int dias = DiasProyeccion;
-            sugerencias = CalcularSugerencias(dias, out prediccion);
+            if (pedido == null || pedido.Count == 0)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
+                    "Marque al menos un insumo para pedirle a " + proveedor.Nombre + "."));
+            }
 
             BEOrdenCompra orden = new BEOrdenCompra();
             orden.CuitProveedor = proveedor.Cuit;
             orden.NombreProveedor = proveedor.Nombre;
             orden.Fecha = fechaOrden;
             orden.Estado = EstadoOrdenCompra.Pendiente.Nombre;
-            foreach (BESugerenciaCompra sugerencia in sugerencias)
+
+            List<string> cambios = new List<string>();
+            List<int> incluidos = new List<int>();
+            foreach (BESugerenciaCompra item in pedido)
             {
+                BEInsumo insumo = bllInsumo.ObtenerPorId(item.IdInsumo);
+                if (insumo == null || !insumo.Activo)
+                {
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR021",
+                        "El insumo " + item.NombreInsumo + " ya no está activo."));
+                }
+                if (incluidos.Contains(item.IdInsumo))
+                {
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR006",
+                        "El insumo " + insumo.Nombre + " figura dos veces en el pedido."));
+                }
+                ValidarCantidadPedida(insumo.Nombre, item.CantidadAPedir);
+                incluidos.Add(item.IdInsumo);
+
                 BEDetalleOrdenCompra detalle = new BEDetalleOrdenCompra();
-                detalle.IdInsumo = sugerencia.IdInsumo;
-                detalle.NombreInsumo = sugerencia.NombreInsumo;
-                detalle.UnidadDeMedida = sugerencia.UnidadDeMedida;
-                detalle.Cantidad = sugerencia.CantidadSugerida;
-                detalle.PrecioUnitario = sugerencia.PrecioUnitario;
+                detalle.IdInsumo = insumo.IdInsumo;
+                detalle.NombreInsumo = insumo.Nombre;
+                detalle.UnidadDeMedida = insumo.UnidadDeMedida;
+                detalle.Cantidad = item.CantidadAPedir;
+                detalle.PrecioUnitario = insumo.PrecioUnitario;
                 orden.Detalles.Add(detalle);
+
+                if (item.CantidadAPedir != item.CantidadSugerida)
+                {
+                    cambios.Add(insumo.Nombre + " (sugerido " + item.CantidadSugerida.ToString("0.##") + ", pedido " +
+                                item.CantidadAPedir.ToString("0.##") + " " + insumo.UnidadDeMedida + ")");
+                }
             }
             orden.CantidadItems = orden.Detalles.Count;
 
             orden.IdOrdenCompra = bllDV.EjecutarControlado(() => dalOrden.Crear(orden), TablaOrden, TablaDetalle);
 
             bllEvento.RegistrarDelUsuarioActual("Generación de orden de compra",
-                "Se generó la orden de compra " + orden.Numero + " para " + orden.ProveedorTexto + " con " +
-                orden.Detalles.Count + (orden.Detalles.Count == 1 ? " insumo" : " insumos") +
-                " (importe estimado " + orden.ImporteEstimado.ToString("C") + "), según la demanda prevista para los próximos " +
-                dias + " días. " + prediccion.Descripcion);
+                Recortar("Se generó la orden de compra " + orden.Numero + " para " + orden.ProveedorTexto + " con " +
+                         orden.Detalles.Count + (orden.Detalles.Count == 1 ? " insumo" : " insumos") +
+                         " (importe estimado " + orden.ImporteEstimado.ToString("C") + "), según la demanda prevista para los próximos " +
+                         DiasProyeccion + " días." +
+                         (cambios.Count > 0 ? " Cantidades cambiadas: " + string.Join("; ", cambios.ToArray()) + "." : string.Empty), 500));
+
+            if (enviarPorCorreo)
+            {
+                resultadoCorreo = EnviarAlProveedor(orden, proveedor);
+            }
 
             return orden;
+        }
+
+        /// Le manda la orden al proveedor por correo, con la orden en PDF.
+        /// Devuelve lo que pasó, para mostrarlo: un error de envío no anula la orden.
+        private string EnviarAlProveedor(BEOrdenCompra orden, BEProveedor proveedor)
+        {
+            if (string.IsNullOrEmpty(proveedor.Correo))
+            {
+                return "La orden no se envió por correo: " + proveedor.Nombre +
+                       " no tiene un correo cargado (se puede agregar en Modificación de proveedor).";
+            }
+            if (!EnviadorCorreo.EstaConfigurado)
+            {
+                return "La orden no se envió por correo: el envío de correos no está configurado en el sistema.";
+            }
+
+            BEReporte documento = new BEReporte();
+            documento.Titulo = "Orden de compra " + orden.Numero;
+            documento.Subtitulo = "Proveedor: " + orden.ProveedorTexto + ". Fecha: " + orden.FechaTexto + ".";
+            documento.Columnas.AddRange(new[] { "Insumo", "Cantidad", "Unidad" });
+            foreach (BEDetalleOrdenCompra detalle in orden.Detalles)
+            {
+                documento.AgregarFila(detalle.NombreInsumo, detalle.Cantidad.ToString("0.##"), detalle.UnidadDeMedida ?? string.Empty);
+            }
+            documento.Pie = "Por favor, confirme la entrega respondiendo este correo.";
+
+            StringBuilder cuerpo = new StringBuilder();
+            cuerpo.Append("Estimados de ").Append(proveedor.Nombre).Append(":\r\n\r\n")
+                  .Append("Les enviamos la orden de compra ").Append(orden.Numero).Append(" del ").Append(orden.FechaTexto)
+                  .Append(" con el siguiente pedido:\r\n\r\n");
+            foreach (BEDetalleOrdenCompra detalle in orden.Detalles)
+            {
+                cuerpo.Append("  - ").Append(detalle.NombreInsumo).Append(": ").Append(detalle.CantidadTexto).Append("\r\n");
+            }
+            cuerpo.Append("\r\nSe adjunta la orden en PDF. Por favor, confirmen la entrega respondiendo este correo.\r\n\r\nMuchas gracias.");
+
+            try
+            {
+                string extension, tipoMime;
+                byte[] pdf = ExportadorReporte.Exportar(documento, ExportadorReporte.FormatoPdf, out extension, out tipoMime);
+                EnviadorCorreo.Enviar(proveedor.Correo, "Orden de compra " + orden.Numero, cuerpo.ToString(),
+                                      pdf, "Orden de compra " + orden.IdOrdenCompra + extension, tipoMime);
+            }
+            catch (Exception ex)
+            {
+                bllEvento.RegistrarDelUsuarioActual("Envío de orden de compra",
+                    Recortar("No se pudo enviar la orden de compra " + orden.Numero + " a " + proveedor.Correo + ": " + ex.Message, 500),
+                    CriticidadEvento.Advertencia);
+                return "La orden quedó generada, pero no se pudo enviar por correo a " + proveedor.Correo + " (" + ex.Message +
+                       "). Avísele al proveedor por otro medio.";
+            }
+
+            bllEvento.RegistrarDelUsuarioActual("Envío de orden de compra",
+                "Se envió la orden de compra " + orden.Numero + " por correo a " + proveedor.Nombre + " (" + proveedor.Correo + ").");
+            return "Se le envió la orden por correo a " + proveedor.Nombre + " (" + proveedor.Correo + ").";
+        }
+
+        private static void ValidarCantidadPedida(string insumo, decimal cantidad)
+        {
+            if (cantidad <= 0)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "La cantidad a pedir de " + insumo + " tiene que ser mayor que cero."));
+            }
+            if (cantidad > CantidadMaxima)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "La cantidad a pedir de " + insumo + " no puede superar " + CantidadMaxima.ToString("0.##") + "."));
+            }
+            if (decimal.Round(cantidad, 2) != cantidad)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "La cantidad a pedir de " + insumo + " admite hasta dos decimales."));
+            }
         }
 
         #endregion
@@ -316,11 +458,24 @@ namespace BLL
 
         #region CU-006-036 Registrar factura de proveedor
 
+        /// Precio unitario máximo (columna precioUnitario, DECIMAL(10,2)).
+        public const decimal PrecioMaximo = 99999999.99m;
+
+        /// Diferencia que se tolera entre la suma de los renglones y el importe
+        /// de la factura antes de avisar (impuestos, redondeos).
+        public const decimal ToleranciaImporte = 0.01m;
+
         /// Registra la factura de una orden pendiente: la orden pasa a Recibida
-        /// (con el comprobante) y lo pedido de cada insumo se suma al stock (R8),
-        /// todo junto. El importe total de la factura queda en la bitácora.
-        public BEOrdenCompra RegistrarFactura(int idOrden, string comprobante, DateTime? fecha, decimal? importe)
+        /// (con el comprobante) y al stock ingresa lo que llegó de cada insumo
+        /// (R8), que puede ser menos que lo pedido, todo junto. El precio
+        /// facturado de cada insumo pasa a ser su precio unitario. El importe
+        /// total de la factura y las diferencias con lo pedido quedan en la
+        /// bitácora. 'aviso' informa si la suma de los renglones no coincide
+        /// con el importe de la factura (no impide registrarla).
+        public BEOrdenCompra RegistrarFactura(int idOrden, string comprobante, DateTime? fecha, decimal? importe,
+                                              List<BEDetalleOrdenCompra> recibido, out string aviso)
         {
+            aviso = null;
             comprobante = comprobante == null ? string.Empty : Regex.Replace(comprobante.Trim(), @"\s+", " ");
 
             if (idOrden <= 0 || comprobante.Length == 0 || !fecha.HasValue || !importe.HasValue)
@@ -381,33 +536,116 @@ namespace BLL
                 }
             }
 
-            if (!bllDV.EjecutarControlado(() => dalOrden.Recibir(idOrden, estado), TablaOrden, TablaInsumo))
+            // Lo que llegó de cada renglón de la orden, con su precio facturado.
+            List<BEDetalleOrdenCompra> llegado = new List<BEDetalleOrdenCompra>();
+            List<string> diferencias = new List<string>();
+            List<string> precios = new List<string>();
+            decimal sumaRenglones = 0;
+            foreach (BEDetalleOrdenCompra pedido in orden.Detalles)
+            {
+                BEDetalleOrdenCompra recibidoDelInsumo = recibido == null ? null
+                    : recibido.Find(delegate(BEDetalleOrdenCompra d) { return d.IdInsumo == pedido.IdInsumo; });
+                decimal cantidad = recibidoDelInsumo == null ? pedido.Cantidad : recibidoDelInsumo.Cantidad;
+                decimal precio = recibidoDelInsumo == null ? pedido.PrecioUnitario : recibidoDelInsumo.PrecioUnitario;
+                ValidarRecibido(pedido.NombreInsumo, cantidad, precio);
+
+                BEDetalleOrdenCompra linea = new BEDetalleOrdenCompra();
+                linea.IdOrdenCompra = idOrden;
+                linea.IdInsumo = pedido.IdInsumo;
+                linea.NombreInsumo = pedido.NombreInsumo;
+                linea.UnidadDeMedida = pedido.UnidadDeMedida;
+                linea.Cantidad = cantidad;
+                linea.PrecioUnitario = precio;
+                llegado.Add(linea);
+                sumaRenglones += cantidad * precio;
+
+                if (cantidad != pedido.Cantidad)
+                {
+                    diferencias.Add(pedido.NombreInsumo + " (pedido " + pedido.Cantidad.ToString("0.##") + ", recibido " +
+                                    cantidad.ToString("0.##") + " " + pedido.UnidadDeMedida + ")");
+                }
+                if (precio > 0 && precio != pedido.PrecioUnitario)
+                {
+                    precios.Add(pedido.NombreInsumo + " " + pedido.PrecioUnitario.ToString("C") + " a " + precio.ToString("C"));
+                }
+            }
+
+            bool llegoAlgo = false;
+            foreach (BEDetalleOrdenCompra linea in llegado)
+            {
+                llegoAlgo = llegoAlgo || linea.Cantidad > 0;
+            }
+            if (!llegoAlgo)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "No llegó ningún insumo de la orden " + orden.Numero + ": si no se va a recibir, anúlela."));
+            }
+
+            if (!bllDV.EjecutarControlado(() => dalOrden.Recibir(idOrden, estado, llegado), TablaOrden, TablaDetalle, TablaInsumo))
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR021",
                     "La orden " + orden.Numero + " cambió de estado mientras tanto."));
             }
 
             StringBuilder ingresos = new StringBuilder();
-            foreach (BEDetalleOrdenCompra detalle in orden.Detalles)
+            foreach (BEDetalleOrdenCompra linea in llegado)
             {
+                if (linea.Cantidad <= 0)
+                {
+                    continue;
+                }
                 if (ingresos.Length > 0)
                 {
                     ingresos.Append("; ");
                 }
-                ingresos.Append(detalle.NombreInsumo).Append(" ").Append(detalle.CantidadTexto);
+                ingresos.Append(linea.NombreInsumo).Append(" ").Append(linea.CantidadTexto);
             }
 
             bllEvento.RegistrarDelUsuarioActual("Factura de proveedor",
                 Recortar("Se registró el comprobante " + comprobante + " del " + fechaComprobante.ToString("dd/MM/yyyy") +
                          " de " + orden.ProveedorTexto + " para la orden " + orden.Numero +
                          ", por " + importe.Value.ToString("C") +
-                         ". Ingresó al stock: " + ingresos + ".", 500));
+                         ". Ingresó al stock: " + ingresos + "." +
+                         (diferencias.Count > 0 ? " Llegó distinto de lo pedido: " + string.Join("; ", diferencias.ToArray()) + "." : string.Empty) +
+                         (precios.Count > 0 ? " Precios actualizados: " + string.Join("; ", precios.ToArray()) + "." : string.Empty), 500));
+
+            if (Math.Abs(sumaRenglones - importe.Value) > Math.Max(1m, importe.Value * ToleranciaImporte))
+            {
+                aviso = "La suma de los renglones (" + sumaRenglones.ToString("C") + ") no coincide con el importe de la factura (" +
+                        importe.Value.ToString("C") + "): puede deberse a impuestos o a un precio mal cargado.";
+            }
 
             orden.Estado = estado;
+            orden.Detalles.Clear();
+            orden.Detalles.AddRange(llegado);
             return orden;
         }
 
         #endregion
+
+        private static void ValidarRecibido(string insumo, decimal cantidad, decimal precio)
+        {
+            if (cantidad < 0 || cantidad > CantidadMaxima)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "La cantidad recibida de " + insumo + " tiene que estar entre 0 y " + CantidadMaxima.ToString("0.##") + "."));
+            }
+            if (decimal.Round(cantidad, 2) != cantidad)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "La cantidad recibida de " + insumo + " admite hasta dos decimales."));
+            }
+            if (precio < 0 || precio > PrecioMaximo)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "El precio unitario de " + insumo + " tiene que estar entre 0 y " + PrecioMaximo.ToString("N2") + "."));
+            }
+            if (decimal.Round(precio, 2) != precio)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "El precio unitario de " + insumo + " admite hasta dos decimales."));
+            }
+        }
 
         private static string Recortar(string texto, int largo)
         {

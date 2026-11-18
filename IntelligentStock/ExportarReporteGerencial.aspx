@@ -18,6 +18,8 @@
                 <asp:DropDownList ID="ddlReporte" runat="server" CssClass="form-control">
                     <asp:ListItem Text="Consumo por insumo" Value="Consumo por insumo" />
                     <asp:ListItem Text="Ventas por receta" Value="Ventas por receta" />
+                    <asp:ListItem Text="Costo por receta" Value="Costo por receta" />
+                    <asp:ListItem Text="Valorización del stock" Value="Valorización del stock" />
                     <asp:ListItem Text="Órdenes por proveedor" Value="Órdenes por proveedor" />
                     <asp:ListItem Text="Alertas térmicas" Value="Alertas térmicas" />
                     <asp:ListItem Text="Ajustes de stock" Value="Ajustes de stock" />
@@ -76,6 +78,10 @@
         <dd>Lo que consumieron las ventas de cada insumo, el promedio diario, el valorizado y el stock actual.</dd>
         <dt>Ventas por receta</dt>
         <dd>Unidades vendidas y cantidad de operaciones de venta de cada receta.</dd>
+        <dt>Costo por receta</dt>
+        <dd>Cuánto cuestan los insumos de cada receta al precio actual (para revisar el precio de venta de cada plato) y el costo de lo vendido en el período.</dd>
+        <dt>Valorización del stock</dt>
+        <dd>Cuánto vale hoy el stock de cada insumo y el total, separando lo perecedero (no depende del período).</dd>
         <dt>Órdenes por proveedor</dt>
         <dd>Órdenes pendientes, recibidas y anuladas de cada proveedor, con el importe recibido.</dd>
         <dt>Alertas térmicas</dt>

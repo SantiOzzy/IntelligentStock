@@ -3,8 +3,9 @@ using BE;
 namespace BLL
 {
     /// Estado State: orden recibida (se registró la factura del proveedor y lo
-    /// pedido ya ingresó al stock). No admite más cambios: Recibir y Anular
-    /// quedan rechazados por la clase base.
+    /// que llegó ya ingresó al stock; el detalle de la orden quedó con las
+    /// cantidades recibidas). No admite más cambios: Recibir y Anular quedan
+    /// rechazados por la clase base.
     public class EstadoOrdenRecibida : EstadoOrdenCompra
     {
         public override string Nombre

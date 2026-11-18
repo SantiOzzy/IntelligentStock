@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.IO;
 using DAL;
@@ -43,6 +44,85 @@ namespace BLL
             }
             return carpeta;
         }
+
+        #region Explorador de carpetas
+
+        /// Carpetas para empezar a elegir dónde guardar la copia: la que propone
+        /// el sistema, el Escritorio y Documentos, y las unidades de disco del
+        /// equipo donde corre el sistema (que es el que escribe el archivo).
+        public List<CarpetaDelEquipo> CarpetasIniciales()
+        {
+            List<CarpetaDelEquipo> carpetas = new List<CarpetaDelEquipo>();
+            carpetas.Add(new CarpetaDelEquipo("Carpeta propuesta por el sistema", RutaPorDefecto()));
+            AgregarSiExiste(carpetas, "Escritorio", Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
+            AgregarSiExiste(carpetas, "Documentos", Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+            foreach (DriveInfo unidad in DriveInfo.GetDrives())
+            {
+                try
+                {
+                    if (unidad.IsReady && (unidad.DriveType == DriveType.Fixed || unidad.DriveType == DriveType.Removable))
+                    {
+                        string etiqueta = string.IsNullOrEmpty(unidad.VolumeLabel) ? "Disco" : unidad.VolumeLabel;
+                        carpetas.Add(new CarpetaDelEquipo(etiqueta + " (" + unidad.Name.TrimEnd('\\') + ")", unidad.RootDirectory.FullName));
+                    }
+                }
+                catch (IOException)
+                {
+                    // Una unidad que no responde (por ejemplo, un lector vacío) no se muestra.
+                }
+            }
+            return carpetas;
+        }
+
+        /// Subcarpetas de una carpeta del equipo, sin las ocultas ni las de sistema.
+        public List<CarpetaDelEquipo> ListarCarpetas(string ruta)
+        {
+            if (string.IsNullOrEmpty(ruta) || !Path.IsPathRooted(ruta) || !Directory.Exists(ruta))
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR013", "La carpeta " + ruta + " no existe."));
+            }
+
+            List<CarpetaDelEquipo> carpetas = new List<CarpetaDelEquipo>();
+            try
+            {
+                foreach (string sub in Directory.GetDirectories(ruta))
+                {
+                    DirectoryInfo info = new DirectoryInfo(sub);
+                    if ((info.Attributes & (FileAttributes.Hidden | FileAttributes.System)) != 0)
+                    {
+                        continue;
+                    }
+                    carpetas.Add(new CarpetaDelEquipo(info.Name, info.FullName));
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR022",
+                    "No hay permiso para ver el contenido de " + ruta + "."));
+            }
+            carpetas.Sort(delegate(CarpetaDelEquipo a, CarpetaDelEquipo b)
+            {
+                return string.Compare(a.Nombre, b.Nombre, StringComparison.CurrentCultureIgnoreCase);
+            });
+            return carpetas;
+        }
+
+        /// Carpeta que contiene a la indicada, o null si es la raíz de una unidad.
+        public string CarpetaSuperior(string ruta)
+        {
+            DirectoryInfo padre = string.IsNullOrEmpty(ruta) ? null : new DirectoryInfo(ruta).Parent;
+            return padre == null ? null : padre.FullName;
+        }
+
+        private static void AgregarSiExiste(List<CarpetaDelEquipo> carpetas, string nombre, string ruta)
+        {
+            if (!string.IsNullOrEmpty(ruta) && Directory.Exists(ruta))
+            {
+                carpetas.Add(new CarpetaDelEquipo(nombre, ruta));
+            }
+        }
+
+        #endregion
 
         /// Genera el archivo .bak y devuelve la ruta completa.
         public string RealizarBackUp(string carpetaDestino)
@@ -203,5 +283,20 @@ namespace BLL
             bllEvento.RegistrarDelUsuarioActual("Recálculo de dígito verificador",
                 "Se recalcularon los dígitos verificadores de todas las tablas controladas.");
         }
+    }
+
+    /// Una carpeta del equipo para el explorador de la pantalla de copia de seguridad.
+    [Serializable]
+    public class CarpetaDelEquipo
+    {
+        public CarpetaDelEquipo(string nombre, string ruta)
+        {
+            Nombre = nombre;
+            Ruta = ruta;
+        }
+
+        public string Nombre { get; set; }
+
+        public string Ruta { get; set; }
     }
 }
