@@ -140,6 +140,10 @@ namespace BLL
             bllEvento.Registrar(usuario.DNI, "Inicio de sesión",
                 "El usuario " + usuario.NombreUsuario + " inició sesión con el perfil " + usuario.NombreRol + ".");
 
+            // El primer inicio de sesión de cada día cobra los abonos mensuales
+            // de la suscripción que vencieron. No corta el inicio de sesión.
+            BLLSuscripcion.RevisarCobrosDelDia();
+
             return resultado;
         }
 

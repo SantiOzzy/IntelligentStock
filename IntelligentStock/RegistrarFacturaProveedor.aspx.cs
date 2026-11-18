@@ -207,7 +207,7 @@ public partial class RegistrarFacturaProveedor : PaginaBase
     }
 
     /// Muestra los insumos de la orden con lo pedido, para cargar lo que llegó
-    /// y el precio facturado (se proponen lo pedido y el precio actual) y, si
+    /// y el precio facturado (se proponen lo pedido y el precio de la orden) y, si
     /// se pide, propone como importe el estimado de la orden.
     private void MostrarDetalle(BEOrdenCompra orden, bool proponerImporte)
     {

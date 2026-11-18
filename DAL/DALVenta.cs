@@ -21,16 +21,12 @@ namespace DAL
         /// alcanzaba, igual se registra y queda en cero (lo informa Faltante).
         /// Si alguna receta lleva un insumo dado de baja no se graba nada,
         /// devuelve false y en 'consumos' quedan esos insumos.
-        public bool Registrar(List<BEVenta> ventas, string origen, out List<BEConsumoVenta> consumos)
+        public bool Registrar(List<BEVenta> ventas, out List<BEConsumoVenta> consumos)
         {
             SqlParameter parametroVentas = new SqlParameter("@Ventas", SqlDbType.Xml);
             parametroVentas.Value = ArmarXml(ventas);
 
-            SqlParameter[] parametros = new SqlParameter[]
-            {
-                parametroVentas,
-                new SqlParameter("@Origen", origen)
-            };
+            SqlParameter[] parametros = new SqlParameter[] { parametroVentas };
 
             DataTable tabla = dalCon.ConsultaProcAlmacenado("RegistrarVentas", parametros);
 
@@ -78,8 +74,6 @@ namespace DAL
                     actual.NombreReceta = Convert.ToString(fila["nombreReceta"]);
                     actual.Cantidad = Convert.ToDecimal(fila["cantidad"]);
                     actual.Fecha = Convert.ToDateTime(fila["fecha"]);
-                    actual.Origen = Convert.ToString(fila["origen"]);
-                    actual.FechaRegistro = Convert.ToDateTime(fila["fechaRegistro"]);
                     ventas.Add(actual);
                 }
 

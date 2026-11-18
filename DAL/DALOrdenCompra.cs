@@ -24,6 +24,8 @@ namespace DAL
                    .Append(detalle.IdInsumo.ToString(CultureInfo.InvariantCulture))
                    .Append("\" cantidad=\"")
                    .Append(detalle.Cantidad.ToString(CultureInfo.InvariantCulture))
+                   .Append("\" precio=\"")
+                   .Append(detalle.PrecioUnitario.ToString(CultureInfo.InvariantCulture))
                    .Append("\" />");
             }
             xml.Append("</Detalle>");
@@ -151,6 +153,24 @@ namespace DAL
                 habitual[Convert.ToInt32(fila["id_insumo"])] = Convert.ToString(fila["cuitProveedor"]);
             }
             return habitual;
+        }
+
+        /// Último precio que facturó cada proveedor por cada insumo, según las
+        /// órdenes recibidas.
+        public List<BEPrecioProveedor> TraerUltimosPrecios()
+        {
+            List<BEPrecioProveedor> precios = new List<BEPrecioProveedor>();
+            foreach (DataRow fila in dalCon.ConsultaProcAlmacenado("TraerUltimosPreciosPorProveedor", null).Rows)
+            {
+                BEPrecioProveedor precio = new BEPrecioProveedor();
+                precio.IdInsumo = Convert.ToInt32(fila["id_insumo"]);
+                precio.CuitProveedor = Convert.ToString(fila["cuitProveedor"]);
+                precio.NombreProveedor = Convert.ToString(fila["nombreProveedor"]);
+                precio.PrecioUnitario = Convert.ToDecimal(fila["precioUnitario"]);
+                precio.Fecha = fila["fecha"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(fila["fecha"]);
+                precios.Add(precio);
+            }
+            return precios;
         }
 
         private static BEOrdenCompra Mapear(DataRow fila)

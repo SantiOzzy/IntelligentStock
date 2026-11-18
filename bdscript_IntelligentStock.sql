@@ -171,10 +171,14 @@ CREATE TABLE OrdenCompra (
 GO
 
 -- Tabla DetalleOrdenCompra
+-- precioUnitario: el precio estimado al generar la orden y, al recibirla, el
+-- que facturó el proveedor. Con las órdenes recibidas, el sistema sabe cuánto
+-- cobró cada proveedor cada insumo y propone el más barato.
 CREATE TABLE DetalleOrdenCompra (
     id_ordenCompra INT FOREIGN KEY REFERENCES OrdenCompra(id_ordenCompra),
     id_insumo INT FOREIGN KEY REFERENCES Insumo(id_insumo),
     cantidad DECIMAL(8,2) NULL,
+    precioUnitario DECIMAL(10,2) NULL,
     PRIMARY KEY (id_ordenCompra, id_insumo)
 )
 GO
@@ -196,16 +200,14 @@ CREATE TABLE DetalleReceta (
 )
 GO
 -- Ventas registradas (CU-006-037): cuántas unidades de una receta se vendieron
--- en un día y de dónde llegó el dato (carga manual, cierre del día, archivo
--- del punto de venta o servicio web). Es el historial que usan la predicción
--- de demanda (CU-006-033) y el reporte gerencial (CU-006-038).
+-- en un día. Es el historial que usan la predicción de demanda (CU-006-033) y
+-- el reporte gerencial (CU-006-038). Quién cargó cada venta, y desde dónde,
+-- queda en la bitácora.
 CREATE TABLE Venta (
     id_venta INT PRIMARY KEY IDENTITY(1,1),
     id_receta INT NOT NULL FOREIGN KEY REFERENCES Receta(id_receta),
     cantidad DECIMAL(10,2) NOT NULL,
-    fecha DATE NOT NULL,
-    origen VARCHAR(30) NOT NULL,
-    fechaRegistro DATETIME NOT NULL DEFAULT GETDATE()
+    fecha DATE NOT NULL
 )
 GO
 -- Lo que se descontó de cada insumo en una venta, según la receta de ese
@@ -242,12 +244,16 @@ CREATE TABLE Alerta (
 GO
 
 -- Tabla Suscripcion
+-- pagadoHasta: día en que vence lo que ya se pagó. Con tarjeta, ese día se
+-- cobra el abono del mes siguiente y la fecha avanza un mes; al contado, o
+-- dada de baja, es el día en que termina el servicio.
 CREATE TABLE Suscripcion (
     id_suscripcion INT PRIMARY KEY IDENTITY(1,1),
     tipoPlan VARCHAR(50) NULL,
     tokenPago VARCHAR(200) NULL,
     estado VARCHAR(50) NULL,
-    fechaInicio DATE NULL
+    fechaInicio DATE NULL,
+    pagadoHasta DATE NULL
 )
 GO
 
@@ -1340,12 +1346,13 @@ CREATE PROCEDURE CrearSuscripcion
     @TipoPlan VARCHAR(50),
     @TokenPago VARCHAR(200),
     @Estado VARCHAR(50),
-    @FechaInicio DATE
+    @FechaInicio DATE,
+    @PagadoHasta DATE
 AS
 BEGIN
     SET NOCOUNT ON;
-    INSERT INTO Suscripcion (tipoPlan, tokenPago, estado, fechaInicio)
-    VALUES (@TipoPlan, @TokenPago, @Estado, @FechaInicio);
+    INSERT INTO Suscripcion (tipoPlan, tokenPago, estado, fechaInicio, pagadoHasta)
+    VALUES (@TipoPlan, @TokenPago, @Estado, @FechaInicio, @PagadoHasta);
     SELECT SCOPE_IDENTITY();
 END
 GO
@@ -1363,7 +1370,7 @@ GO
 CREATE PROCEDURE TraerSuscripciones
 AS
 BEGIN
-    SELECT id_suscripcion, tipoPlan, tokenPago, estado, fechaInicio
+    SELECT id_suscripcion, tipoPlan, tokenPago, estado, fechaInicio, pagadoHasta
     FROM Suscripcion
     ORDER BY id_suscripcion DESC
 END
@@ -1373,9 +1380,28 @@ CREATE PROCEDURE TraerSuscripcionPorId
     @IdSuscripcion INT
 AS
 BEGIN
-    SELECT id_suscripcion, tipoPlan, tokenPago, estado, fechaInicio
+    SELECT id_suscripcion, tipoPlan, tokenPago, estado, fechaInicio, pagadoHasta
     FROM Suscripcion
     WHERE id_suscripcion = @IdSuscripcion
+END
+GO
+
+-- Cobro mensual: el abono de un mes se cobró y lo pagado avanza hasta
+-- @PagadoHasta. Solo si la suscripción sigue activa y nadie registró ese cobro
+-- antes (pagadoHasta sigue siendo @PagadoHastaAnterior). Devuelve 1 si lo
+-- registró.
+CREATE PROCEDURE RegistrarCobroSuscripcion
+    @IdSuscripcion INT,
+    @PagadoHastaAnterior DATE,
+    @PagadoHasta DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE Suscripcion SET pagadoHasta = @PagadoHasta
+    WHERE id_suscripcion = @IdSuscripcion
+      AND estado = 'Activa'
+      AND pagadoHasta = @PagadoHastaAnterior;
+    SELECT @@ROWCOUNT;
 END
 GO
 
@@ -1403,10 +1429,11 @@ BEGIN
     INSERT INTO OrdenCompra (cuitProveedor, fecha, estado) VALUES (@Cuit, @Fecha, 'Pendiente');
     SET @IdOrden = SCOPE_IDENTITY();
 
-    INSERT INTO DetalleOrdenCompra (id_ordenCompra, id_insumo, cantidad)
+    INSERT INTO DetalleOrdenCompra (id_ordenCompra, id_insumo, cantidad, precioUnitario)
     SELECT @IdOrden,
            X.I.value('@idInsumo', 'INT'),
-           X.I.value('@cantidad', 'DECIMAL(8,2)')
+           X.I.value('@cantidad', 'DECIMAL(8,2)'),
+           X.I.value('@precio', 'DECIMAL(10,2)')
     FROM @Detalle.nodes('/Detalle/Insumo') AS X(I);
 
     SELECT @IdOrden;
@@ -1436,12 +1463,15 @@ BEGIN
 END
 GO
 
--- Detalle de una orden (o de todas, si @IdOrden es NULL) con los datos del insumo.
+-- Detalle de una orden (o de todas, si @IdOrden es NULL) con los datos del
+-- insumo. El precio es el de la orden; las órdenes anteriores a la columna
+-- precioUnitario no lo tienen y se muestran con el precio actual del insumo.
 CREATE PROCEDURE TraerDetalleOrdenCompra
     @IdOrden INT = NULL
 AS
 BEGIN
-    SELECT D.id_ordenCompra, D.id_insumo, I.nombre, I.unidadDeMedida, D.cantidad, I.precioUnitario
+    SELECT D.id_ordenCompra, D.id_insumo, I.nombre, I.unidadDeMedida, D.cantidad,
+           ISNULL(D.precioUnitario, I.precioUnitario) AS precioUnitario
     FROM DetalleOrdenCompra D
     INNER JOIN Insumo I ON I.id_insumo = D.id_insumo
     WHERE @IdOrden IS NULL OR D.id_ordenCompra = @IdOrden
@@ -1480,6 +1510,27 @@ BEGIN
 END
 GO
 
+-- Último precio que facturó cada proveedor por cada insumo: el de la orden
+-- recibida más reciente de ese proveedor que lo incluyó (y llegó). La
+-- generación de órdenes los compara para proponer el proveedor más barato.
+CREATE PROCEDURE TraerUltimosPreciosPorProveedor
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT X.id_insumo, X.cuitProveedor, X.nombreProveedor, X.precioUnitario, X.fecha
+    FROM (SELECT D.id_insumo, O.cuitProveedor, P.nombre AS nombreProveedor, D.precioUnitario, O.fecha,
+                 ROW_NUMBER() OVER (PARTITION BY D.id_insumo, O.cuitProveedor
+                                    ORDER BY O.fecha DESC, O.id_ordenCompra DESC) AS n
+          FROM DetalleOrdenCompra D
+          INNER JOIN OrdenCompra O ON O.id_ordenCompra = D.id_ordenCompra
+          INNER JOIN Proveedor P ON P.cuit = O.cuitProveedor
+          WHERE O.estado LIKE 'Recibida%'
+            AND D.precioUnitario > 0
+            AND D.cantidad > 0) X
+    WHERE X.n = 1;
+END
+GO
+
 -- CU-006-035: solo se anula una orden que sigue Pendiente. Devuelve 1 si la anuló.
 CREATE PROCEDURE AnularOrdenCompra
     @IdOrden INT,
@@ -1499,7 +1550,8 @@ GO
 -- unitario facturado de cada insumo:
 --   <Detalle><Insumo idInsumo="1" cantidad="2.5" precio="1200" /></Detalle>
 -- La cantidad de la orden pasa a ser la recibida (lo pedido queda en la
--- bitácora) y el precio facturado pasa a ser el precio unitario del insumo.
+-- bitácora). El precio facturado queda en el renglón de la orden (así se sabe
+-- cuánto cobró ese proveedor) y pasa a ser el precio unitario del insumo.
 -- DALConexion lo ejecuta dentro de una transacción: o se hace todo o nada. Si
 -- la orden ya no estaba Pendiente no cambia nada y devuelve 0.
 CREATE PROCEDURE RecibirOrdenCompra
@@ -1526,7 +1578,8 @@ BEGIN
            X.I.value('@precio', 'DECIMAL(10,2)')
     FROM @Detalle.nodes('/Detalle/Insumo') AS X(I);
 
-    UPDATE D SET cantidad = R.cantidad
+    UPDATE D SET cantidad = R.cantidad,
+                 precioUnitario = CASE WHEN R.precio > 0 THEN R.precio ELSE D.precioUnitario END
     FROM DetalleOrdenCompra D
     INNER JOIN @Recibido R ON R.id_insumo = D.id_insumo
     WHERE D.id_ordenCompra = @IdOrden;
@@ -1553,8 +1606,7 @@ GO
 -- insumos con resultado 'I'. Si se registró, devuelve cada insumo con el total
 -- descontado y su stock anterior y nuevo.
 CREATE PROCEDURE RegistrarVentas
-    @Ventas XML,
-    @Origen VARCHAR(30)
+    @Ventas XML
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -1610,8 +1662,8 @@ BEGIN
     MERGE INTO Venta AS V
     USING @Lineas AS L ON 1 = 0
     WHEN NOT MATCHED THEN
-        INSERT (id_receta, cantidad, fecha, origen, fechaRegistro)
-        VALUES (L.id_receta, L.cantidad, L.fecha, @Origen, GETDATE())
+        INSERT (id_receta, cantidad, fecha)
+        VALUES (L.id_receta, L.cantidad, L.fecha)
     OUTPUT L.nro, inserted.id_venta INTO @Ids (nro, id_venta);
 
     INSERT INTO ConsumoVenta (id_venta, id_insumo, cantidad)
@@ -1639,7 +1691,7 @@ CREATE PROCEDURE TraerVentas
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT V.id_venta, V.id_receta, R.nombre AS nombreReceta, V.cantidad, V.fecha, V.origen, V.fechaRegistro,
+    SELECT V.id_venta, V.id_receta, R.nombre AS nombreReceta, V.cantidad, V.fecha,
            C.id_insumo, I.nombre AS nombreInsumo, I.unidadDeMedida, C.cantidad AS consumo
     FROM Venta V
     INNER JOIN Receta R ON R.id_receta = V.id_receta

@@ -8,55 +8,22 @@
 
     <asp:Label ID="lblMensaje" runat="server" Visible="false"></asp:Label>
 
-    <p class="help-block">Los pedidos los toma y los factura el punto de venta del local; acá se cargan las ventas para descontar del stock lo que lleva cada receta. Se pueden cargar de a una, todas las del día juntas al cierre, o importando el archivo que exporta el punto de venta. Si el stock del sistema no alcanza, la venta igual se registra (ya ocurrió): el insumo queda en cero y conviene corregirlo con un ajuste de stock.</p>
+    <p class="help-block">Acá se cargan las ventas para descontar del stock lo que lleva cada receta. Se pueden cargar por pedido, con una o varias recetas (por ejemplo, todo lo que pidió una mesa), o todas las del día juntas al cierre. Si el stock del sistema no alcanza, la venta igual se registra (ya ocurrió): el insumo queda en cero y conviene corregirlo con un ajuste de stock.</p>
 
     <ul class="nav nav-tabs" style="margin-bottom: 15px;">
-        <li id="tabUna" runat="server" class="active">
-            <asp:LinkButton ID="lnkUna" runat="server" CommandArgument="0" OnClick="lnkModo_Click" CausesValidation="false">Una venta</asp:LinkButton>
+        <li id="tabPedido" runat="server" class="active">
+            <asp:LinkButton ID="lnkPedido" runat="server" CommandArgument="0" OnClick="lnkModo_Click" CausesValidation="false">Venta</asp:LinkButton>
         </li>
         <li id="tabCierre" runat="server">
             <asp:LinkButton ID="lnkCierre" runat="server" CommandArgument="1" OnClick="lnkModo_Click" CausesValidation="false">Cierre del día</asp:LinkButton>
-        </li>
-        <li id="tabArchivo" runat="server">
-            <asp:LinkButton ID="lnkArchivo" runat="server" CommandArgument="2" OnClick="lnkModo_Click" CausesValidation="false">Importar archivo del punto de venta</asp:LinkButton>
         </li>
     </ul>
 
     <asp:MultiView ID="mvModo" runat="server" ActiveViewIndex="0">
 
-        <asp:View ID="vwUna" runat="server">
+        <asp:View ID="vwPedido" runat="server">
             <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <asp:Label ID="lblReceta" runat="server" AssociatedControlID="ddlReceta"
-                            CssClass="control-label" Text="Receta vendida (*)"></asp:Label>
-                        <asp:DropDownList ID="ddlReceta" runat="server" CssClass="form-control"
-                            AutoPostBack="true" OnSelectedIndexChanged="ddlReceta_SelectedIndexChanged">
-                            <asp:ListItem Text="(seleccione)" Value="" />
-                        </asp:DropDownList>
-                        <asp:RequiredFieldValidator ID="rfvReceta" runat="server" ControlToValidate="ddlReceta"
-                            ValidationGroup="Venta" Display="Dynamic" CssClass="text-danger"
-                            ErrorMessage="Elija la receta vendida."></asp:RequiredFieldValidator>
-                    </div>
-                    <div class="form-group">
-                        <asp:Label ID="lblCantidad" runat="server" AssociatedControlID="txtCantidad"
-                            CssClass="control-label" Text="Cantidad vendida (*)"></asp:Label>
-                        <asp:TextBox ID="txtCantidad" runat="server" CssClass="form-control" TextMode="Number" min="0.01" step="0.01"
-                            AutoPostBack="true" OnTextChanged="txtCantidad_TextChanged" max="10000"></asp:TextBox>
-                        <asp:RequiredFieldValidator ID="rfvCantidad" runat="server" ControlToValidate="txtCantidad"
-                            ValidationGroup="Venta" Display="Dynamic" CssClass="text-danger"
-                            ErrorMessage="Ingrese la cantidad vendida."></asp:RequiredFieldValidator>
-                        <asp:RangeValidator ID="rvCantidad" runat="server" ControlToValidate="txtCantidad"
-                            Type="Double" MinimumValue="0.01" MaximumValue="10000" CultureInvariantValues="true"
-                            ValidationGroup="Venta" Display="Dynamic" CssClass="text-danger"
-                            ErrorMessage="La cantidad vendida tiene que estar entre 0,01 y 10.000."></asp:RangeValidator>
-                        <asp:RegularExpressionValidator ID="revDecimalesCantidad" runat="server" ControlToValidate="txtCantidad"
-                            ValidationExpression="^\d+([.,]\d{1,2})?$" ValidationGroup="Venta" Display="Dynamic"
-                            CssClass="text-danger" ErrorMessage="La cantidad vendida admite hasta dos decimales."></asp:RegularExpressionValidator>
-                        <span class="campo-ayuda">Hasta 10000 unidades, con hasta dos decimales (media porción: 0,5).</span>
-                    </div>
-                </div>
-                <div class="col-md-6">
+                <div class="col-sm-6 col-md-4">
                     <div class="form-group">
                         <asp:Label ID="lblFecha" runat="server" AssociatedControlID="txtFecha"
                             CssClass="control-label" Text="Fecha de la venta (*)"></asp:Label>
@@ -71,10 +38,66 @@
                     </div>
                 </div>
             </div>
+
+            <asp:Panel ID="pnlAgregar" runat="server" DefaultButton="btnAgregar">
+                <div class="row">
+                    <div class="col-sm-6 col-md-5">
+                        <div class="form-group">
+                            <asp:Label ID="lblReceta" runat="server" AssociatedControlID="ddlReceta"
+                                CssClass="control-label" Text="Receta vendida (*)"></asp:Label>
+                            <asp:DropDownList ID="ddlReceta" runat="server" CssClass="form-control">
+                                <asp:ListItem Text="(seleccione)" Value="" />
+                            </asp:DropDownList>
+                            <asp:RequiredFieldValidator ID="rfvReceta" runat="server" ControlToValidate="ddlReceta"
+                                ValidationGroup="Agregar" Display="Dynamic" CssClass="text-danger"
+                                ErrorMessage="Elija la receta vendida."></asp:RequiredFieldValidator>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 col-md-3">
+                        <div class="form-group">
+                            <asp:Label ID="lblCantidad" runat="server" AssociatedControlID="txtCantidad"
+                                CssClass="control-label" Text="Unidades (*)"></asp:Label>
+                            <asp:TextBox ID="txtCantidad" runat="server" CssClass="form-control" TextMode="Number"
+                                min="0.01" step="0.01" max="10000"></asp:TextBox>
+                            <asp:RequiredFieldValidator ID="rfvCantidad" runat="server" ControlToValidate="txtCantidad"
+                                ValidationGroup="Agregar" Display="Dynamic" CssClass="text-danger"
+                                ErrorMessage="Ingrese la cantidad vendida."></asp:RequiredFieldValidator>
+                            <asp:RangeValidator ID="rvCantidad" runat="server" ControlToValidate="txtCantidad"
+                                Type="Double" MinimumValue="0.01" MaximumValue="10000" CultureInvariantValues="true"
+                                ValidationGroup="Agregar" Display="Dynamic" CssClass="text-danger"
+                                ErrorMessage="La cantidad tiene que estar entre 0,01 y 10.000."></asp:RangeValidator>
+                            <asp:RegularExpressionValidator ID="revDecimalesCantidad" runat="server" ControlToValidate="txtCantidad"
+                                ValidationExpression="^\d+([.,]\d{1,2})?$" ValidationGroup="Agregar" Display="Dynamic"
+                                CssClass="text-danger" ErrorMessage="La cantidad admite hasta dos decimales."></asp:RegularExpressionValidator>
+                        </div>
+                    </div>
+                    <div class="col-sm-3 col-md-4">
+                        <div class="form-group">
+                            <span class="control-label hidden-xs" style="display: block;">&nbsp;</span>
+                            <asp:Button ID="btnAgregar" runat="server" Text="Agregar al pedido" CssClass="btn btn-default"
+                                OnClick="btnAgregar_Click" ValidationGroup="Agregar" />
+                        </div>
+                    </div>
+                </div>
+                <span class="campo-ayuda">Elija cada receta, la cantidad y presione Agregar al pedido (o Enter). Si agrega una receta que ya está, se suman las unidades. Media porción: 0,5.</span>
+            </asp:Panel>
+
+            <h3 class="seccion-titulo">Pedido</h3>
+            <asp:GridView ID="gvPedido" runat="server" AutoGenerateColumns="false"
+                CssClass="table table-bordered table-condensed table-striped" GridLines="None"
+                ShowHeaderWhenEmpty="true" OnRowCommand="gvPedido_RowCommand"
+                EmptyDataText="Todavía no hay recetas en el pedido.">
+                <Columns>
+                    <asp:BoundField DataField="NombreReceta" HeaderText="Receta" />
+                    <asp:BoundField DataField="CantidadTexto" HeaderText="Unidades" ItemStyle-Width="150px" />
+                    <asp:ButtonField CommandName="Quitar" Text="Quitar" ButtonType="Button"
+                        ControlStyle-CssClass="btn btn-default btn-xs" ItemStyle-Width="90px" />
+                </Columns>
+            </asp:GridView>
         </asp:View>
 
         <asp:View ID="vwCierre" runat="server">
-            <p class="help-block">Al cerrar el día, cargue cuántas unidades se vendieron de cada receta (el total que informa el punto de venta) y registre todo junto. Las recetas sin cantidad no se registran.</p>
+            <p class="help-block">Al cerrar el día, cargue cuántas unidades se vendieron de cada receta (el total que informa el punto de venta) y registre todo junto. Las recetas sin cantidad no se registran. Si ese día ya se cargaron pedidos, cargue solo lo que falta: si no, se contarían dos veces.</p>
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
@@ -113,49 +136,6 @@
                 CssClass="btn btn-default" OnClick="btnPrevisualizarCierre_Click" ValidationGroup="Cierre" />
         </asp:View>
 
-        <asp:View ID="vwArchivo" runat="server">
-            <p class="help-block">
-                Importe el archivo de ventas que exporta el punto de venta (CSV, separado por punto y coma, coma o tabulación) con tres columnas: <strong>fecha</strong>, <strong>receta</strong> y <strong>cantidad</strong>. La primera línea puede tener los nombres de las columnas (en cualquier orden). La receta se busca por su nombre o por su número; las líneas de una misma receta y un mismo día se suman. Por ejemplo:
-            </p>
-            <pre>fecha;receta;cantidad
-17/11/2026;Pizza muzzarella;24
-17/11/2026;Hamburguesa completa;18,5</pre>
-            <div class="form-group">
-                <asp:Label ID="lblArchivoVentas" runat="server" AssociatedControlID="fuVentas"
-                    CssClass="control-label" Text="Archivo de ventas (*)"></asp:Label>
-                <asp:FileUpload ID="fuVentas" runat="server" CssClass="form-control" accept=".csv,.txt" />
-                <span class="campo-ayuda">Hasta 2 MB y 5000 líneas. Fechas de hoy o de hasta un año atrás.</span>
-            </div>
-            <asp:Button ID="btnLeerArchivo" runat="server" Text="Leer archivo" CssClass="btn btn-default"
-                OnClick="btnLeerArchivo_Click" CausesValidation="false" />
-
-            <asp:Literal ID="litAvisosArchivo" runat="server" Mode="PassThrough"></asp:Literal>
-
-            <asp:Panel ID="pnlArchivo" runat="server" Visible="false">
-                <h3 class="seccion-titulo">Ventas del archivo</h3>
-                <asp:GridView ID="gvArchivo" runat="server" AutoGenerateColumns="false"
-                    CssClass="table table-bordered table-condensed table-striped" GridLines="None"
-                    ShowHeaderWhenEmpty="true" EmptyDataText="El archivo no tiene ventas válidas.">
-                    <Columns>
-                        <asp:BoundField DataField="FechaTexto" HeaderText="Fecha" />
-                        <asp:BoundField DataField="NombreReceta" HeaderText="Receta" />
-                        <asp:BoundField DataField="CantidadTexto" HeaderText="Unidades" />
-                    </Columns>
-                </asp:GridView>
-
-                <asp:Panel ID="pnlErrores" runat="server" Visible="false">
-                    <h3 class="seccion-titulo">Líneas con errores <small>(no se registran)</small></h3>
-                    <asp:GridView ID="gvErrores" runat="server" AutoGenerateColumns="false"
-                        CssClass="table table-bordered table-condensed" GridLines="None">
-                        <Columns>
-                            <asp:BoundField DataField="Linea" HeaderText="Línea" ItemStyle-Width="80px" />
-                            <asp:BoundField DataField="Error" HeaderText="Problema" />
-                        </Columns>
-                    </asp:GridView>
-                </asp:Panel>
-            </asp:Panel>
-        </asp:View>
-
     </asp:MultiView>
 
     <asp:Literal ID="litIndicadores" runat="server" Mode="PassThrough"></asp:Literal>
@@ -168,8 +148,7 @@
         EmptyDataText="Cargue las ventas para ver cuánto se descuenta de cada insumo.">
         <Columns>
             <asp:BoundField DataField="NombreInsumo" HeaderText="Insumo" />
-            <asp:BoundField DataField="ConsumoUnitarioTexto" HeaderText="Consumo unitario" />
-            <asp:BoundField DataField="ConsumoTotalTexto" HeaderText="Consumo total" />
+            <asp:BoundField DataField="ConsumoTotalTexto" HeaderText="Se descuenta" />
             <asp:BoundField DataField="StockAnteriorTexto" HeaderText="Stock actual" />
             <asp:BoundField DataField="StockResultanteTexto" HeaderText="Stock resultante" ItemStyle-Font-Bold="true" />
             <asp:BoundField DataField="FaltanteTexto" HeaderText="Faltó" />
@@ -177,7 +156,7 @@
     </asp:GridView>
 
     <div class="acciones">
-        <asp:Button ID="btnAceptar" runat="server" Text="Descontar stock" CssClass="btn btn-primary"
+        <asp:Button ID="btnAceptar" runat="server" Text="Registrar la venta" CssClass="btn btn-primary"
             OnClick="btnAceptar_Click"
             OnClientClick="return confirm('Se van a registrar las ventas y descontar del stock los insumos de cada receta. ¿Continuar?');" ValidationGroup="Venta" />
         <asp:Button ID="btnCancelar" runat="server" Text="Cancelar" CssClass="btn btn-default"

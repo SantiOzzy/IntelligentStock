@@ -8,7 +8,7 @@
 
     <asp:Label ID="lblMensaje" runat="server" Visible="false"></asp:Label>
 
-    <p class="help-block">Busque las órdenes por proveedor, estado o fechas. Los filtros vacíos no se tienen en cuenta. Con "Ver detalle" se muestran los insumos de la orden.</p>
+    <p class="help-block">Busque las órdenes por proveedor, estado o fechas. Los filtros vacíos no se tienen en cuenta. Con "Ver detalle" se muestran los insumos de la orden, con el precio estimado al pedirla o, si ya se recibió, el facturado.</p>
 
     <div class="filtros">
         <div class="row">
@@ -98,7 +98,7 @@
                 <asp:BoundField DataField="NombreInsumo" HeaderText="Insumo" />
                 <asp:BoundField DataField="CantidadTexto" HeaderText="Cantidad" />
                 <asp:BoundField DataField="PrecioUnitario" HeaderText="Precio unitario" DataFormatString="{0:C}" />
-                <asp:BoundField DataField="ImporteTexto" HeaderText="Importe estimado" />
+                <asp:BoundField DataField="ImporteTexto" HeaderText="Importe" />
             </Columns>
         </asp:GridView>
     </asp:Panel>

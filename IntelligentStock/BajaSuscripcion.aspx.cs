@@ -9,7 +9,7 @@ using Servicios;
 // servicio ya pagado. El usuario elige una activa, presiona "Dar de baja" y
 // confirma. La BLL desencripta el token (R7), le pide a la pasarela que
 // detenga los cobros y deja la suscripción como Cancelada (baja lógica). El
-// servicio sigue hasta el cierre del período en curso.
+// servicio sigue hasta el último día ya pagado (columna pagadoHasta).
 public partial class BajaSuscripcion : PaginaBase
 {
     private BLLSuscripcion bllSuscripcion = new BLLSuscripcion();

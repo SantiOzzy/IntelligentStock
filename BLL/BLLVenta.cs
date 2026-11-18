@@ -16,14 +16,13 @@ namespace BLL
     /// reporte gerencial y el servicio web de ventas. Además queda auditada en
     /// la bitácora (quién la cargó y cuándo).
     ///
-    /// Las ventas las registra el punto de venta del local, que es el que toma
-    /// los pedidos y factura. IntelligentStock las recibe de cuatro formas, que
-    /// pasan todas por las mismas reglas:
-    ///   - una venta suelta (carga manual),
+    /// IntelligentStock recibe las ventas de tres formas, que pasan todas por
+    /// las mismas reglas:
+    ///   - un pedido: una o varias recetas vendidas juntas (por ejemplo, lo que
+    ///     pidió una mesa),
     ///   - el cierre del día: todas las recetas vendidas en un día, de una vez,
-    ///   - el archivo que exporta el punto de venta (CSV),
-    ///   - el servicio web WebServiceVentas, que el punto de venta puede llamar
-    ///     por cada venta (R9: solo desde orígenes autorizados).
+    ///   - el servicio web WebServiceVentas, que el punto de venta del local
+    ///     puede llamar por cada venta (R9: solo desde orígenes autorizados).
     ///
     /// La venta ya ocurrió: si el stock del sistema no alcanza, no se rechaza.
     /// El insumo queda en cero y se avisa la diferencia, que se corrige con un
@@ -33,20 +32,20 @@ namespace BLL
         /// Acción con la que cada registro de ventas queda en la bitácora.
         public const string AccionVenta = "Registro de ventas";
 
-        public const string OrigenManual = "Carga manual";
-        public const string OrigenCierre = "Cierre del día";
-        public const string OrigenArchivo = "Archivo del punto de venta";
-        public const string OrigenServicioWeb = "Punto de venta (servicio web)";
+        /// Por dónde llegó la venta. No se guarda en la tabla Venta: queda
+        /// escrito en el evento de la bitácora, junto con quién la cargó.
+        private const string CanalPedido = "carga manual";
+        private const string CanalCierre = "cierre del día";
+        private const string CanalServicioWeb = "punto de venta, servicio web";
 
-        /// Unidades que se pueden registrar en una sola venta.
+        /// Unidades que se pueden registrar de una receta en una sola venta.
         public const decimal CantidadMaxima = 10000m;
+
+        /// Recetas distintas que puede tener un pedido.
+        public const int RecetasMaximasPorPedido = 50;
 
         /// Hasta cuántos días hacia atrás se puede registrar una venta.
         public const int DiasMaximosHaciaAtras = 365;
-
-        /// Límites de la importación del archivo del punto de venta.
-        public const int LineasMaximasPorArchivo = 5000;
-        public const int BytesMaximosPorArchivo = 2 * 1024 * 1024;
 
         private const int LargoMaximoDescripcion = 500;
 
@@ -79,35 +78,50 @@ namespace BLL
             return recetas;
         }
 
-        #region Vista previa
+        #region Pedido
 
-        /// Lo que se va a descontar de cada insumo, sin grabar nada, para
-        /// mostrarlo antes de confirmar.
-        public List<BEConsumoVenta> Previsualizar(int idReceta, decimal cantidad)
+        /// Agrega una receta al pedido que se está armando y devuelve el pedido.
+        /// Si la receta ya estaba, suma la cantidad. No graba nada: el pedido se
+        /// registra completo con RegistrarPedido.
+        public List<BEVenta> AgregarAlPedido(List<BEVenta> pedido, int idReceta, decimal cantidad)
         {
+            if (pedido == null)
+            {
+                pedido = new List<BEVenta>();
+            }
+
             BEReceta receta = ObtenerRecetaVendible(idReceta);
             ValidarCantidad(cantidad);
 
+            BEVenta existente = pedido.Find(delegate(BEVenta v) { return v.IdReceta == receta.IdReceta; });
+            if (existente != null)
+            {
+                ValidarCantidad(existente.Cantidad + cantidad);
+                existente.Cantidad += cantidad;
+                return pedido;
+            }
+
+            if (pedido.Count >= RecetasMaximasPorPedido)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "Un pedido puede tener hasta " + RecetasMaximasPorPedido + " recetas distintas."));
+            }
+
             BEVenta venta = new BEVenta();
             venta.IdReceta = receta.IdReceta;
+            venta.NombreReceta = receta.Nombre;
             venta.Cantidad = cantidad;
-            List<BEConsumoVenta> consumos = Previsualizar(new List<BEVenta> { venta });
-
-            foreach (BEConsumoVenta consumo in consumos)
-            {
-                foreach (BEDetalleReceta detalle in receta.Detalles)
-                {
-                    if (detalle.IdInsumo == consumo.IdInsumo)
-                    {
-                        consumo.ConsumoUnitario = detalle.Cantidad;
-                    }
-                }
-            }
-            return consumos;
+            pedido.Add(venta);
+            return pedido;
         }
 
-        /// Lo que se va a descontar de cada insumo por varias ventas juntas (el
-        /// cierre del día o un archivo), sumado por insumo.
+        #endregion
+
+        #region Vista previa
+
+        /// Lo que se va a descontar de cada insumo por una o varias ventas juntas
+        /// (un pedido o el cierre del día), sumado por insumo, sin grabar nada,
+        /// para mostrarlo antes de confirmar.
         public List<BEConsumoVenta> Previsualizar(List<BEVenta> ventas)
         {
             Dictionary<int, BEConsumoVenta> porInsumo = new Dictionary<int, BEConsumoVenta>();
@@ -159,7 +173,7 @@ namespace BLL
         }
 
         /// Ventas ya registradas con esa fecha, para avisar antes de cargar un
-        /// cierre del día o un archivo que podrían repetirlas.
+        /// cierre del día que podría repetirlas.
         public List<BEVenta> TraerVentasDelDia(DateTime fecha)
         {
             return dalVenta.TraerVentas(fecha.Date, fecha.Date);
@@ -169,33 +183,42 @@ namespace BLL
 
         #region Registro
 
-        /// Una venta suelta (carga manual).
-        public List<BEConsumoVenta> Registrar(int idReceta, decimal cantidad, DateTime? fecha)
+        /// Un pedido: una o varias recetas vendidas juntas, en una sola
+        /// operación. Cada receta queda como una venta (una fila de Venta).
+        public List<BEConsumoVenta> RegistrarPedido(List<BEVenta> pedido, DateTime? fecha)
         {
-            if (idReceta <= 0)
+            if (pedido == null || pedido.Count == 0)
             {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002", "Elija la receta vendida."));
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
+                    "Agregue al pedido al menos una receta."));
+            }
+            if (pedido.Count > RecetasMaximasPorPedido)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "Un pedido puede tener hasta " + RecetasMaximasPorPedido + " recetas distintas."));
             }
 
-            BEVenta venta = new BEVenta();
-            venta.IdReceta = idReceta;
-            venta.Cantidad = cantidad;
-            venta.Fecha = ValidarFecha(fecha);
+            DateTime dia = ValidarFecha(fecha);
 
-            List<BEConsumoVenta> consumos = RegistrarVentas(new List<BEVenta> { venta }, OrigenManual, true, null);
-
-            BEReceta receta = bllReceta.ObtenerPorId(idReceta);
-            foreach (BEConsumoVenta consumo in consumos)
+            // La misma receta dos veces se registra una sola vez, sumada.
+            List<BEVenta> ventas = new List<BEVenta>();
+            foreach (BEVenta linea in pedido)
             {
-                foreach (BEDetalleReceta detalle in receta.Detalles)
+                BEVenta existente = ventas.Find(delegate(BEVenta v) { return v.IdReceta == linea.IdReceta; });
+                if (existente != null)
                 {
-                    if (detalle.IdInsumo == consumo.IdInsumo)
-                    {
-                        consumo.ConsumoUnitario = detalle.Cantidad;
-                    }
+                    existente.Cantidad += linea.Cantidad;
+                    continue;
                 }
+
+                BEVenta venta = new BEVenta();
+                venta.IdReceta = linea.IdReceta;
+                venta.Cantidad = linea.Cantidad;
+                venta.Fecha = dia;
+                ventas.Add(venta);
             }
-            return consumos;
+
+            return RegistrarVentas(ventas, CanalPedido, true, null);
         }
 
         /// Cierre del día: todas las recetas vendidas en un día, en una sola
@@ -218,25 +241,8 @@ namespace BLL
                     "Ingrese la cantidad vendida de al menos una receta."));
             }
 
-            return RegistrarVentas(conCantidad, OrigenCierre, true,
+            return RegistrarVentas(conCantidad, CanalCierre, true,
                 "Cierre del día del " + dia.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture));
-        }
-
-        /// Registra las ventas válidas de un archivo ya leído con LeerArchivo.
-        public List<BEConsumoVenta> RegistrarImportadas(List<BEVenta> ventas, string nombreArchivo)
-        {
-            if (ventas == null || ventas.Count == 0)
-            {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
-                    "El archivo no tiene ventas para registrar."));
-            }
-            foreach (BEVenta venta in ventas)
-            {
-                venta.Fecha = ValidarFecha(venta.Fecha);
-            }
-
-            return RegistrarVentas(ventas, OrigenArchivo, true,
-                "Importación del archivo " + (nombreArchivo ?? string.Empty));
         }
 
         /// Una venta que informa el punto de venta por el servicio web. La receta
@@ -255,14 +261,14 @@ namespace BLL
             venta.IdReceta = encontrada.IdReceta;
             venta.Cantidad = cantidad;
             venta.Fecha = ValidarFecha(fecha);
-            return RegistrarVentas(new List<BEVenta> { venta }, OrigenServicioWeb, false, null);
+            return RegistrarVentas(new List<BEVenta> { venta }, CanalServicioWeb, false, null);
         }
 
         /// Valida las ventas, las graba y descuenta el stock en una sola
         /// transacción (con el control de dígitos verificadores), deja el
         /// registro en la bitácora y avisa por el Observer los insumos que
         /// quedaron en su mínimo. Devuelve lo descontado de cada insumo.
-        private List<BEConsumoVenta> RegistrarVentas(List<BEVenta> ventas, string origen, bool conUsuario, string titulo)
+        private List<BEConsumoVenta> RegistrarVentas(List<BEVenta> ventas, string canal, bool conUsuario, string titulo)
         {
             Dictionary<int, BEReceta> recetas = new Dictionary<int, BEReceta>();
             foreach (BEVenta venta in ventas)
@@ -277,7 +283,7 @@ namespace BLL
 
             List<BEConsumoVenta> consumos = null;
             bool registrado = bllDV.EjecutarControlado(
-                () => dalVenta.Registrar(ventas, origen, out consumos),
+                () => dalVenta.Registrar(ventas, out consumos),
                 ok => ok,
                 "Insumo", "Venta", "ConsumoVenta");
 
@@ -293,7 +299,7 @@ namespace BLL
                     "). Revíselas desde Modificación de receta. No se registró nada."));
             }
 
-            RegistrarEnBitacora(ventas, origen, titulo, consumos, conUsuario);
+            RegistrarEnBitacora(ventas, canal, titulo, consumos, conUsuario);
 
             // Patrón Observer: avisa si algún insumo cruzó su stock mínimo.
             foreach (BEConsumoVenta consumo in consumos)
@@ -309,40 +315,39 @@ namespace BLL
             return consumos;
         }
 
-        private void RegistrarEnBitacora(List<BEVenta> ventas, string origen, string titulo,
+        /// Por ejemplo: "Venta de 3 recetas (10 unidades) del 17/11/2026: 4 x
+        /// Empanada de carne, 4 x Empanada de pollo, 2 x Flan (carga manual).
+        /// Se descontó el stock de 6 insumos."
+        private void RegistrarEnBitacora(List<BEVenta> ventas, string canal, string titulo,
                                          List<BEConsumoVenta> consumos, bool conUsuario)
         {
             decimal unidades = 0;
-            DateTime desde = DateTime.MaxValue, hasta = DateTime.MinValue;
+            List<string> recetas = new List<string>();
             foreach (BEVenta venta in ventas)
             {
                 unidades += venta.Cantidad;
-                if (venta.Fecha < desde) desde = venta.Fecha;
-                if (venta.Fecha > hasta) hasta = venta.Fecha;
+                recetas.Add(venta.Cantidad.ToString("0.##") + " x " + venta.NombreReceta);
             }
 
             StringBuilder texto = new StringBuilder();
-            if (ventas.Count == 1 && titulo == null)
+            if (titulo != null)
             {
-                texto.Append("Venta de ").Append(ventas[0].Cantidad.ToString("0.##")).Append(" x ")
-                     .Append(ventas[0].NombreReceta).Append(" del ").Append(desde.ToString("dd/MM/yyyy"));
+                texto.Append(titulo).Append(": ").Append(ventas.Count).Append(ventas.Count == 1 ? " receta" : " recetas")
+                     .Append(" (").Append(unidades.ToString("0.##")).Append(" unidades)");
+            }
+            else if (ventas.Count == 1)
+            {
+                texto.Append("Venta de ").Append(recetas[0]).Append(" del ").Append(ventas[0].Fecha.ToString("dd/MM/yyyy"));
             }
             else
             {
-                texto.Append(titulo ?? "Registro de ventas").Append(": ")
-                     .Append(ventas.Count).Append(ventas.Count == 1 ? " venta" : " ventas")
-                     .Append(" (").Append(unidades.ToString("0.##")).Append(" unidades)");
-                if (desde != hasta)
-                {
-                    texto.Append(" del ").Append(desde.ToString("dd/MM/yyyy")).Append(" al ").Append(hasta.ToString("dd/MM/yyyy"));
-                }
-                else if (titulo == null || !titulo.StartsWith("Cierre", StringComparison.Ordinal))
-                {
-                    texto.Append(" del ").Append(desde.ToString("dd/MM/yyyy"));
-                }
+                texto.Append("Venta de ").Append(ventas.Count).Append(" recetas (").Append(unidades.ToString("0.##"))
+                     .Append(" unidades) del ").Append(ventas[0].Fecha.ToString("dd/MM/yyyy")).Append(": ")
+                     .Append(string.Join(", ", recetas.ToArray()));
             }
-            texto.Append(" (").Append(origen.ToLower()).Append("). Se descontó el stock de ")
-                 .Append(consumos.Count).Append(consumos.Count == 1 ? " insumo." : " insumos.");
+            StringBuilder cola = new StringBuilder();
+            cola.Append(" (").Append(canal).Append("). Se descontó el stock de ")
+                .Append(consumos.Count).Append(consumos.Count == 1 ? " insumo." : " insumos.");
 
             List<string> faltantes = new List<string>();
             foreach (BEConsumoVenta consumo in consumos)
@@ -354,12 +359,14 @@ namespace BLL
             }
             if (faltantes.Count > 0)
             {
-                texto.Append(" El stock del sistema no alcanzaba y quedó en cero: ")
-                     .Append(string.Join("; ", faltantes.ToArray()))
-                     .Append(". Corregirlo con un ajuste de stock.");
+                cola.Append(" El stock del sistema no alcanzaba y quedó en cero: ")
+                    .Append(string.Join("; ", faltantes.ToArray()))
+                    .Append(". Corregirlo con un ajuste de stock.");
             }
 
-            string descripcion = Recortar(texto.ToString(), LargoMaximoDescripcion);
+            // Si no entra todo, se recorta la lista de recetas y no los faltantes.
+            string final = Recortar(cola.ToString(), LargoMaximoDescripcion / 2);
+            string descripcion = Recortar(texto.ToString(), LargoMaximoDescripcion - final.Length) + final;
             CriticidadEvento criticidad = faltantes.Count > 0 ? CriticidadEvento.Advertencia : CriticidadEvento.Informativa;
             if (conUsuario)
             {
@@ -369,377 +376,6 @@ namespace BLL
             {
                 bllEvento.Registrar(null, AccionVenta, descripcion, criticidad);
             }
-        }
-
-        #endregion
-
-        #region Archivo del punto de venta
-
-        /// Lee el archivo de ventas que exporta el punto de venta (CSV, con
-        /// punto y coma, coma o tabulación) con las columnas fecha, receta y
-        /// cantidad. Si la primera línea tiene los nombres de las columnas, se
-        /// respeta su orden (también se aceptan "plato", "producto" o
-        /// "artículo" por receta y "unidades" por cantidad); si no, se toman en
-        /// ese orden. La receta se busca por su nombre (sin importar mayúsculas
-        /// ni acentos) o por su número. Las líneas de una misma receta y un
-        /// mismo día se suman. No graba nada: devuelve las ventas válidas y las
-        /// líneas con errores, para mostrarlas antes de confirmar.
-        public ResultadoImportacionVentas LeerArchivo(byte[] contenido, string nombreArchivo)
-        {
-            if (contenido == null || contenido.Length == 0)
-            {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002", "Elija el archivo de ventas."));
-            }
-            if (contenido.Length > BytesMaximosPorArchivo)
-            {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
-                    "El archivo no puede superar los " + (BytesMaximosPorArchivo / 1024 / 1024) + " MB."));
-            }
-
-            string[] lineas = Decodificar(contenido).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-
-            ResultadoImportacionVentas resultado = new ResultadoImportacionVentas();
-            resultado.NombreArchivo = nombreArchivo;
-            Dictionary<string, BEReceta> indice = IndiceDeRecetas();
-            Dictionary<string, BEVenta> agrupadas = new Dictionary<string, BEVenta>();
-
-            char separador = '\0';
-            int colFecha = 0, colReceta = 1, colCantidad = 2;
-            bool primera = true;
-            int leidas = 0;
-
-            for (int i = 0; i < lineas.Length; i++)
-            {
-                string linea = lineas[i].Trim();
-                if (linea.Length == 0)
-                {
-                    continue;
-                }
-
-                if (separador == '\0')
-                {
-                    separador = DetectarSeparador(linea);
-                }
-                List<string> campos = Partir(linea, separador);
-
-                if (primera)
-                {
-                    primera = false;
-                    if (EsEncabezado(campos, ref colFecha, ref colReceta, ref colCantidad))
-                    {
-                        continue;
-                    }
-                }
-
-                leidas++;
-                if (leidas > LineasMaximasPorArchivo)
-                {
-                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
-                        "El archivo no puede tener más de " + LineasMaximasPorArchivo + " líneas de ventas."));
-                }
-
-                BEVenta venta = new BEVenta();
-                venta.Linea = i + 1;
-                venta.Error = LeerLinea(campos, colFecha, colReceta, colCantidad, indice, venta);
-                if (venta.Error != null)
-                {
-                    resultado.ConError.Add(venta);
-                    continue;
-                }
-
-                string clave = venta.IdReceta + "|" + venta.Fecha.ToString("yyyyMMdd");
-                BEVenta existente;
-                if (agrupadas.TryGetValue(clave, out existente))
-                {
-                    existente.Cantidad += venta.Cantidad;
-                }
-                else
-                {
-                    agrupadas[clave] = venta;
-                    resultado.Validas.Add(venta);
-                }
-            }
-
-            // Una receta y un día que, sumados, pasan el máximo de una venta.
-            for (int i = resultado.Validas.Count - 1; i >= 0; i--)
-            {
-                if (resultado.Validas[i].Cantidad > CantidadMaxima)
-                {
-                    resultado.Validas[i].Error = "La cantidad del día supera las " + CantidadMaxima.ToString("0") + " unidades.";
-                    resultado.ConError.Add(resultado.Validas[i]);
-                    resultado.Validas.RemoveAt(i);
-                }
-            }
-
-            resultado.Validas.Sort(delegate(BEVenta a, BEVenta b)
-            {
-                int c = a.Fecha.CompareTo(b.Fecha);
-                return c != 0 ? c : string.Compare(a.NombreReceta, b.NombreReceta, StringComparison.CurrentCultureIgnoreCase);
-            });
-            resultado.ConError.Sort(delegate(BEVenta a, BEVenta b) { return a.Linea.CompareTo(b.Linea); });
-
-            AvisarRepetidas(resultado);
-            return resultado;
-        }
-
-        /// Avisa los días del archivo que ya tienen ventas registradas: si el
-        /// archivo se importó antes (o se cargó el cierre de ese día), se
-        /// contarían dos veces.
-        private void AvisarRepetidas(ResultadoImportacionVentas resultado)
-        {
-            if (resultado.Validas.Count == 0)
-            {
-                return;
-            }
-
-            DateTime desde = resultado.Validas[0].Fecha, hasta = resultado.Validas[0].Fecha;
-            foreach (BEVenta venta in resultado.Validas)
-            {
-                if (venta.Fecha < desde) desde = venta.Fecha;
-                if (venta.Fecha > hasta) hasta = venta.Fecha;
-            }
-
-            SortedDictionary<DateTime, decimal> yaCargado = new SortedDictionary<DateTime, decimal>();
-            foreach (BEVenta venta in dalVenta.TraerVentas(desde, hasta))
-            {
-                decimal previo;
-                yaCargado.TryGetValue(venta.Fecha.Date, out previo);
-                yaCargado[venta.Fecha.Date] = previo + venta.Cantidad;
-            }
-
-            List<string> dias = new List<string>();
-            foreach (KeyValuePair<DateTime, decimal> dia in yaCargado)
-            {
-                foreach (BEVenta venta in resultado.Validas)
-                {
-                    if (venta.Fecha.Date == dia.Key)
-                    {
-                        dias.Add(dia.Key.ToString("dd/MM/yyyy") + " (" + dia.Value.ToString("0.##") + " unidades)");
-                        break;
-                    }
-                }
-            }
-            if (dias.Count > 0)
-            {
-                resultado.Avisos.Add("Ya hay ventas registradas para " + (dias.Count == 1 ? "el día " : "los días ") +
-                                     string.Join(", ", dias.ToArray()) + ". Si el archivo incluye esas mismas ventas, " +
-                                     "se contarían dos veces.");
-            }
-        }
-
-        private static string Decodificar(byte[] contenido)
-        {
-            // Los puntos de venta exportan en UTF-8 o en la codificación de
-            // Windows (la de Excel en español): si no es UTF-8 válido, se lee así.
-            try
-            {
-                return new UTF8Encoding(false, true).GetString(contenido).TrimStart('﻿');
-            }
-            catch (DecoderFallbackException)
-            {
-                return Encoding.GetEncoding(1252).GetString(contenido);
-            }
-        }
-
-        private static char DetectarSeparador(string linea)
-        {
-            if (linea.IndexOf(';') >= 0) return ';';
-            if (linea.IndexOf('\t') >= 0) return '\t';
-            return ',';
-        }
-
-        /// Parte una línea CSV respetando los campos entre comillas.
-        private static List<string> Partir(string linea, char separador)
-        {
-            List<string> campos = new List<string>();
-            StringBuilder actual = new StringBuilder();
-            bool entreComillas = false;
-            for (int i = 0; i < linea.Length; i++)
-            {
-                char c = linea[i];
-                if (c == '"')
-                {
-                    if (entreComillas && i + 1 < linea.Length && linea[i + 1] == '"')
-                    {
-                        actual.Append('"');
-                        i++;
-                    }
-                    else
-                    {
-                        entreComillas = !entreComillas;
-                    }
-                }
-                else if (c == separador && !entreComillas)
-                {
-                    campos.Add(actual.ToString().Trim());
-                    actual.Length = 0;
-                }
-                else
-                {
-                    actual.Append(c);
-                }
-            }
-            campos.Add(actual.ToString().Trim());
-            return campos;
-        }
-
-        private static bool EsEncabezado(List<string> campos, ref int colFecha, ref int colReceta, ref int colCantidad)
-        {
-            int fecha = -1, receta = -1, cantidad = -1;
-            for (int i = 0; i < campos.Count; i++)
-            {
-                string nombre = Normalizar(campos[i]);
-                if (nombre.StartsWith("fecha")) fecha = i;
-                else if (nombre == "receta" || nombre == "plato" || nombre == "producto" || nombre == "articulo" ||
-                         nombre == "item" || nombre == "descripcion") receta = i;
-                else if (nombre == "cantidad" || nombre == "unidades" || nombre == "cant") cantidad = i;
-            }
-            if (fecha < 0 && receta < 0 && cantidad < 0)
-            {
-                return false;
-            }
-            if (fecha >= 0) colFecha = fecha;
-            if (receta >= 0) colReceta = receta;
-            if (cantidad >= 0) colCantidad = cantidad;
-            return true;
-        }
-
-        /// Completa la venta con los datos de la línea. Devuelve el error, o null si la línea es válida.
-        private string LeerLinea(List<string> campos, int colFecha, int colReceta, int colCantidad,
-                                 Dictionary<string, BEReceta> indice, BEVenta venta)
-        {
-            int columnas = Math.Max(colFecha, Math.Max(colReceta, colCantidad)) + 1;
-            if (campos.Count < columnas)
-            {
-                return "Faltan columnas: se esperan fecha, receta y cantidad.";
-            }
-
-            DateTime fecha;
-            if (!LeerFecha(campos[colFecha], out fecha))
-            {
-                return "La fecha \"" + campos[colFecha] + "\" no es válida (por ejemplo, 17/11/2026).";
-            }
-            if (fecha.Date > DateTime.Today)
-            {
-                return "La fecha " + fecha.ToString("dd/MM/yyyy") + " es posterior a hoy.";
-            }
-            if (fecha.Date < DateTime.Today.AddDays(-DiasMaximosHaciaAtras))
-            {
-                return "La fecha " + fecha.ToString("dd/MM/yyyy") + " tiene más de un año.";
-            }
-
-            BEReceta receta = BuscarRecetaVendible(campos[colReceta], indice);
-            if (receta == null)
-            {
-                return "No hay una receta activa con insumos que se llame \"" + campos[colReceta] + "\".";
-            }
-
-            decimal cantidad;
-            if (!LeerCantidad(campos[colCantidad], out cantidad))
-            {
-                return "La cantidad \"" + campos[colCantidad] + "\" no es un número.";
-            }
-            if (cantidad <= 0)
-            {
-                return "La cantidad tiene que ser mayor que cero.";
-            }
-            if (decimal.Round(cantidad, 2) != cantidad)
-            {
-                return "La cantidad admite hasta dos decimales.";
-            }
-
-            venta.Fecha = fecha.Date;
-            venta.IdReceta = receta.IdReceta;
-            venta.NombreReceta = receta.Nombre;
-            venta.Cantidad = cantidad;
-            return null;
-        }
-
-        private static readonly string[] FormatosFecha =
-        {
-            "dd/MM/yyyy", "d/M/yyyy", "yyyy-MM-dd", "dd-MM-yyyy", "d-M-yyyy", "dd/MM/yy", "d/M/yy", "yyyyMMdd"
-        };
-
-        private static bool LeerFecha(string texto, out DateTime fecha)
-        {
-            texto = (texto ?? string.Empty).Trim();
-            // Algunos puntos de venta exportan fecha y hora: alcanza con la fecha.
-            int espacio = texto.IndexOf(' ');
-            if (espacio < 0) espacio = texto.IndexOf('T');
-            if (espacio > 0)
-            {
-                texto = texto.Substring(0, espacio);
-            }
-            return DateTime.TryParseExact(texto, FormatosFecha, CultureInfo.InvariantCulture, DateTimeStyles.None, out fecha);
-        }
-
-        private static bool LeerCantidad(string texto, out decimal cantidad)
-        {
-            texto = (texto ?? string.Empty).Trim().Replace(" ", string.Empty);
-            if (texto.IndexOf(',') >= 0 && texto.IndexOf('.') >= 0)
-            {
-                // 1.234,5: el punto es de miles.
-                texto = texto.Replace(".", string.Empty);
-            }
-            texto = texto.Replace(',', '.');
-            return decimal.TryParse(texto, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out cantidad);
-        }
-
-        /// Recetas que se pueden vender, por nombre normalizado y por número.
-        private Dictionary<string, BEReceta> IndiceDeRecetas()
-        {
-            Dictionary<string, BEReceta> indice = new Dictionary<string, BEReceta>();
-            foreach (BEReceta receta in TraerRecetasVendibles())
-            {
-                indice["#" + receta.IdReceta.ToString(CultureInfo.InvariantCulture)] = receta;
-                string nombre = Normalizar(receta.Nombre);
-                if (!indice.ContainsKey(nombre))
-                {
-                    indice[nombre] = receta;
-                }
-            }
-            return indice;
-        }
-
-        private static BEReceta BuscarRecetaVendible(string texto, Dictionary<string, BEReceta> indice)
-        {
-            texto = (texto ?? string.Empty).Trim();
-            BEReceta receta;
-            int numero;
-            string sinNumeral = texto.TrimStart('#').Replace("N°", string.Empty).Trim();
-            if (int.TryParse(sinNumeral, NumberStyles.None, CultureInfo.InvariantCulture, out numero) &&
-                indice.TryGetValue("#" + numero.ToString(CultureInfo.InvariantCulture), out receta))
-            {
-                return receta;
-            }
-            return indice.TryGetValue(Normalizar(texto), out receta) ? receta : null;
-        }
-
-        /// Minúsculas, sin acentos y sin espacios de más, para comparar nombres.
-        private static string Normalizar(string texto)
-        {
-            string descompuesto = (texto ?? string.Empty).Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
-            StringBuilder limpio = new StringBuilder();
-            bool espacio = false;
-            foreach (char c in descompuesto)
-            {
-                if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark)
-                {
-                    continue;
-                }
-                if (char.IsWhiteSpace(c))
-                {
-                    espacio = limpio.Length > 0;
-                    continue;
-                }
-                if (espacio)
-                {
-                    limpio.Append(' ');
-                    espacio = false;
-                }
-                limpio.Append(c);
-            }
-            return limpio.ToString();
         }
 
         #endregion
@@ -907,52 +543,68 @@ namespace BLL
             }
         }
 
+        /// Recetas que se pueden vender, por nombre normalizado y por número.
+        private Dictionary<string, BEReceta> IndiceDeRecetas()
+        {
+            Dictionary<string, BEReceta> indice = new Dictionary<string, BEReceta>();
+            foreach (BEReceta receta in TraerRecetasVendibles())
+            {
+                indice["#" + receta.IdReceta.ToString(CultureInfo.InvariantCulture)] = receta;
+                string nombre = Normalizar(receta.Nombre);
+                if (!indice.ContainsKey(nombre))
+                {
+                    indice[nombre] = receta;
+                }
+            }
+            return indice;
+        }
+
+        private static BEReceta BuscarRecetaVendible(string texto, Dictionary<string, BEReceta> indice)
+        {
+            texto = (texto ?? string.Empty).Trim();
+            BEReceta receta;
+            int numero;
+            string sinNumeral = texto.TrimStart('#').Replace("N°", string.Empty).Trim();
+            if (int.TryParse(sinNumeral, NumberStyles.None, CultureInfo.InvariantCulture, out numero) &&
+                indice.TryGetValue("#" + numero.ToString(CultureInfo.InvariantCulture), out receta))
+            {
+                return receta;
+            }
+            return indice.TryGetValue(Normalizar(texto), out receta) ? receta : null;
+        }
+
+        /// Minúsculas, sin acentos y sin espacios de más, para comparar nombres.
+        private static string Normalizar(string texto)
+        {
+            string descompuesto = (texto ?? string.Empty).Trim().ToLowerInvariant().Normalize(NormalizationForm.FormD);
+            StringBuilder limpio = new StringBuilder();
+            bool espacio = false;
+            foreach (char c in descompuesto)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) == UnicodeCategory.NonSpacingMark)
+                {
+                    continue;
+                }
+                if (char.IsWhiteSpace(c))
+                {
+                    espacio = limpio.Length > 0;
+                    continue;
+                }
+                if (espacio)
+                {
+                    limpio.Append(' ');
+                    espacio = false;
+                }
+                limpio.Append(c);
+            }
+            return limpio.ToString();
+        }
+
         private static string Recortar(string texto, int largo)
         {
             return texto.Length <= largo ? texto : texto.Substring(0, largo - 3) + "...";
         }
 
         #endregion
-    }
-
-    /// Resultado de leer el archivo de ventas del punto de venta: las ventas
-    /// que se pueden registrar (ya sumadas por receta y día), las líneas con
-    /// errores y los avisos (por ejemplo, días que ya tienen ventas cargadas).
-    [Serializable]
-    public class ResultadoImportacionVentas
-    {
-        private readonly List<BEVenta> validas = new List<BEVenta>();
-        private readonly List<BEVenta> conError = new List<BEVenta>();
-        private readonly List<string> avisos = new List<string>();
-
-        public string NombreArchivo { get; set; }
-
-        public List<BEVenta> Validas
-        {
-            get { return validas; }
-        }
-
-        public List<BEVenta> ConError
-        {
-            get { return conError; }
-        }
-
-        public List<string> Avisos
-        {
-            get { return avisos; }
-        }
-
-        public decimal UnidadesValidas
-        {
-            get
-            {
-                decimal total = 0;
-                foreach (BEVenta venta in validas)
-                {
-                    total += venta.Cantidad;
-                }
-                return total;
-            }
-        }
     }
 }

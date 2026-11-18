@@ -9,13 +9,12 @@ using Servicios;
 
 // CU-006-037 Descontar stock por venta.
 //
-// Los pedidos los toma y los factura el punto de venta del local; esta pantalla
-// recibe las ventas para descontar del stock lo que lleva cada receta. Hay tres
-// formas de cargarlas:
-//   - Una venta: la receta, la cantidad y la fecha.
+// Esta pantalla recibe las ventas para descontar del stock lo que lleva cada
+// receta. Hay dos formas de cargarlas:
+//   - Venta: un pedido con una o varias recetas (por ejemplo, todo lo que pidió
+//     una mesa). Se agregan las recetas de a una y se registra todo junto.
 //   - Cierre del día: todas las recetas vendidas en un día, de una vez.
-//   - Importar el archivo que exporta el punto de venta (CSV).
-// En las tres la grilla muestra antes de confirmar cuánto se descuenta de cada
+// En las dos la grilla muestra antes de confirmar cuánto se descuenta de cada
 // insumo y cómo queda el stock. La BLL graba las ventas (tablas Venta y
 // ConsumoVenta) y descuenta todo en una sola transacción, recalcula el dígito
 // verificador y deja el registro en la bitácora. Si el stock del sistema no
@@ -24,17 +23,23 @@ using Servicios;
 // ControladorStock (Observer) avisa por correo.
 public partial class DescontarStockVenta : PaginaBase
 {
-    private const int ModoUna = 0;
+    private const int ModoPedido = 0;
     private const int ModoCierre = 1;
-    private const int ModoArchivo = 2;
 
-    private const string ClaveImportacion = "ImportacionVentas";
+    private const string ClavePedido = "Pedido";
 
     private BLLVenta bllVenta = new BLLVenta();
 
     protected override string PatenteRequerida
     {
         get { return "DescontarStockVenta"; }
+    }
+
+    /// Las recetas del pedido que se está armando, en el orden en que se agregaron.
+    private List<BEVenta> Pedido
+    {
+        get { return ViewState[ClavePedido] as List<BEVenta> ?? new List<BEVenta>(); }
+        set { ViewState[ClavePedido] = value; }
     }
 
     protected void Page_Load(object sender, EventArgs e)
@@ -46,9 +51,8 @@ public partial class DescontarStockVenta : PaginaBase
         {
             txtFecha.Text = DateTime.Today.ToString("yyyy-MM-dd");
             txtFechaCierre.Text = DateTime.Today.ToString("yyyy-MM-dd");
-            Session.Remove(ClaveImportacion);
             CargarRecetas();
-            CambiarModo(ModoUna);
+            CambiarModo(ModoPedido);
         }
     }
 
@@ -58,16 +62,53 @@ public partial class DescontarStockVenta : PaginaBase
         CambiarModo(int.Parse(((LinkButton)sender).CommandArgument, CultureInfo.InvariantCulture));
     }
 
-    protected void ddlReceta_SelectedIndexChanged(object sender, EventArgs e)
+    protected void btnAgregar_Click(object sender, EventArgs e)
     {
         OcultarMensaje(lblMensaje);
-        Previsualizar();
+        if (!IsValid)
+        {
+            return;
+        }
+
+        int idReceta;
+        int.TryParse(ddlReceta.SelectedValue, out idReceta);
+        decimal cantidad;
+        if (!Numeros.TryParseDecimal(txtCantidad.Text, out cantidad))
+        {
+            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025", "La cantidad vendida tiene que ser un número."), true);
+            return;
+        }
+
+        try
+        {
+            Pedido = bllVenta.AgregarAlPedido(Pedido, idReceta, cantidad);
+            ddlReceta.SelectedIndex = 0;
+            txtCantidad.Text = string.Empty;
+            ddlReceta.Focus();
+        }
+        catch (Exception ex)
+        {
+            MostrarMensaje(lblMensaje, ex.Message, true);
+        }
+        MostrarPedido();
     }
 
-    protected void txtCantidad_TextChanged(object sender, EventArgs e)
+    protected void gvPedido_RowCommand(object sender, GridViewCommandEventArgs e)
     {
+        if (e.CommandName != "Quitar")
+        {
+            return;
+        }
+
         OcultarMensaje(lblMensaje);
-        Previsualizar();
+        int indice = Convert.ToInt32(e.CommandArgument, CultureInfo.InvariantCulture);
+        List<BEVenta> pedido = Pedido;
+        if (indice >= 0 && indice < pedido.Count)
+        {
+            pedido.RemoveAt(indice);
+            Pedido = pedido;
+        }
+        MostrarPedido();
     }
 
     protected void txtFechaCierre_TextChanged(object sender, EventArgs e)
@@ -101,32 +142,6 @@ public partial class DescontarStockVenta : PaginaBase
         MostrarVistaPrevia(ventas);
     }
 
-    protected void btnLeerArchivo_Click(object sender, EventArgs e)
-    {
-        OcultarMensaje(lblMensaje);
-        Session.Remove(ClaveImportacion);
-        pnlArchivo.Visible = false;
-        litAvisosArchivo.Text = string.Empty;
-        LimpiarDetalle();
-
-        if (!fuVentas.HasFile)
-        {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002", "Elija el archivo de ventas."), true);
-            return;
-        }
-
-        try
-        {
-            ResultadoImportacionVentas resultado = bllVenta.LeerArchivo(fuVentas.FileBytes, fuVentas.FileName);
-            Session[ClaveImportacion] = resultado;
-            MostrarImportacion(resultado);
-        }
-        catch (Exception ex)
-        {
-            MostrarMensaje(lblMensaje, ex.Message, true);
-        }
-    }
-
     protected void btnAceptar_Click(object sender, EventArgs e)
     {
         if (!IsValid)
@@ -136,17 +151,13 @@ public partial class DescontarStockVenta : PaginaBase
 
         try
         {
-            switch (mvModo.ActiveViewIndex)
+            if (mvModo.ActiveViewIndex == ModoCierre)
             {
-                case ModoCierre:
-                    RegistrarCierre();
-                    break;
-                case ModoArchivo:
-                    RegistrarArchivo();
-                    break;
-                default:
-                    RegistrarUna();
-                    break;
+                RegistrarCierre();
+            }
+            else
+            {
+                RegistrarPedido();
             }
         }
         catch (Exception ex)
@@ -166,35 +177,24 @@ public partial class DescontarStockVenta : PaginaBase
     private void CambiarModo(int modo)
     {
         mvModo.ActiveViewIndex = modo;
-        tabUna.Attributes["class"] = modo == ModoUna ? "active" : string.Empty;
+        tabPedido.Attributes["class"] = modo == ModoPedido ? "active" : string.Empty;
         tabCierre.Attributes["class"] = modo == ModoCierre ? "active" : string.Empty;
-        tabArchivo.Attributes["class"] = modo == ModoArchivo ? "active" : string.Empty;
 
-        btnAceptar.ValidationGroup = modo == ModoUna ? "Venta" : modo == ModoCierre ? "Cierre" : string.Empty;
-        btnAceptar.CausesValidation = modo != ModoArchivo;
-        btnAceptar.Text = modo == ModoUna ? "Descontar stock" : modo == ModoCierre ? "Registrar el cierre del día" : "Registrar las ventas del archivo";
-        gvDetalle.Columns[1].Visible = modo == ModoUna;
+        btnAceptar.ValidationGroup = modo == ModoPedido ? "Venta" : "Cierre";
+        btnAceptar.Text = modo == ModoPedido ? "Registrar la venta" : "Registrar el cierre del día";
 
         LimpiarDetalle();
-        if (modo == ModoUna)
+        if (modo == ModoPedido)
         {
-            Previsualizar();
+            MostrarPedido();
         }
-        else if (modo == ModoCierre)
+        else
         {
             if (gvCierre.Rows.Count == 0)
             {
                 CargarCierre();
             }
             AvisarVentasDelDia();
-        }
-        else
-        {
-            ResultadoImportacionVentas resultado = Session[ClaveImportacion] as ResultadoImportacionVentas;
-            if (resultado != null)
-            {
-                MostrarImportacion(resultado);
-            }
         }
     }
 
@@ -207,24 +207,30 @@ public partial class DescontarStockVenta : PaginaBase
 
     #endregion
 
-    #region Una venta
+    #region Venta (pedido)
 
-    private void RegistrarUna()
+    /// Muestra las recetas del pedido y lo que se descontaría con todas juntas.
+    private void MostrarPedido()
     {
-        int idReceta;
-        int.TryParse(ddlReceta.SelectedValue, out idReceta);
+        List<BEVenta> pedido = Pedido;
+        gvPedido.DataSource = pedido;
+        gvPedido.DataBind();
 
-        if (idReceta <= 0 || string.IsNullOrEmpty(txtCantidad.Text.Trim()) || string.IsNullOrEmpty(txtFecha.Text.Trim()))
+        if (pedido.Count == 0)
         {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002",
-                "Elija la receta e ingrese la cantidad y la fecha de la venta."), true);
+            LimpiarDetalle();
             return;
         }
+        MostrarVistaPrevia(pedido);
+    }
 
-        decimal cantidad;
-        if (!Numeros.TryParseDecimal(txtCantidad.Text, out cantidad))
+    private void RegistrarPedido()
+    {
+        List<BEVenta> pedido = Pedido;
+        if (pedido.Count == 0)
         {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025", "La cantidad vendida tiene que ser un número."), true);
+            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002",
+                "Agregue al pedido al menos una receta: elíjala, ingrese las unidades y presione Agregar al pedido."), true);
             return;
         }
 
@@ -235,44 +241,23 @@ public partial class DescontarStockVenta : PaginaBase
             return;
         }
 
-        try
+        decimal unidades = 0;
+        foreach (BEVenta venta in pedido)
         {
-            List<BEConsumoVenta> consumos = bllVenta.Registrar(idReceta, cantidad, fecha);
-            MostrarResultado(consumos, "Se registró la venta de " + cantidad.ToString("0.##") + " x " +
-                                       ddlReceta.SelectedItem.Text, cantidad.ToString("0.##") + " x " + ddlReceta.SelectedItem.Text);
-            txtCantidad.Text = string.Empty;
+            unidades += venta.Cantidad;
         }
-        catch (Exception ex)
-        {
-            MostrarMensaje(lblMensaje, ex.Message, true);
-            Previsualizar();
-        }
-    }
+        string descripcion = pedido.Count == 1
+            ? pedido[0].CantidadTexto + " x " + pedido[0].NombreReceta
+            : Textos.Contar(pedido.Count, "receta", "recetas") + ", " + unidades.ToString("0.##") + " unidades";
 
-    /// Muestra lo que se descontaría con la receta y la cantidad elegidas.
-    private void Previsualizar()
-    {
-        LimpiarDetalle();
+        List<BEConsumoVenta> consumos = bllVenta.RegistrarPedido(pedido, fecha);
 
-        int idReceta;
-        decimal cantidad;
-        if (!int.TryParse(ddlReceta.SelectedValue, out idReceta) || idReceta <= 0 ||
-            !Numeros.TryParseDecimal(txtCantidad.Text, out cantidad) || cantidad <= 0)
-        {
-            return;
-        }
+        // El pedido ya se registró: se vacía para cargar el próximo.
+        Pedido = new List<BEVenta>();
+        gvPedido.DataSource = Pedido;
+        gvPedido.DataBind();
 
-        try
-        {
-            MostrarConsumos(bllVenta.Previsualizar(idReceta, cantidad), true);
-        }
-        catch (Exception ex)
-        {
-            if (!lblMensaje.Visible)
-            {
-                MostrarMensaje(lblMensaje, ex.Message, true);
-            }
-        }
+        MostrarResultado(consumos, "Se registró la venta de " + descripcion, descripcion);
     }
 
     private void CargarRecetas()
@@ -419,71 +404,6 @@ public partial class DescontarStockVenta : PaginaBase
         {
             MostrarMensaje(lblMensaje, ex.Message, true);
         }
-    }
-
-    #endregion
-
-    #region Archivo del punto de venta
-
-    private void MostrarImportacion(ResultadoImportacionVentas resultado)
-    {
-        pnlArchivo.Visible = true;
-        gvArchivo.DataSource = resultado.Validas;
-        gvArchivo.DataBind();
-        pnlErrores.Visible = resultado.ConError.Count > 0;
-        gvErrores.DataSource = resultado.ConError;
-        gvErrores.DataBind();
-
-        string avisos = string.Empty;
-        foreach (string aviso in resultado.Avisos)
-        {
-            avisos += "<div class=\"alert alert-warning\">" + HttpUtility.HtmlEncode(aviso) + "</div>";
-        }
-        litAvisosArchivo.Text = avisos;
-
-        if (resultado.Validas.Count > 0)
-        {
-            MostrarVistaPrevia(resultado.Validas);
-        }
-        else
-        {
-            LimpiarDetalle();
-        }
-
-        if (resultado.Validas.Count == 0)
-        {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025",
-                "El archivo " + resultado.NombreArchivo + " no tiene ventas válidas para registrar."), true);
-        }
-        else if (!lblMensaje.Visible)
-        {
-            MostrarMensaje(lblMensaje, "Se leyeron " + Textos.Contar(resultado.Validas.Count, "venta", "ventas") +
-                                       " (" + resultado.UnidadesValidas.ToString("0.##") + " unidades) de " + resultado.NombreArchivo +
-                                       (resultado.ConError.Count > 0
-                                           ? " y " + Textos.Contar(resultado.ConError.Count, "línea con errores", "líneas con errores") + ", que no se van a registrar"
-                                           : string.Empty) +
-                                       ". Revise la grilla y confirme.", false);
-        }
-    }
-
-    private void RegistrarArchivo()
-    {
-        ResultadoImportacionVentas resultado = Session[ClaveImportacion] as ResultadoImportacionVentas;
-        if (resultado == null || resultado.Validas.Count == 0)
-        {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002",
-                "Primero elija el archivo y presione Leer archivo."), true);
-            return;
-        }
-
-        List<BEConsumoVenta> consumos = bllVenta.RegistrarImportadas(resultado.Validas, resultado.NombreArchivo);
-        Session.Remove(ClaveImportacion);
-        pnlArchivo.Visible = false;
-        litAvisosArchivo.Text = string.Empty;
-
-        MostrarResultado(consumos, "Se registraron " + Textos.Contar(resultado.Validas.Count, "venta", "ventas") + " (" +
-                                   resultado.UnidadesValidas.ToString("0.##") + " unidades) del archivo " + resultado.NombreArchivo,
-                         Textos.Contar(resultado.Validas.Count, "venta", "ventas") + " importadas");
     }
 
     #endregion

@@ -17,6 +17,8 @@ namespace DAL
         {
             SqlParameter fecha = new SqlParameter("@FechaInicio", SqlDbType.Date);
             fecha.Value = suscripcion.FechaInicio.Date;
+            SqlParameter pagadoHasta = new SqlParameter("@PagadoHasta", SqlDbType.Date);
+            pagadoHasta.Value = suscripcion.PagadoHasta.Date;
 
             SqlParameter[] parametros = new SqlParameter[]
             {
@@ -26,7 +28,8 @@ namespace DAL
                     ? (object)DBNull.Value
                     : suscripcion.TokenPago),
                 new SqlParameter("@Estado", suscripcion.Estado),
-                fecha
+                fecha,
+                pagadoHasta
             };
 
             return dalCon.EjecutarYTraerId("CrearSuscripcion", parametros);
@@ -41,6 +44,26 @@ namespace DAL
             };
 
             dalCon.EjecutarProcAlmacenado("CambiarEstadoSuscripcion", parametros);
+        }
+
+        /// Registra que se cobró el abono de un mes: lo pagado pasa de
+        /// pagadoHastaAnterior a pagadoHasta. Devuelve false si la suscripción ya
+        /// no está activa o si ese cobro ya se había registrado.
+        public bool RegistrarCobro(int idSuscripcion, DateTime pagadoHastaAnterior, DateTime pagadoHasta)
+        {
+            SqlParameter anterior = new SqlParameter("@PagadoHastaAnterior", SqlDbType.Date);
+            anterior.Value = pagadoHastaAnterior.Date;
+            SqlParameter nuevo = new SqlParameter("@PagadoHasta", SqlDbType.Date);
+            nuevo.Value = pagadoHasta.Date;
+
+            SqlParameter[] parametros = new SqlParameter[]
+            {
+                new SqlParameter("@IdSuscripcion", idSuscripcion),
+                anterior,
+                nuevo
+            };
+
+            return dalCon.EjecutarYTraerId("RegistrarCobroSuscripcion", parametros) > 0;
         }
 
         public List<BESuscripcion> TraerSuscripciones()
@@ -73,6 +96,9 @@ namespace DAL
                 suscripcion.FechaInicio = fila["fechaInicio"] == DBNull.Value
                     ? DateTime.MinValue
                     : Convert.ToDateTime(fila["fechaInicio"]);
+                suscripcion.PagadoHasta = fila["pagadoHasta"] == DBNull.Value
+                    ? DateTime.MinValue
+                    : Convert.ToDateTime(fila["pagadoHasta"]);
                 lista.Add(suscripcion);
             }
 

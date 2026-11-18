@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace BE
 {
@@ -9,9 +10,15 @@ namespace BE
     ///
     /// Un perecedero no se pide para más días de los que dura (su vida útil):
     /// lo que sobrara se tiraría.
+    ///
+    /// Además propone a qué proveedor pedírselo: el que lo facturó más barato
+    /// en las órdenes recibidas de los últimos días (ver BLLOrdenCompra). El
+    /// usuario puede elegir otro.
     [Serializable]
     public class BESugerenciaCompra
     {
+        private List<BEPrecioProveedor> precios = new List<BEPrecioProveedor>();
+
         public int IdInsumo { get; set; }
 
         public string NombreInsumo { get; set; }
@@ -39,17 +46,60 @@ namespace BE
 
         public bool LimitadoPorVidaUtil { get; set; }
 
-        /// Proveedor al que se le pidió este insumo la última vez (vacío si
-        /// nunca se pidió).
-        public string CuitProveedorHabitual { get; set; }
+        /// Si está marcado para pedirlo (en la pantalla se puede desmarcar).
+        public bool Incluir { get; set; }
 
-        public string ProveedorHabitual { get; set; }
+        /// Proveedor al que se le va a pedir (el sugerido o el que eligió el
+        /// usuario). Vacío si todavía no hay ninguno.
+        public string CuitProveedor { get; set; }
 
+        public string NombreProveedor { get; set; }
+
+        /// Por qué se sugiere ese proveedor ("Mejor precio de los últimos 60
+        /// días", "Se le pidió la última vez"...).
+        public string MotivoProveedor { get; set; }
+
+        /// Último precio que facturó cada proveedor por este insumo, del más
+        /// barato al más caro.
+        public List<BEPrecioProveedor> Precios
+        {
+            get { return precios; }
+            set { precios = value ?? new List<BEPrecioProveedor>(); }
+        }
+
+        /// Precio unitario actual del insumo: el de la última factura de
+        /// cualquier proveedor. Se usa si el proveedor elegido nunca lo facturó.
+        public decimal PrecioReferencia { get; set; }
+
+        /// Precio estimado con el proveedor elegido.
         public decimal PrecioUnitario { get; set; }
+
+        /// Fecha del precio del proveedor elegido (null si es el de referencia).
+        public DateTime? FechaPrecio { get; set; }
+
+        /// El precio del proveedor elegido es de los últimos días.
+        public bool PrecioReciente { get; set; }
 
         public decimal ImporteEstimado
         {
-            get { return CantidadSugerida * PrecioUnitario; }
+            get { return CantidadAPedir * PrecioUnitario; }
+        }
+
+        /// Último precio de ese proveedor para este insumo, o null si nunca lo facturó.
+        public BEPrecioProveedor PrecioDe(string cuit)
+        {
+            return string.IsNullOrEmpty(cuit) ? null : precios.Find(delegate(BEPrecioProveedor p) { return p.CuitProveedor == cuit; });
+        }
+
+        /// Pasa a pedírselo a ese proveedor, con su último precio (o el de referencia).
+        public void ElegirProveedor(string cuit, string nombre)
+        {
+            CuitProveedor = cuit;
+            NombreProveedor = nombre;
+            BEPrecioProveedor precio = PrecioDe(cuit);
+            PrecioUnitario = precio == null ? PrecioReferencia : precio.PrecioUnitario;
+            FechaPrecio = precio == null ? (DateTime?)null : precio.Fecha;
+            PrecioReciente = precio != null && precio.Reciente;
         }
 
         public string StockActualTexto
@@ -91,9 +141,42 @@ namespace BE
             }
         }
 
-        public string ProveedorHabitualTexto
+        /// Consumo previsto y para cuántos días: "12 kg en 7 días".
+        public string ConsumoPrevistoPeriodoTexto
         {
-            get { return string.IsNullOrEmpty(ProveedorHabitual) ? "-" : ProveedorHabitual; }
+            get { return ConsumoPrevistoTexto + " en " + DiasCubiertosTexto; }
+        }
+
+        /// "$ 1.250,00 (02/11/2026)", o "(precio de referencia)" si el proveedor
+        /// elegido nunca lo facturó.
+        public string PrecioTexto
+        {
+            get
+            {
+                if (!FechaPrecio.HasValue)
+                {
+                    return PrecioUnitario.ToString("C") + " (precio de referencia)";
+                }
+                return PrecioUnitario.ToString("C") + " (" + FechaPrecio.Value.ToString("dd/MM/yyyy") +
+                       (PrecioReciente ? ")" : ", desactualizado)");
+            }
+        }
+
+        /// Lo que cobraron los otros proveedores, para comparar.
+        public string OtrosPreciosTexto
+        {
+            get
+            {
+                List<string> otros = new List<string>();
+                foreach (BEPrecioProveedor precio in precios)
+                {
+                    if (precio.CuitProveedor != CuitProveedor)
+                    {
+                        otros.Add(precio.Texto);
+                    }
+                }
+                return otros.Count == 0 ? string.Empty : "Otros: " + string.Join("; ", otros.ToArray());
+            }
         }
     }
 }

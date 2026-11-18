@@ -111,6 +111,7 @@
         </asp:Panel>
 
         <asp:Panel ID="pnlTarjeta" runat="server" Visible="false">
+            <p class="campo-ayuda">Con tarjeta, cuando terminan los meses pagados el sistema cobra solo el abono de cada mes con la misma tarjeta y manda la factura por correo, hasta que se dé de baja la suscripción.</p>
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">

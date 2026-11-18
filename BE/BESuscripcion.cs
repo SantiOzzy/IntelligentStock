@@ -6,17 +6,18 @@ namespace BE
     /// Suscripcion.
     ///
     /// Se paga por adelantado una cantidad de meses (la compra, BECompraPlan).
-    /// Con tarjeta de crédito, al terminar ese período la pasarela sigue
-    /// cobrando el abono todos los meses con el token guardado. Al contado no
-    /// hay token: el servicio cubre los meses pagados y después hay que volver
-    /// a comprar.
+    /// PagadoHasta es el día en que vence lo pagado. Con tarjeta de crédito,
+    /// ese día el sistema cobra el abono del mes siguiente con el token
+    /// guardado y PagadoHasta avanza un mes (BLLSuscripcion.CobrarAbonosVencidos).
+    /// Al contado no hay token: el servicio cubre los meses pagados y después
+    /// hay que volver a comprar.
     [Serializable]
     public class BESuscripcion
     {
-        /// Mientras está Activa (y se pagó con tarjeta) la pasarela cobra el
-    /// abono todos los meses, después de los meses pagados por adelantado.
-        /// Al darla de baja pasa a Cancelada: se detienen los cobros y el
-        /// servicio sigue hasta el cierre del período ya pagado.
+        /// Mientras está Activa (y se pagó con tarjeta) se cobra el abono todos
+        /// los meses, después de los meses pagados por adelantado. Al darla de
+        /// baja pasa a Cancelada: se detienen los cobros y el servicio sigue
+        /// hasta que vence lo ya pagado.
         public const string EstadoActiva = "Activa";
         public const string EstadoCancelada = "Cancelada";
 
@@ -28,26 +29,30 @@ namespace BE
         /// si se pagó al contado.
         public string TokenPago { get; set; }
 
-        /// Contado o tarjeta de crédito: se deduce del token (no se agregan
-        /// columnas a la tabla).
+        /// Contado o tarjeta de crédito: se deduce del token.
         public string MedioPago
         {
             get { return string.IsNullOrEmpty(TokenPago) ? BECompraPlan.MedioContado : BECompraPlan.MedioTarjeta; }
         }
 
-        /// Meses pagados por adelantado en la compra. No se guarda en la tabla:
-        /// se lee del evento de la compra en la bitácora (1 si no se encuentra).
-        public int MesesPagados { get; set; }
-
-        /// Fin del período pagado por adelantado.
-        public DateTime PagadoHasta
+        public bool ConTarjeta
         {
-            get { return FechaInicio.AddMonths(Math.Max(1, MesesPagados)); }
+            get { return MedioPago == BECompraPlan.MedioTarjeta; }
         }
 
         public string Estado { get; set; }
 
         public DateTime FechaInicio { get; set; }
+
+        /// Día en que vence lo que ya se pagó (columna pagadoHasta): el servicio
+        /// está pagado hasta el día anterior. DateTime.MinValue si no se conoce.
+        public DateTime PagadoHasta { get; set; }
+
+        /// Último día cubierto por lo que ya se pagó.
+        public DateTime UltimoDiaPagado
+        {
+            get { return PagadoHasta == DateTime.MinValue ? DateTime.MinValue : PagadoHasta.AddDays(-1); }
+        }
 
         /// Abono mensual del plan (no se guarda: depende del plan).
         public decimal AbonoMensual { get; set; }
@@ -59,16 +64,16 @@ namespace BE
         /// Código de la operación que informó la pasarela en el alta. No se guarda.
         public string CodigoTransaccion { get; set; }
 
-        /// Para las canceladas: hasta qué día sigue el servicio que ya se pagó
-        /// (cierre del período en el que se dio de baja). Null si no se conoce.
-        public DateTime? ServicioHasta { get; set; }
-
-        /// Para las activas: próxima fecha de cobro mensual.
-        public DateTime? ProximoCobro { get; set; }
-
         public bool Activa
         {
             get { return Estado == EstadoActiva; }
+        }
+
+        /// Activa, con tarjeta y con el abono del mes vencido sin cobrar (por
+        /// ejemplo, porque la pasarela rechazó el cobro): se reintenta cada día.
+        public bool CobroPendiente
+        {
+            get { return Activa && ConTarjeta && PagadoHasta != DateTime.MinValue && PagadoHasta <= DateTime.Today; }
         }
 
         /// Situación del servicio para mostrar en la grilla.
@@ -76,28 +81,29 @@ namespace BE
         {
             get
             {
-                if (Activa && MedioPago == BECompraPlan.MedioContado)
+                if (PagadoHasta == DateTime.MinValue)
+                {
+                    return Activa ? "Activa" : "Dada de baja";
+                }
+
+                string ultimoDia = UltimoDiaPagado.ToString("dd/MM/yyyy");
+                if (Activa && !ConTarjeta)
                 {
                     return PagadoHasta > DateTime.Today
-                        ? "Pagada al contado hasta el " + PagadoHasta.ToString("dd/MM/yyyy")
-                        : "Vencida el " + PagadoHasta.ToString("dd/MM/yyyy") + ": hay que volver a comprar";
+                        ? "Pagada al contado hasta el " + ultimoDia
+                        : "Vencida desde el " + PagadoHasta.ToString("dd/MM/yyyy") + ": hay que volver a comprar";
                 }
 
                 if (Activa)
                 {
-                    return ProximoCobro.HasValue
-                        ? "Próximo cobro: " + ProximoCobro.Value.ToString("dd/MM/yyyy")
-                        : "Activa";
+                    return CobroPendiente
+                        ? "Abono del " + PagadoHasta.ToString("dd/MM/yyyy") + " sin cobrar: se reintenta cada día"
+                        : "Próximo cobro: " + PagadoHasta.ToString("dd/MM/yyyy");
                 }
 
-                if (!ServicioHasta.HasValue)
-                {
-                    return "Dada de baja";
-                }
-
-                return ServicioHasta.Value.Date > DateTime.Today
-                    ? "Dada de baja: el servicio sigue hasta el " + ServicioHasta.Value.ToString("dd/MM/yyyy")
-                    : "Dada de baja: el servicio terminó el " + ServicioHasta.Value.ToString("dd/MM/yyyy");
+                return PagadoHasta > DateTime.Today
+                    ? "Dada de baja: el servicio sigue hasta el " + ultimoDia
+                    : "Dada de baja: el servicio terminó el " + ultimoDia;
             }
         }
 

@@ -13,12 +13,13 @@ namespace BLL
     /// (CU-006-034), anulación (CU-006-035) y recepción con la factura del
     /// proveedor (CU-006-036).
     ///
-    /// La predicción propone qué insumos hacen falta. Como cada proveedor
-    /// vende lo suyo, el usuario arma una orden por proveedor: elige cuáles de
-    /// los insumos sugeridos le pide a cada uno (el sistema propone el que se
-    /// usó la última vez) y puede ajustar las cantidades. La orden se le envía
-    /// al proveedor por correo y, al llegar la mercadería, se registra lo que
-    /// llegó de verdad y a qué precio.
+    /// La predicción propone qué insumos hacen falta y a qué proveedor
+    /// pedirle cada uno: el que lo facturó más barato en los últimos días.
+    /// Los precios salen de las facturas registradas (cada renglón de una orden
+    /// recibida guarda el precio facturado), así que no hay que cargar listas
+    /// de precios. El usuario puede cambiar el proveedor y las cantidades; se
+    /// genera una orden por proveedor, que se le envía por correo y, al llegar
+    /// la mercadería, se registra lo que llegó de verdad y a qué precio.
     ///
     /// Qué se puede hacer con una orden según su estado lo deciden las clases
     /// del patrón State (EstadoOrdenCompra y sus subclases): esta clase es el
@@ -121,8 +122,9 @@ namespace BLL
         }
 
         /// Compras por proveedor en un período (WebServiceGastoProveedores y
-        /// reporte gerencial). Lo recibido se valoriza al precio unitario
-        /// actual de cada insumo, que se actualiza con el de cada factura.
+        /// reporte gerencial). Cada renglón se valoriza con su precio: el
+        /// facturado si la orden se recibió, el estimado si no (las órdenes
+        /// anteriores a la columna de precio usan el precio actual del insumo).
         public List<BEGastoProveedor> GastoPorProveedor(DateTime desde, DateTime hasta)
         {
             Dictionary<int, decimal> importePorOrden = new Dictionary<int, decimal>();
@@ -162,19 +164,26 @@ namespace BLL
 
         #region CU-006-033 Generar orden de compra predictiva
 
+        /// Días en que un precio facturado sirve para comparar proveedores: con
+        /// precios que cambian todos los meses, uno más viejo ya no dice quién
+        /// es más barato.
+        public const int DiasVigenciaPrecio = 60;
+
+        /// Días hacia adelante que puede tener la fecha de una orden.
+        public const int DiasMaximosFechaOrden = 60;
+
         /// Cantidades a pedir de cada insumo según la predicción de demanda de
-        /// los próximos 'dias' días. Lanza #ERR019 / #ERR005 si la predicción no
+        /// los próximos 'dias' días, cada una con el proveedor sugerido: el que
+        /// la facturó más barato en las órdenes recibidas de los últimos
+        /// DiasVigenciaPrecio días. Lanza #ERR019 / #ERR005 si la predicción no
         /// se puede hacer y #ERR020 si no hace falta pedir nada.
         public List<BESugerenciaCompra> CalcularSugerencias(int dias, out ResultadoPrediccion prediccion)
         {
             prediccion = new BLLPrediccionDemanda().Predecir(dias);
             Dictionary<int, decimal> pendientes = dalOrden.TraerCantidadesPendientes();
             Dictionary<int, string> habitual = dalOrden.TraerProveedorHabitual();
-            Dictionary<string, string> proveedores = new Dictionary<string, string>();
-            foreach (BEProveedor proveedor in bllProveedor.TraerActivos())
-            {
-                proveedores[proveedor.Cuit] = proveedor.Nombre;
-            }
+            Dictionary<string, string> proveedores = ProveedoresActivos();
+            Dictionary<int, List<BEPrecioProveedor>> precios = PreciosPorInsumo(proveedores);
 
             List<BESugerenciaCompra> sugerencias = new List<BESugerenciaCompra>();
             foreach (BEInsumo insumo in bllInsumo.TraerActivos())
@@ -211,16 +220,17 @@ namespace BLL
                 sugerencia.ConsumoPrevisto = consumo;
                 sugerencia.CantidadSugerida = Math.Min(CantidadMaxima, Math.Ceiling(faltante * 100m) / 100m);
                 sugerencia.CantidadAPedir = sugerencia.CantidadSugerida;
-                sugerencia.PrecioUnitario = insumo.PrecioUnitario;
                 sugerencia.DiasCubiertos = diasCubiertos;
                 sugerencia.LimitadoPorVidaUtil = limitado;
+                sugerencia.Incluir = true;
+                sugerencia.PrecioReferencia = insumo.PrecioUnitario;
 
-                string cuit;
-                if (habitual.TryGetValue(insumo.IdInsumo, out cuit) && proveedores.ContainsKey(cuit))
+                List<BEPrecioProveedor> delInsumo;
+                if (precios.TryGetValue(insumo.IdInsumo, out delInsumo))
                 {
-                    sugerencia.CuitProveedorHabitual = cuit;
-                    sugerencia.ProveedorHabitual = proveedores[cuit];
+                    sugerencia.Precios = delInsumo;
                 }
+                SugerirProveedor(sugerencia, habitual, proveedores);
                 sugerencias.Add(sugerencia);
             }
 
@@ -236,29 +246,120 @@ namespace BLL
             return sugerencias;
         }
 
-        /// Genera la orden con lo que el usuario eligió pedirle a este proveedor
-        /// de la propuesta (los insumos marcados, con la cantidad que haya
-        /// ajustado) y la deja Pendiente. Si se pide, se la envía al proveedor por
-        /// correo con la orden en PDF; si no se puede enviar, la orden queda
-        /// generada igual y 'resultadoCorreo' dice por qué.
-        public BEOrdenCompra GenerarPredictiva(string cuit, DateTime? fecha, List<BESugerenciaCompra> pedido,
-                                               bool enviarPorCorreo, out string resultadoCorreo)
+        /// Proveedores activos, por CUIT, con su nombre.
+        public Dictionary<string, string> ProveedoresActivos()
         {
-            resultadoCorreo = null;
-            if (string.IsNullOrEmpty(cuit))
+            Dictionary<string, string> proveedores = new Dictionary<string, string>();
+            foreach (BEProveedor proveedor in bllProveedor.TraerActivos())
             {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002", "Elija el proveedor."));
+                proveedores[proveedor.Cuit] = proveedor.Nombre;
+            }
+            return proveedores;
+        }
+
+        /// Último precio de cada proveedor activo, por insumo, del más barato al
+        /// más caro. Marca como recientes los de los últimos DiasVigenciaPrecio días.
+        private Dictionary<int, List<BEPrecioProveedor>> PreciosPorInsumo(Dictionary<string, string> proveedoresActivos)
+        {
+            DateTime limite = DateTime.Today.AddDays(-DiasVigenciaPrecio);
+            Dictionary<int, List<BEPrecioProveedor>> porInsumo = new Dictionary<int, List<BEPrecioProveedor>>();
+            foreach (BEPrecioProveedor precio in dalOrden.TraerUltimosPrecios())
+            {
+                string nombre;
+                if (!proveedoresActivos.TryGetValue(precio.CuitProveedor, out nombre))
+                {
+                    continue;
+                }
+                precio.NombreProveedor = nombre;
+                precio.Reciente = precio.Fecha.Date >= limite;
+
+                List<BEPrecioProveedor> lista;
+                if (!porInsumo.TryGetValue(precio.IdInsumo, out lista))
+                {
+                    lista = new List<BEPrecioProveedor>();
+                    porInsumo[precio.IdInsumo] = lista;
+                }
+                lista.Add(precio);
             }
 
-            BEProveedor proveedor = bllProveedor.ObtenerPorCuit(cuit);
-            if (proveedor == null)
+            foreach (List<BEPrecioProveedor> lista in porInsumo.Values)
             {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR013"));
+                lista.Sort(delegate(BEPrecioProveedor a, BEPrecioProveedor b)
+                {
+                    int c = a.PrecioUnitario.CompareTo(b.PrecioUnitario);
+                    return c != 0 ? c : b.Fecha.CompareTo(a.Fecha);
+                });
             }
-            if (!proveedor.Activo)
+            return porInsumo;
+        }
+
+        /// El proveedor que se propone para un insumo:
+        ///   1. el más barato entre los que lo facturaron en los últimos días;
+        ///   2. si los precios son más viejos, el último al que se le compró;
+        ///   3. si nunca se recibió, al que se le pidió la última vez;
+        ///   4. si nunca se pidió, ninguno: lo elige el usuario.
+        private static void SugerirProveedor(BESugerenciaCompra sugerencia, Dictionary<int, string> habitual,
+                                             Dictionary<string, string> proveedores)
+        {
+            BEPrecioProveedor mejor = null;
+            BEPrecioProveedor masNuevo = null;
+            int recientes = 0;
+            foreach (BEPrecioProveedor precio in sugerencia.Precios)
             {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR021",
-                    "El proveedor " + proveedor.Nombre + " está dado de baja."));
+                if (precio.Reciente)
+                {
+                    recientes++;
+                    if (mejor == null || precio.PrecioUnitario < mejor.PrecioUnitario)
+                    {
+                        mejor = precio;
+                    }
+                }
+                if (masNuevo == null || precio.Fecha > masNuevo.Fecha)
+                {
+                    masNuevo = precio;
+                }
+            }
+
+            if (mejor != null)
+            {
+                sugerencia.ElegirProveedor(mejor.CuitProveedor, mejor.NombreProveedor);
+                sugerencia.MotivoProveedor = recientes > 1
+                    ? "Mejor precio entre " + recientes + " proveedores (últimos " + DiasVigenciaPrecio + " días)"
+                    : "Único proveedor que lo facturó en los últimos " + DiasVigenciaPrecio + " días";
+                return;
+            }
+
+            if (masNuevo != null)
+            {
+                sugerencia.ElegirProveedor(masNuevo.CuitProveedor, masNuevo.NombreProveedor);
+                sugerencia.MotivoProveedor = "Se le compró la última vez; los precios tienen más de " + DiasVigenciaPrecio + " días";
+                return;
+            }
+
+            string cuit;
+            if (habitual.TryGetValue(sugerencia.IdInsumo, out cuit) && proveedores.ContainsKey(cuit))
+            {
+                sugerencia.ElegirProveedor(cuit, proveedores[cuit]);
+                sugerencia.MotivoProveedor = "Se le pidió la última vez (todavía no hay una factura con su precio)";
+                return;
+            }
+
+            sugerencia.ElegirProveedor(null, null);
+            sugerencia.MotivoProveedor = "Nunca se compró: elija el proveedor";
+        }
+
+        /// Genera una orden por proveedor con los insumos marcados de la
+        /// propuesta, con la cantidad y el proveedor que haya elegido el usuario.
+        /// Se valida todo antes de grabar la primera: si algo está mal no se
+        /// genera ninguna. Cada orden queda Pendiente y, si se pide, se le envía
+        /// a su proveedor por correo con la orden en PDF (un error de envío no
+        /// anula la orden: queda dicho en el resultado).
+        public List<OrdenGenerada> GenerarPorProveedor(DateTime? fecha, List<BESugerenciaCompra> pedido, bool enviarPorCorreo)
+        {
+            if (pedido == null || pedido.Count == 0)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
+                    "Marque al menos un insumo para pedir."));
             }
 
             DateTime fechaOrden = fecha.HasValue ? fecha.Value.Date : DateTime.Today;
@@ -267,26 +368,56 @@ namespace BLL
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
                     "La fecha de la orden no puede ser anterior a hoy."));
             }
-            if (fechaOrden > DateTime.Today.AddDays(60))
+            if (fechaOrden > DateTime.Today.AddDays(DiasMaximosFechaOrden))
             {
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
-                    "La fecha de la orden no puede estar a más de 60 días."));
+                    "La fecha de la orden no puede estar a más de " + DiasMaximosFechaOrden + " días."));
             }
 
-            if (pedido == null || pedido.Count == 0)
-            {
-                throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
-                    "Marque al menos un insumo para pedirle a " + proveedor.Nombre + "."));
-            }
-
-            BEOrdenCompra orden = new BEOrdenCompra();
-            orden.CuitProveedor = proveedor.Cuit;
-            orden.NombreProveedor = proveedor.Nombre;
-            orden.Fecha = fechaOrden;
-            orden.Estado = EstadoOrdenCompra.Pendiente.Nombre;
-
-            List<string> cambios = new List<string>();
+            // Agrupado por proveedor, en el orden en que aparecen.
+            List<string> cuits = new List<string>();
+            Dictionary<string, List<BESugerenciaCompra>> porProveedor = new Dictionary<string, List<BESugerenciaCompra>>();
             List<int> incluidos = new List<int>();
+            foreach (BESugerenciaCompra item in pedido)
+            {
+                if (string.IsNullOrEmpty(item.CuitProveedor))
+                {
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR002",
+                        "Elija a qué proveedor pedirle " + item.NombreInsumo + "."));
+                }
+                if (incluidos.Contains(item.IdInsumo))
+                {
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR006",
+                        "El insumo " + item.NombreInsumo + " figura dos veces en el pedido."));
+                }
+                incluidos.Add(item.IdInsumo);
+                ValidarCantidadPedida(item.NombreInsumo, item.CantidadAPedir);
+
+                if (!porProveedor.ContainsKey(item.CuitProveedor))
+                {
+                    porProveedor[item.CuitProveedor] = new List<BESugerenciaCompra>();
+                    cuits.Add(item.CuitProveedor);
+                }
+                porProveedor[item.CuitProveedor].Add(item);
+            }
+
+            Dictionary<string, BEProveedor> proveedores = new Dictionary<string, BEProveedor>();
+            foreach (string cuit in cuits)
+            {
+                BEProveedor proveedor = bllProveedor.ObtenerPorCuit(cuit);
+                if (proveedor == null)
+                {
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR013"));
+                }
+                if (!proveedor.Activo)
+                {
+                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR021",
+                        "El proveedor " + proveedor.Nombre + " está dado de baja."));
+                }
+                proveedores[cuit] = proveedor;
+            }
+
+            Dictionary<int, BEInsumo> insumos = new Dictionary<int, BEInsumo>();
             foreach (BESugerenciaCompra item in pedido)
             {
                 BEInsumo insumo = bllInsumo.ObtenerPorId(item.IdInsumo);
@@ -295,26 +426,61 @@ namespace BLL
                     throw new ApplicationException(AdministradorErrores.Mensaje("ERR021",
                         "El insumo " + item.NombreInsumo + " ya no está activo."));
                 }
-                if (incluidos.Contains(item.IdInsumo))
-                {
-                    throw new ApplicationException(AdministradorErrores.Mensaje("ERR006",
-                        "El insumo " + insumo.Nombre + " figura dos veces en el pedido."));
-                }
-                ValidarCantidadPedida(insumo.Nombre, item.CantidadAPedir);
-                incluidos.Add(item.IdInsumo);
+                insumos[item.IdInsumo] = insumo;
+            }
+
+            // El precio de cada renglón se vuelve a tomar de la base: el último
+            // que facturó ese proveedor o, si nunca lo facturó, el del insumo.
+            Dictionary<int, List<BEPrecioProveedor>> precios = PreciosPorInsumo(ProveedoresActivos());
+
+            List<OrdenGenerada> generadas = new List<OrdenGenerada>();
+            foreach (string cuit in cuits)
+            {
+                generadas.Add(CrearOrden(proveedores[cuit], fechaOrden, porProveedor[cuit], insumos, precios, enviarPorCorreo));
+            }
+            return generadas;
+        }
+
+        private OrdenGenerada CrearOrden(BEProveedor proveedor, DateTime fechaOrden, List<BESugerenciaCompra> items,
+                                         Dictionary<int, BEInsumo> insumos, Dictionary<int, List<BEPrecioProveedor>> precios,
+                                         bool enviarPorCorreo)
+        {
+            BEOrdenCompra orden = new BEOrdenCompra();
+            orden.CuitProveedor = proveedor.Cuit;
+            orden.NombreProveedor = proveedor.Nombre;
+            orden.Fecha = fechaOrden;
+            orden.Estado = EstadoOrdenCompra.Pendiente.Nombre;
+
+            List<string> cambios = new List<string>();
+            List<string> noElMasBarato = new List<string>();
+            foreach (BESugerenciaCompra item in items)
+            {
+                BEInsumo insumo = insumos[item.IdInsumo];
+                List<BEPrecioProveedor> delInsumo;
+                precios.TryGetValue(insumo.IdInsumo, out delInsumo);
+                BEPrecioProveedor delProveedor = delInsumo == null ? null
+                    : delInsumo.Find(delegate(BEPrecioProveedor p) { return p.CuitProveedor == proveedor.Cuit; });
 
                 BEDetalleOrdenCompra detalle = new BEDetalleOrdenCompra();
                 detalle.IdInsumo = insumo.IdInsumo;
                 detalle.NombreInsumo = insumo.Nombre;
                 detalle.UnidadDeMedida = insumo.UnidadDeMedida;
                 detalle.Cantidad = item.CantidadAPedir;
-                detalle.PrecioUnitario = insumo.PrecioUnitario;
+                detalle.PrecioUnitario = delProveedor == null ? insumo.PrecioUnitario : delProveedor.PrecioUnitario;
                 orden.Detalles.Add(detalle);
 
                 if (item.CantidadAPedir != item.CantidadSugerida)
                 {
                     cambios.Add(insumo.Nombre + " (sugerido " + item.CantidadSugerida.ToString("0.##") + ", pedido " +
                                 item.CantidadAPedir.ToString("0.##") + " " + insumo.UnidadDeMedida + ")");
+                }
+
+                // Queda registrado si se eligió un proveedor más caro que el mejor precio reciente.
+                if (delInsumo != null && delInsumo.Count > 0 && delInsumo[0].Reciente &&
+                    delInsumo[0].CuitProveedor != proveedor.Cuit && delInsumo[0].PrecioUnitario < detalle.PrecioUnitario)
+                {
+                    noElMasBarato.Add(insumo.Nombre + " (" + delInsumo[0].NombreProveedor + " lo cobró " +
+                                      delInsumo[0].PrecioUnitario.ToString("C") + ")");
                 }
             }
             orden.CantidadItems = orden.Detalles.Count;
@@ -326,14 +492,17 @@ namespace BLL
                          orden.Detalles.Count + (orden.Detalles.Count == 1 ? " insumo" : " insumos") +
                          " (importe estimado " + orden.ImporteEstimado.ToString("C") + "), según la demanda prevista para los próximos " +
                          DiasProyeccion + " días." +
-                         (cambios.Count > 0 ? " Cantidades cambiadas: " + string.Join("; ", cambios.ToArray()) + "." : string.Empty), 500));
+                         (cambios.Count > 0 ? " Cantidades cambiadas: " + string.Join("; ", cambios.ToArray()) + "." : string.Empty) +
+                         (noElMasBarato.Count > 0 ? " Se eligió este proveedor aunque había un precio menor: " +
+                                                    string.Join("; ", noElMasBarato.ToArray()) + "." : string.Empty), 500));
 
+            OrdenGenerada generada = new OrdenGenerada();
+            generada.Orden = orden;
             if (enviarPorCorreo)
             {
-                resultadoCorreo = EnviarAlProveedor(orden, proveedor);
+                generada.ResultadoCorreo = EnviarAlProveedor(orden, proveedor);
             }
-
-            return orden;
+            return generada;
         }
 
         /// Le manda la orden al proveedor por correo, con la orden en PDF.
@@ -651,5 +820,15 @@ namespace BLL
         {
             return texto.Length <= largo ? texto : texto.Substring(0, largo - 3) + "...";
         }
+    }
+
+    /// Una de las órdenes que generó GenerarPorProveedor y si se pudo enviar
+    /// por correo al proveedor.
+    public class OrdenGenerada
+    {
+        public BEOrdenCompra Orden { get; set; }
+
+        /// Qué pasó con el correo al proveedor (null si no se pidió enviarlo).
+        public string ResultadoCorreo { get; set; }
     }
 }

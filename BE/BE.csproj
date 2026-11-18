@@ -50,6 +50,7 @@
     <Compile Include="BEGastoProveedor.cs" />
     <Compile Include="BEInsumo.cs" />
     <Compile Include="BEOrdenCompra.cs" />
+    <Compile Include="BEPrecioProveedor.cs" />
     <Compile Include="BEProveedor.cs" />
     <Compile Include="BEReceta.cs" />
     <Compile Include="BEReporte.cs" />

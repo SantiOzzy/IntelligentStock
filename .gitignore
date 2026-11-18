@@ -44,5 +44,6 @@ IntelligentStock/Secretos.config
 # No van al repositorio: script de actualización, datos de prueba y documentación
 bdscript_actualizacion.sql
 bdscript_datos_prueba_ventas.sql
+bdscript_datos_prueba_compras.sql
 *.docx
 *.pdf

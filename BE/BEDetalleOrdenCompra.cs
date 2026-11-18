@@ -16,7 +16,9 @@ namespace BE
 
         public decimal Cantidad { get; set; }
 
-        /// Precio unitario actual del insumo (para valorizar la orden).
+        /// Precio unitario del renglón: el estimado al generar la orden y, ya
+        /// recibida, el que facturó el proveedor. Las órdenes anteriores a la
+        /// columna precioUnitario traen el precio actual del insumo.
         public decimal PrecioUnitario { get; set; }
 
         public decimal Importe

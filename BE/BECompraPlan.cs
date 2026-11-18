@@ -8,7 +8,8 @@ namespace BE
     ///
     /// No es una tabla. De la compra se guarda en la base solo la suscripción
     /// (tabla Suscripcion); el detalle queda en la factura en PDF y en el evento
-    /// "Factura de venta" de la bitácora.
+    /// "Factura de venta" de la bitácora. También describe cada abono mensual
+    /// que se cobra con la tarjeta y su factura.
     [Serializable]
     public class BECompraPlan
     {
@@ -112,12 +113,13 @@ namespace BE
 
         public int PuntoDeVenta { get; set; }
 
-        /// Número de comprobante: es el número de la suscripción, porque cada
-        /// compra genera una sola suscripción y una sola factura.
-        public int NumeroComprobante
-        {
-            get { return IdSuscripcion; }
-        }
+        /// Número de comprobante: el siguiente al último emitido del mismo tipo
+        /// (A o B) y punto de venta, como pide ARCA. Lo asigna la BLL al emitir.
+        public int NumeroComprobante { get; set; }
+
+        /// La factura es de un abono mensual cobrado automáticamente con la
+        /// tarjeta (no de una compra hecha desde la pantalla).
+        public bool EsAbonoMensual { get; set; }
 
         /// "0001-00000012".
         public string NumeroFactura

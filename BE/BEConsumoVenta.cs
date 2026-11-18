@@ -2,8 +2,8 @@
 
 namespace BE
 {
-    /// Consumo de un insumo en una venta (CU-006-037): lo que lleva la receta por
-    /// unidad, el total según la cantidad vendida y cómo queda el stock.
+    /// Consumo de un insumo en una venta (CU-006-037): el total según la receta
+    /// y la cantidad vendida, y cómo queda el stock.
     [Serializable]
     public class BEConsumoVenta
     {
@@ -12,8 +12,6 @@ namespace BE
         public string NombreInsumo { get; set; }
 
         public string UnidadDeMedida { get; set; }
-
-        public decimal ConsumoUnitario { get; set; }
 
         public decimal ConsumoTotal { get; set; }
 
@@ -46,11 +44,6 @@ namespace BE
         public bool QuedaEnMinimo
         {
             get { return !SinStock && StockResultante <= StockMinimo; }
-        }
-
-        public string ConsumoUnitarioTexto
-        {
-            get { return ConsumoUnitario.ToString("0.##") + " " + UnidadDeMedida; }
         }
 
         public string ConsumoTotalTexto

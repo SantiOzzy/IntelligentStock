@@ -14,18 +14,23 @@ using Servicios;
 // útil), y a eso se le suma el stock mínimo y se le resta el stock actual y lo
 // que ya está pedido en órdenes pendientes.
 //
-// Como cada proveedor vende lo suyo, se arma una orden por proveedor: al
-// elegirlo se marcan los insumos que se le pidieron la última vez, el usuario
-// marca o desmarca los que quiere pedirle y puede ajustar las cantidades. La
-// orden queda Pendiente hasta que se registre la factura (CU-006-036) y se le
-// envía al proveedor por correo. Lo que no se pidió sigue en la propuesta para
-// el próximo proveedor.
+// Para cada insumo se sugiere a qué proveedor pedírselo: el que lo facturó más
+// barato en los últimos días, según las facturas registradas (cada renglón de
+// una orden recibida guarda el precio facturado). El usuario puede desmarcar
+// insumos, cambiar las cantidades o elegir otro proveedor; abajo se ve qué
+// órdenes se van a generar. Se genera una orden por proveedor, queda Pendiente
+// hasta que se registre la factura (CU-006-036) y se le envía al proveedor por
+// correo.
 public partial class GenerarOrdenCompraPredictiva : PaginaBase
 {
     private const string ClaveSugerencias = "Sugerencias";
+    private const string ClaveDiasHistorial = "DiasHistorial";
 
     private BLLOrdenCompra bllOrden = new BLLOrdenCompra();
     private BLLProveedor bllProveedor = new BLLProveedor();
+
+    /// Proveedores activos, cargados una vez por pedido.
+    private Dictionary<string, BEProveedor> proveedores;
 
     protected override string PatenteRequerida
     {
@@ -39,61 +44,102 @@ public partial class GenerarOrdenCompraPredictiva : PaginaBase
         set { ViewState[ClaveSugerencias] = value; }
     }
 
+    private Dictionary<string, BEProveedor> Proveedores
+    {
+        get
+        {
+            if (proveedores == null)
+            {
+                proveedores = new Dictionary<string, BEProveedor>();
+                foreach (BEProveedor proveedor in bllProveedor.TraerActivos())
+                {
+                    proveedores[proveedor.Cuit] = proveedor;
+                }
+            }
+            return proveedores;
+        }
+    }
+
     protected void Page_Load(object sender, EventArgs e)
     {
-        ValidadorDeRango.CargarFechas(rvFecha, DateTime.Today, DateTime.Today.AddDays(60));
+        ValidadorDeRango.CargarFechas(rvFecha, DateTime.Today, DateTime.Today.AddDays(BLLOrdenCompra.DiasMaximosFechaOrden));
 
         if (!IsPostBack)
         {
             txtFecha.Text = DateTime.Today.ToString("yyyy-MM-dd");
-            CargarProveedores();
             MostrarSugerencias();
         }
     }
 
-    /// Marca los insumos que se le pidieron a este proveedor la última vez.
-    protected void ddlProveedor_SelectedIndexChanged(object sender, EventArgs e)
+    /// Se marcó o desmarcó un insumo, se cambió una cantidad o un proveedor:
+    /// se actualizan los precios, los importes y el resumen de órdenes.
+    protected void Grilla_Cambio(object sender, EventArgs e)
     {
         OcultarMensaje(lblMensaje);
-        string cuit = ddlProveedor.SelectedValue;
-        List<BESugerenciaCompra> sugerencias = Sugerencias;
-
-        int marcados = 0;
-        for (int i = 0; i < gvDetalle.Rows.Count && i < sugerencias.Count; i++)
-        {
-            CheckBox chk = (CheckBox)gvDetalle.Rows[i].FindControl("chkIncluir");
-            bool delProveedor = !string.IsNullOrEmpty(cuit) && sugerencias[i].CuitProveedorHabitual == cuit;
-            chk.Checked = delProveedor;
-            if (delProveedor)
-            {
-                marcados++;
-            }
-        }
-
-        if (string.IsNullOrEmpty(cuit))
-        {
-            return;
-        }
-
         try
         {
-            BEProveedor proveedor = bllProveedor.ObtenerPorCuit(cuit);
-            bool tieneCorreo = proveedor != null && !string.IsNullOrEmpty(proveedor.Correo);
-            chkEnviarCorreo.Enabled = tieneCorreo;
-            chkEnviarCorreo.Checked = tieneCorreo;
-            chkEnviarCorreo.Text = tieneCorreo
-                ? "Enviarle la orden por correo a " + proveedor.Correo + " (con la orden en PDF)"
-                : "El proveedor no tiene correo cargado: la orden no se le puede enviar por correo";
-
-            MostrarMensaje(lblMensaje, marcados > 0
-                ? "Se marcaron " + Textos.Contar(marcados, "insumo que se le pidió", "insumos que se le pidieron") +
-                  " a " + ddlProveedor.SelectedItem.Text + " la última vez. Marque o desmarque los que quiera pedirle."
-                : "A " + ddlProveedor.SelectedItem.Text + " todavía no se le pidió ninguno de estos insumos: marque los que quiera pedirle.",
-                false);
+            LeerGrilla(false);
+            Enlazar();
         }
         catch (Exception ex)
         {
             MostrarMensaje(lblMensaje, ex.Message, true);
+        }
+    }
+
+    protected void gvDetalle_RowDataBound(object sender, GridViewRowEventArgs e)
+    {
+        if (e.Row.RowType != DataControlRowType.DataRow)
+        {
+            return;
+        }
+
+        BESugerenciaCompra sugerencia = (BESugerenciaCompra)e.Row.DataItem;
+        DropDownList ddl = (DropDownList)e.Row.FindControl("ddlProveedorFila");
+        ddl.Items.Clear();
+        ddl.Items.Add(new ListItem("(elegir proveedor)", string.Empty));
+
+        // Primero los que lo facturaron, del más barato al más caro; después el resto.
+        List<string> agregados = new List<string>();
+        foreach (BEPrecioProveedor precio in sugerencia.Precios)
+        {
+            if (Proveedores.ContainsKey(precio.CuitProveedor))
+            {
+                ddl.Items.Add(new ListItem(precio.NombreProveedor + " - " + precio.PrecioUnitario.ToString("C"), precio.CuitProveedor));
+                agregados.Add(precio.CuitProveedor);
+            }
+        }
+        List<BEProveedor> resto = new List<BEProveedor>();
+        foreach (BEProveedor proveedor in Proveedores.Values)
+        {
+            if (!agregados.Contains(proveedor.Cuit))
+            {
+                resto.Add(proveedor);
+            }
+        }
+        resto.Sort(delegate(BEProveedor a, BEProveedor b)
+        {
+            return string.Compare(a.Nombre, b.Nombre, StringComparison.CurrentCultureIgnoreCase);
+        });
+        foreach (BEProveedor proveedor in resto)
+        {
+            ddl.Items.Add(new ListItem(proveedor.Nombre, proveedor.Cuit));
+        }
+
+        ListItem elegido = ddl.Items.FindByValue(sugerencia.CuitProveedor ?? string.Empty);
+        if (elegido != null)
+        {
+            ddl.ClearSelection();
+            elegido.Selected = true;
+        }
+
+        if (!sugerencia.Incluir)
+        {
+            e.Row.CssClass = "text-muted";
+        }
+        else if (string.IsNullOrEmpty(sugerencia.CuitProveedor))
+        {
+            e.Row.CssClass = "warning";
         }
     }
 
@@ -104,63 +150,56 @@ public partial class GenerarOrdenCompraPredictiva : PaginaBase
             return;
         }
 
-        if (string.IsNullOrEmpty(ddlProveedor.SelectedValue) || string.IsNullOrEmpty(txtFecha.Text.Trim()))
-        {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002", "Elija el proveedor y la fecha de la orden."), true);
-            return;
-        }
-
         DateTime valor;
         if (!DateTime.TryParseExact(txtFecha.Text, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out valor))
         {
             MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025", "La fecha no es válida."), true);
             return;
         }
-        DateTime? fecha = valor;
-
-        List<BESugerenciaCompra> pedido = LeerPedido();
-        if (pedido == null)
-        {
-            return;
-        }
-        if (pedido.Count == 0)
-        {
-            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR002",
-                "Marque al menos un insumo para pedirle a " + ddlProveedor.SelectedItem.Text + "."), true);
-            return;
-        }
 
         try
         {
-            string resultadoCorreo;
-            BEOrdenCompra orden = bllOrden.GenerarPredictiva(ddlProveedor.SelectedValue, fecha, pedido,
-                                                             chkEnviarCorreo.Enabled && chkEnviarCorreo.Checked, out resultadoCorreo);
-
-            string mensaje = "Se generó la orden de compra " + orden.Numero + " para " + orden.ProveedorTexto + " con " +
-                             Textos.Contar(orden.Detalles.Count, "insumo", "insumos") + ", por un importe estimado de " +
-                             orden.ImporteEstimado.ToString("C") + ". Quedó en estado Pendiente.";
-            if (!string.IsNullOrEmpty(resultadoCorreo))
+            if (!LeerGrilla(true))
             {
-                mensaje += " " + resultadoCorreo;
+                Enlazar();
+                return;
             }
 
+            List<BESugerenciaCompra> pedido = Sugerencias.FindAll(delegate(BESugerenciaCompra s) { return s.Incluir; });
+            List<OrdenGenerada> generadas = bllOrden.GenerarPorProveedor(valor, pedido, chkEnviarCorreo.Checked);
+
+            List<string> ordenes = new List<string>();
+            List<string> correos = new List<string>();
+            decimal importe = 0;
+            int insumos = 0;
+            foreach (OrdenGenerada generada in generadas)
+            {
+                BEOrdenCompra orden = generada.Orden;
+                ordenes.Add(orden.Numero + " para " + orden.ProveedorTexto + " (" +
+                            Textos.Contar(orden.Detalles.Count, "insumo", "insumos") + ", " + orden.ImporteEstimado.ToString("C") + ")");
+                if (!string.IsNullOrEmpty(generada.ResultadoCorreo))
+                {
+                    correos.Add(generada.ResultadoCorreo);
+                }
+                importe += orden.ImporteEstimado;
+                insumos += orden.Detalles.Count;
+            }
+
+            string mensaje = (generadas.Count == 1 ? "Se generó la orden de compra " : "Se generaron las órdenes de compra ") +
+                             string.Join("; ", ordenes.ToArray()) + ", en estado Pendiente." +
+                             (correos.Count > 0 ? " " + string.Join(" ", correos.ToArray()) : string.Empty);
+
             // La propuesta se vuelve a calcular: lo pedido ya figura como pendiente.
-            ddlProveedor.SelectedIndex = 0;
-            chkEnviarCorreo.Enabled = true;
-            chkEnviarCorreo.Checked = true;
-            chkEnviarCorreo.Text = "Enviarle la orden por correo al proveedor (con la orden en PDF)";
             MostrarSugerencias();
 
             litIndicadores.Text = new Indicadores()
-                .Agregar("Orden generada", orden.Numero, "destacado")
-                .Agregar("Insumos pedidos", orden.Detalles.Count.ToString())
-                .Agregar("Importe estimado", orden.ImporteEstimado.ToString("C"))
+                .Agregar(generadas.Count == 1 ? "Orden generada" : "Órdenes generadas", generadas.Count.ToString(), "destacado")
+                .Agregar("Insumos pedidos", insumos.ToString())
+                .Agregar("Importe estimado", importe.ToString("C"))
                 .Agregar("Quedan por pedir", Sugerencias.Count.ToString(), Sugerencias.Count > 0 ? "aviso" : "exito")
                 .ToString();
 
-            MostrarMensaje(lblMensaje, mensaje + (Sugerencias.Count > 0
-                ? " Quedan " + Textos.Contar(Sugerencias.Count, "insumo", "insumos") + " en la propuesta: elija el próximo proveedor."
-                : string.Empty), false);
+            MostrarMensaje(lblMensaje, mensaje, false);
         }
         catch (Exception ex)
         {
@@ -174,53 +213,62 @@ public partial class GenerarOrdenCompraPredictiva : PaginaBase
         Context.ApplicationInstance.CompleteRequest();
     }
 
-    private void CargarProveedores()
-    {
-        try
-        {
-            foreach (BEProveedor proveedor in bllProveedor.TraerActivos())
-            {
-                ddlProveedor.Items.Add(new ListItem(proveedor.Descripcion, proveedor.Cuit));
-            }
-        }
-        catch (Exception ex)
-        {
-            MostrarMensaje(lblMensaje, ex.Message, true);
-        }
-    }
-
-    /// Los insumos marcados con la cantidad a pedir. Devuelve null (y muestra
-    /// el error) si alguna cantidad no es válida.
-    private List<BESugerenciaCompra> LeerPedido()
+    /// Pasa a la propuesta lo que el usuario cambió en la grilla: qué insumos
+    /// pide, cuánto y a qué proveedor. Con 'validar', si alguna cantidad
+    /// marcada no es válida muestra el error y devuelve false; si no, la
+    /// cantidad inválida se deja como estaba.
+    private bool LeerGrilla(bool validar)
     {
         List<BESugerenciaCompra> sugerencias = Sugerencias;
-        List<BESugerenciaCompra> pedido = new List<BESugerenciaCompra>();
         for (int i = 0; i < gvDetalle.Rows.Count && i < sugerencias.Count; i++)
         {
-            CheckBox chk = (CheckBox)gvDetalle.Rows[i].FindControl("chkIncluir");
-            if (chk == null || !chk.Checked)
-            {
-                continue;
-            }
+            BESugerenciaCompra sugerencia = sugerencias[i];
+            GridViewRow fila = gvDetalle.Rows[i];
 
-            TextBox txt = (TextBox)gvDetalle.Rows[i].FindControl("txtCantidadPedir");
+            CheckBox chk = (CheckBox)fila.FindControl("chkIncluir");
+            sugerencia.Incluir = chk != null && chk.Checked;
+
+            TextBox txt = (TextBox)fila.FindControl("txtCantidadPedir");
             decimal cantidad;
-            if (txt == null || !Numeros.TryParseDecimal(txt.Text, out cantidad) || cantidad <= 0)
+            if (txt != null && Numeros.TryParseDecimal(txt.Text, out cantidad) && cantidad > 0)
             {
+                sugerencia.CantidadAPedir = cantidad;
+            }
+            else if (validar && sugerencia.Incluir)
+            {
+                Sugerencias = sugerencias;
                 MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025",
-                    "Ingrese la cantidad a pedir de " + sugerencias[i].NombreInsumo + " (mayor que cero)."), true);
-                return null;
+                    "Ingrese la cantidad a pedir de " + sugerencia.NombreInsumo + " (mayor que cero)."), true);
+                return false;
             }
 
-            BESugerenciaCompra item = sugerencias[i];
-            item.CantidadAPedir = cantidad;
-            pedido.Add(item);
+            DropDownList ddl = (DropDownList)fila.FindControl("ddlProveedorFila");
+            string cuit = ddl == null ? string.Empty : ddl.SelectedValue;
+            if (cuit != (sugerencia.CuitProveedor ?? string.Empty))
+            {
+                BEProveedor proveedor;
+                if (!string.IsNullOrEmpty(cuit) && Proveedores.TryGetValue(cuit, out proveedor))
+                {
+                    sugerencia.ElegirProveedor(proveedor.Cuit, proveedor.Nombre);
+                    BEPrecioProveedor mejor = sugerencia.Precios.Count > 0 ? sugerencia.Precios[0] : null;
+                    sugerencia.MotivoProveedor = mejor != null && mejor.Reciente && mejor.CuitProveedor != cuit &&
+                                                 mejor.PrecioUnitario < sugerencia.PrecioUnitario
+                        ? "Elegido por el usuario (" + mejor.NombreProveedor + " lo cobró " + mejor.PrecioUnitario.ToString("C") + ")"
+                        : "Elegido por el usuario";
+                }
+                else
+                {
+                    sugerencia.ElegirProveedor(null, null);
+                    sugerencia.MotivoProveedor = "Elija el proveedor";
+                }
+            }
         }
-        return pedido;
+        Sugerencias = sugerencias;
+        return true;
     }
 
     /// Calcula la propuesta para mostrarla. Si no hay nada para pedir (o no se
-    /// puede calcular) no se ofrece generar la orden.
+    /// puede calcular) no se ofrece generar órdenes.
     private void MostrarSugerencias()
     {
         litPeriodo.Text = "próximos " + BLLOrdenCompra.DiasProyeccion + " días";
@@ -228,42 +276,88 @@ public partial class GenerarOrdenCompraPredictiva : PaginaBase
         try
         {
             ResultadoPrediccion prediccion;
-            List<BESugerenciaCompra> sugerencias = bllOrden.CalcularSugerencias(BLLOrdenCompra.DiasProyeccion, out prediccion);
-            Sugerencias = sugerencias;
-            gvDetalle.DataSource = sugerencias;
-            gvDetalle.DataBind();
+            Sugerencias = bllOrden.CalcularSugerencias(BLLOrdenCompra.DiasProyeccion, out prediccion);
+            ViewState[ClaveDiasHistorial] = prediccion.DiasDeHistorial;
             MostrarPrediccion(prediccion);
-            btnAceptar.Enabled = true;
-
-            decimal importe = 0;
-            int perecederos = 0;
-            foreach (BESugerenciaCompra sugerencia in sugerencias)
-            {
-                importe += sugerencia.ImporteEstimado;
-                if (sugerencia.LimitadoPorVidaUtil)
-                {
-                    perecederos++;
-                }
-            }
-            litIndicadores.Text = new Indicadores()
-                .Agregar("Insumos para pedir", sugerencias.Count.ToString(), "destacado")
-                .Agregar("Importe estimado", importe.ToString("C"))
-                .Agregar("Días proyectados", prediccion.DiasProyectados.ToString())
-                .Agregar("Limitados por vida útil", perecederos.ToString())
-                .Agregar("Días de ventas analizados", prediccion.DiasDeHistorial.ToString())
-                .ToString();
+            Enlazar();
         }
         catch (Exception ex)
         {
             Sugerencias = new List<BESugerenciaCompra>();
-            gvDetalle.DataSource = null;
-            gvDetalle.DataBind();
+            Enlazar();
             btnAceptar.Enabled = false;
             if (!lblMensaje.Visible)
             {
                 MostrarMensaje(lblMensaje, ex.Message, true);
             }
         }
+    }
+
+    /// Muestra la propuesta, el resumen de órdenes por proveedor y los indicadores.
+    private void Enlazar()
+    {
+        List<BESugerenciaCompra> sugerencias = Sugerencias;
+        gvDetalle.DataSource = sugerencias;
+        gvDetalle.DataBind();
+
+        List<ResumenProveedor> resumen = new List<ResumenProveedor>();
+        Dictionary<string, ResumenProveedor> porCuit = new Dictionary<string, ResumenProveedor>();
+        int incluidos = 0, sinProveedor = 0, perecederos = 0;
+        decimal importe = 0;
+        foreach (BESugerenciaCompra sugerencia in sugerencias)
+        {
+            if (sugerencia.LimitadoPorVidaUtil)
+            {
+                perecederos++;
+            }
+            if (!sugerencia.Incluir)
+            {
+                continue;
+            }
+
+            incluidos++;
+            importe += sugerencia.ImporteEstimado;
+            if (string.IsNullOrEmpty(sugerencia.CuitProveedor))
+            {
+                sinProveedor++;
+                continue;
+            }
+
+            ResumenProveedor fila;
+            if (!porCuit.TryGetValue(sugerencia.CuitProveedor, out fila))
+            {
+                BEProveedor proveedor;
+                Proveedores.TryGetValue(sugerencia.CuitProveedor, out proveedor);
+                fila = new ResumenProveedor();
+                fila.Proveedor = sugerencia.NombreProveedor;
+                fila.Correo = proveedor == null || string.IsNullOrEmpty(proveedor.Correo)
+                    ? "Sin correo: la orden no se le puede enviar"
+                    : proveedor.Correo;
+                porCuit[sugerencia.CuitProveedor] = fila;
+                resumen.Add(fila);
+            }
+            fila.CantidadInsumos++;
+            fila.Importe += sugerencia.ImporteEstimado;
+        }
+
+        gvResumen.DataSource = resumen;
+        gvResumen.DataBind();
+
+        lblSinProveedor.Visible = sinProveedor > 0;
+        lblSinProveedor.Text = sinProveedor > 0
+            ? "Hay " + Textos.Contar(sinProveedor, "insumo marcado", "insumos marcados") +
+              " sin proveedor: elíjalo en la grilla (fila en amarillo) o desmárquelo."
+            : string.Empty;
+        btnAceptar.Enabled = incluidos > 0;
+
+        object diasHistorial = ViewState[ClaveDiasHistorial];
+        litIndicadores.Text = new Indicadores()
+            .Agregar("Insumos para pedir", incluidos.ToString(), "destacado")
+            .Agregar("Importe estimado", importe.ToString("C"))
+            .Agregar("Órdenes (proveedores)", resumen.Count.ToString())
+            .Agregar("Limitados por vida útil", perecederos.ToString())
+            .Agregar("Días de ventas analizados", diasHistorial == null ? "-" : diasHistorial.ToString())
+            .ToString();
     }
 
     private void MostrarPrediccion(ResultadoPrediccion prediccion)
@@ -273,5 +367,27 @@ public partial class GenerarOrdenCompraPredictiva : PaginaBase
         lblPrediccion.Visible = true;
         lblAvisoPrediccion.Text = prediccion.Aviso;
         lblAvisoPrediccion.Visible = !string.IsNullOrEmpty(prediccion.Aviso);
+    }
+
+    /// Una fila del resumen: la orden que se va a generar para un proveedor.
+    public class ResumenProveedor
+    {
+        public string Proveedor { get; set; }
+
+        public int CantidadInsumos { get; set; }
+
+        public decimal Importe { get; set; }
+
+        public string Correo { get; set; }
+
+        public string Insumos
+        {
+            get { return CantidadInsumos.ToString(CultureInfo.InvariantCulture); }
+        }
+
+        public string ImporteTexto
+        {
+            get { return Importe.ToString("C"); }
+        }
     }
 }

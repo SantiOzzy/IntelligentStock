@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
+using System.Threading;
 using BE;
 using DAL;
 using Servicios;
@@ -19,9 +19,17 @@ namespace BLL
     /// El cobro con tarjeta lo hace la pasarela de cobros externa
     /// (Servicios.PasarelaPagos, simulada), que primero cambia la tarjeta por un
     /// token. El token se guarda encriptado con AES-256 (R6) y se desencripta
-    /// (R7) para mostrarlo enmascarado y para pedirle a la pasarela que detenga
-    /// los cobros en la baja. La factura la autoriza el servicio de factura
-    /// electrónica (Servicios.FacturacionElectronica, simulado).
+    /// (R7) para cobrar el abono de cada mes, para mostrarlo enmascarado y para
+    /// pedirle a la pasarela que detenga los cobros en la baja. La factura la
+    /// autoriza el servicio de factura electrónica
+    /// (Servicios.FacturacionElectronica, simulado).
+    ///
+    /// Cobro mensual: la columna pagadoHasta guarda el día en que vence lo
+    /// pagado. Con tarjeta, ese día se cobra el abono del mes siguiente con el
+    /// token guardado, se emite la factura y se manda por correo
+    /// (CobrarAbonosVencidos). Lo revisa el primer inicio de sesión de cada
+    /// día (RevisarCobrosDelDia). Si la pasarela rechaza el cobro, se avisa
+    /// por correo y en la bitácora y se vuelve a intentar al día siguiente.
     public class BLLSuscripcion
     {
         private const string Tabla = "Suscripcion";
@@ -29,22 +37,26 @@ namespace BLL
         /// Acción con la que queda la baja en la bitácora.
         private const string AccionBaja = "Baja de suscripción";
 
-        /// Cuántos eventos de baja se leen para saber hasta cuándo sigue el servicio.
-        private const int EventosDeBajaALeer = 500;
-
-        /// "Se canceló la suscripción N° 5 (...) hasta el 09/11/2026."
-        private static readonly Regex FormatoEventoDeBaja =
-            new Regex(@"suscripci\S*n N\S*\s*(\d+)\b.*?hasta el (\d{2}/\d{2}/\d{4})", RegexOptions.Compiled);
-
         /// Acción con la que queda el alta (la compra) en la bitácora.
         private const string AccionAlta = "Alta de suscripción";
+
+        /// Acción con la que queda cada cobro mensual (o su rechazo) en la bitácora.
+        public const string AccionCobro = "Cobro mensual de suscripción";
 
         /// Acción con la que queda la factura en la bitácora.
         public const string AccionFactura = "Factura de venta";
 
-        /// "Se activó la suscripción N° 5 al plan Básico por 3 meses ..."
-        private static readonly Regex FormatoEventoDeAlta =
-            new Regex(@"suscripci\S*n N\S*\s*(\d+)\b.*?\bpor (\d+) mes", RegexOptions.Compiled);
+        /// Meses atrasados que se cobran como máximo en una revisión (si nadie
+        /// entró al sistema en mucho tiempo, el resto se cobra en las siguientes).
+        private const int MesesMaximosPorRevision = 12;
+
+        /// Revisión diaria de los cobros: una sola por día y de a un pedido a la vez.
+        private static readonly object candadoCobros = new object();
+        private static DateTime ultimaRevisionDeCobros = DateTime.MinValue;
+        private static DateTime proximoIntentoDeCobros = DateTime.MinValue;
+
+        /// Dos facturas al mismo tiempo no pueden tomar el mismo número.
+        private static readonly object candadoNumeracion = new object();
 
         /// Meses que se pueden pagar por adelantado y su descuento (en %).
         public static readonly int[] MesesPermitidos = new int[] { 1, 3, 6, 12 };
@@ -122,30 +134,6 @@ namespace BLL
             return -1;
         }
 
-        /// La suscripción se cobra por mes desde la fecha de inicio (el primer mes
-        /// se cobra en el alta). Al cancelar, el servicio sigue hasta el próximo
-        /// vencimiento mensual: el cierre del período que ya se pagó. Si todavía
-        /// no empezó, se respeta el primer mes completo, que ya está cobrado.
-        public static DateTime CalcularCierreDelPeriodo(DateTime fechaInicio, DateTime hoy)
-        {
-            return CalcularCierreDelPeriodo(fechaInicio, hoy, 1);
-        }
-
-        /// Igual que el anterior cuando se pagaron varios meses por adelantado:
-        /// el primer período termina al final de lo pagado y después el cobro
-        /// es mensual.
-        public static DateTime CalcularCierreDelPeriodo(DateTime fechaInicio, DateTime hoy, int mesesPagados)
-        {
-            DateTime inicio = fechaInicio.Date;
-
-            int meses = Math.Max(1, mesesPagados);
-            while (inicio.AddMonths(meses) <= hoy.Date)
-            {
-                meses++;
-            }
-            return inicio.AddMonths(meses);
-        }
-
         #endregion
 
         #region Consultas
@@ -153,90 +141,11 @@ namespace BLL
         public List<BESuscripcion> TraerSuscripciones()
         {
             List<BESuscripcion> suscripciones = dalSuscripcion.TraerSuscripciones();
-            Dictionary<int, DateTime> finDelServicio = null;
-            Dictionary<int, int> mesesPagados = LeerMesesPagados();
-
             foreach (BESuscripcion suscripcion in suscripciones)
             {
-                int meses;
-                suscripcion.MesesPagados = mesesPagados.TryGetValue(suscripcion.IdSuscripcion, out meses) ? meses : 1;
                 Completar(suscripcion);
-
-                if (!suscripcion.Activa)
-                {
-                    if (finDelServicio == null)
-                    {
-                        finDelServicio = LeerFinesDeServicio();
-                    }
-
-                    DateTime hasta;
-                    if (finDelServicio.TryGetValue(suscripcion.IdSuscripcion, out hasta))
-                    {
-                        suscripcion.ServicioHasta = hasta;
-                    }
-                }
             }
             return suscripciones;
-        }
-
-        /// La tabla Suscripcion no guarda la fecha de baja (no se agregan
-        /// columnas): el cierre del período queda escrito en el evento de baja de
-        /// la bitácora, y de ahí se lee. Si el evento ya se depuró, la grilla
-        /// muestra la suscripción como "Dada de baja" sin fecha.
-        private Dictionary<int, DateTime> LeerFinesDeServicio()
-        {
-            Dictionary<int, DateTime> fines = new Dictionary<int, DateTime>();
-            try
-            {
-                // Se recorren del más nuevo al más viejo: queda el más reciente.
-                foreach (BEEvento evento in bllEvento.TraerUltimosPorAccion(AccionBaja, EventosDeBajaALeer))
-                {
-                    Match m = FormatoEventoDeBaja.Match(evento.Descripcion ?? string.Empty);
-                    DateTime hasta;
-                    if (m.Success &&
-                        DateTime.TryParseExact(m.Groups[2].Value, "dd/MM/yyyy", CultureInfo.InvariantCulture,
-                            DateTimeStyles.None, out hasta))
-                    {
-                        int id = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
-                        if (!fines.ContainsKey(id))
-                        {
-                            fines[id] = hasta;
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Sin la bitácora la grilla igual se muestra, sin la fecha.
-            }
-            return fines;
-        }
-
-        /// La tabla tampoco guarda cuántos meses se pagaron por adelantado: queda
-        /// escrito en el evento del alta, y de ahí se lee (1 si ya se depuró).
-        private Dictionary<int, int> LeerMesesPagados()
-        {
-            Dictionary<int, int> meses = new Dictionary<int, int>();
-            try
-            {
-                foreach (BEEvento evento in bllEvento.TraerUltimosPorAccion(AccionAlta, EventosDeBajaALeer))
-                {
-                    Match m = FormatoEventoDeAlta.Match(evento.Descripcion ?? string.Empty);
-                    if (m.Success)
-                    {
-                        int id = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
-                        if (!meses.ContainsKey(id))
-                        {
-                            meses[id] = int.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture);
-                        }
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // Sin la bitácora se toma un mes.
-            }
-            return meses;
         }
 
         /// Suscripciones que se pueden dar de baja.
@@ -250,8 +159,6 @@ namespace BLL
             BESuscripcion suscripcion = idSuscripcion <= 0 ? null : dalSuscripcion.ObtenerPorId(idSuscripcion);
             if (suscripcion != null)
             {
-                int meses;
-                suscripcion.MesesPagados = LeerMesesPagados().TryGetValue(idSuscripcion, out meses) ? meses : 1;
                 Completar(suscripcion);
             }
             return suscripcion;
@@ -355,6 +262,7 @@ namespace BLL
             suscripcion.TokenPago = tokenEncriptado;
             suscripcion.Estado = BESuscripcion.EstadoActiva;
             suscripcion.FechaInicio = inicio;
+            suscripcion.PagadoHasta = inicio.AddMonths(1);
 
             // Si la grabación falla, en un sistema real habría que pedirle a la
             // pasarela que anule el cobro; la pasarela simulada no lo necesita.
@@ -396,7 +304,7 @@ namespace BLL
 
         /// CU-008-045 Baja de suscripción. Le pide a la pasarela que detenga los
         /// cobros y la marca como Cancelada (baja lógica). Devuelve hasta qué
-        /// fecha sigue habilitado el servicio (cierre del período en curso). Si
+        /// día sigue habilitado el servicio (el último día ya pagado). Si
         /// el token no se puede desencriptar (por ejemplo, porque cambió la clave
         /// AES del Web.config) la suscripción se cancela igual en el sistema y
         /// pasarelaNotificada queda en false: hay que pedir la baja de los cobros
@@ -450,11 +358,12 @@ namespace BLL
             bllDV.EjecutarControlado(
                 () => dalSuscripcion.CambiarEstado(idSuscripcion, BESuscripcion.EstadoCancelada), Tabla);
 
-            // Al contado el servicio sigue hasta el final de lo pagado; con tarjeta,
-            // hasta el cierre del período en curso.
-            DateTime cierre = alContado
-                ? suscripcion.PagadoHasta
-                : CalcularCierreDelPeriodo(suscripcion.FechaInicio, DateTime.Today, suscripcion.MesesPagados);
+            // El servicio sigue hasta el último día ya pagado: al contado, el
+            // final de los meses comprados; con tarjeta, el del último abono
+            // cobrado.
+            DateTime cierre = suscripcion.PagadoHasta == DateTime.MinValue
+                ? DateTime.Today
+                : suscripcion.UltimoDiaPagado;
 
             bllEvento.Registrar(dniUsuario, AccionBaja,
                 "Se canceló la suscripción N° " + idSuscripcion + " (plan " + suscripcion.TipoPlan +
@@ -636,10 +545,24 @@ namespace BLL
             suscripcion.TokenPago = tokenEncriptado;
             suscripcion.Estado = BESuscripcion.EstadoActiva;
             suscripcion.FechaInicio = compra.FechaInicio;
+            suscripcion.PagadoHasta = compra.PagadoHasta;
 
             // Si la grabación falla, en un sistema real habría que pedirle a la
             // pasarela que anule el cobro; la pasarela simulada no lo necesita.
             compra.IdSuscripcion = bllDV.EjecutarControlado(() => dalSuscripcion.Crear(suscripcion), Tabla);
+
+            // Datos de facturación para las facturas de los abonos mensuales.
+            try
+            {
+                dalArchivoFactura.GuardarDatosDeFacturacion(compra.IdSuscripcion, compra);
+            }
+            catch (Exception ex)
+            {
+                bllEvento.Registrar(dniUsuario, AccionFactura,
+                    "No se pudieron guardar los datos de facturación de la suscripción N° " + compra.IdSuscripcion +
+                    " (" + ex.Message + "): las facturas de los abonos mensuales se van a tener que emitir a mano.",
+                    CriticidadEvento.Advertencia);
+            }
 
             bllEvento.Registrar(dniUsuario, AccionAlta,
                 "Se activó la suscripción N° " + compra.IdSuscripcion + " al plan " + compra.Plan + " por " +
@@ -663,6 +586,17 @@ namespace BLL
             compra.PuntoDeVenta = emisor.PuntoDeVenta;
             compra.FechaEmision = DateTime.Today;
 
+            // El número es el siguiente al último emitido del mismo tipo y
+            // punto de venta; hasta que se guarda el PDF nadie más puede tomarlo.
+            lock (candadoNumeracion)
+            {
+                compra.NumeroComprobante = dalArchivoFactura.UltimoNumero(compra.TipoFactura, compra.PuntoDeVenta) + 1;
+                AutorizarYGuardarFactura(compra, emisor, dniUsuario);
+            }
+        }
+
+        private void AutorizarYGuardarFactura(BECompraPlan compra, DatosEmisor emisor, int? dniUsuario)
+        {
             RespuestaCae cae = FacturacionElectronica.SolicitarCae(compra.TipoFactura, compra.PuntoDeVenta,
                 compra.NumeroComprobante, compra.DocumentoCliente, compra.Total, compra.FechaEmision);
 
@@ -674,10 +608,12 @@ namespace BLL
                     ? "la respuesta llegó desde la IP no autorizada " + cae.IpOrigen
                     : cae.Motivo;
                 bllEvento.Registrar(dniUsuario, AccionFactura,
-                    "No se pudo autorizar la factura de la suscripción N° " + compra.IdSuscripcion + ": " + motivo +
+                    "No se pudo autorizar la factura " + (compra.EsAbonoMensual ? "del abono mensual " : string.Empty) +
+                    "de la suscripción N° " + compra.IdSuscripcion + ": " + motivo +
                     " Hay que emitirla a mano. [#ERR024]", CriticidadEvento.Grave);
                 throw new ApplicationException(AdministradorErrores.Mensaje("ERR024",
-                    "La compra quedó registrada (suscripción N° " + compra.IdSuscripcion + "), pero el servicio de " +
+                    (compra.EsAbonoMensual ? "El abono quedó cobrado" : "La compra quedó registrada") +
+                    " (suscripción N° " + compra.IdSuscripcion + "), pero el servicio de " +
                     "factura electrónica no autorizó la factura: " + motivo));
             }
 
@@ -691,8 +627,10 @@ namespace BLL
             // Hasta 500 caracteres (columna descripcion de Evento).
             string descripcion =
                 "Factura " + compra.TipoFactura + " " + compra.NumeroFactura + " a " + compra.RazonSocial + " (" +
-                compra.DocumentoCliente + ", " + compra.CondicionIva + "): plan " + compra.Plan + " x " +
-                compra.Meses + " meses, neto " + compra.NetoGravado.ToString("C") + ", IVA " +
+                compra.DocumentoCliente + ", " + compra.CondicionIva + "): " +
+                (compra.EsAbonoMensual ? "abono mensual del " + compra.FechaInicio.ToString("dd/MM/yyyy") + ", " : string.Empty) +
+                "plan " + compra.Plan + " x " + compra.Meses + (compra.Meses == 1 ? " mes" : " meses") +
+                ", neto " + compra.NetoGravado.ToString("C") + ", IVA " +
                 compra.Iva.ToString("C") + ", total " + compra.Total.ToString("C") + ". Pago: " +
                 (compra.MedioPago == BECompraPlan.MedioTarjeta
                     ? compra.MarcaTarjeta + " *" + compra.UltimosDigitos + " en " + compra.Cuotas + " cuota(s)"
@@ -707,6 +645,11 @@ namespace BLL
         /// internet), no corta la compra: deja el motivo en la compra y un
         /// evento en la bitácora, y la factura se puede descargar o reenviar.
         public bool EnviarFactura(BECompraPlan compra)
+        {
+            return EnviarFactura(compra, SessionManager.ObtenerInstancia().DniActual);
+        }
+
+        private bool EnviarFactura(BECompraPlan compra, int? dniUsuario)
         {
             compra.FacturaEnviada = false;
             compra.MotivoNoEnviada = null;
@@ -724,12 +667,16 @@ namespace BLL
             {
                 try
                 {
+                    string detalle = compra.EsAbonoMensual
+                        ? "Se cobró el abono mensual del plan " + compra.Plan + " de IntelligentStock, del " +
+                          compra.FechaInicio.ToString("dd/MM/yyyy") + " al " +
+                          compra.PagadoHasta.AddDays(-1).ToString("dd/MM/yyyy") + "."
+                        : "Gracias por contratar el plan " + compra.Plan + " de IntelligentStock por " + compra.Meses +
+                          (compra.Meses == 1 ? " mes" : " meses") + ", desde el " + compra.FechaInicio.ToString("dd/MM/yyyy") + ".";
                     EnviadorCorreo.Enviar(compra.Correo,
                         "IntelligentStock - Factura " + compra.TipoFactura + " " + compra.NumeroFactura,
-                        "Hola, " + compra.RazonSocial + ".\n\n" +
-                        "Gracias por contratar el plan " + compra.Plan + " de IntelligentStock por " + compra.Meses +
-                        (compra.Meses == 1 ? " mes" : " meses") + ", desde el " + compra.FechaInicio.ToString("dd/MM/yyyy") +
-                        ". Adjuntamos la factura " + compra.TipoFactura + " " + compra.NumeroFactura + " por " +
+                        "Hola, " + compra.RazonSocial + ".\n\n" + detalle +
+                        " Adjuntamos la factura " + compra.TipoFactura + " " + compra.NumeroFactura + " por " +
                         compra.Total.ToString("C") + ".\n\n" +
                         "Forma de pago: " + compra.DescripcionMedioPago + ".\n\n" +
                         "Este es un comprobante simulado, sin validez fiscal, generado para el trabajo final de ingeniería.",
@@ -744,7 +691,7 @@ namespace BLL
 
             if (!compra.FacturaEnviada)
             {
-                bllEvento.RegistrarDelUsuarioActual(AccionFactura,
+                bllEvento.Registrar(dniUsuario, AccionFactura,
                     "La factura " + compra.TipoFactura + " " + compra.NumeroFactura + " no se mandó a " + compra.Correo +
                     ": " + compra.MotivoNoEnviada + ".", CriticidadEvento.Advertencia);
             }
@@ -890,6 +837,243 @@ namespace BLL
 
         #endregion
 
+        #region Cobro mensual
+
+        /// Revisa los cobros del día: se llama en cada inicio de sesión, pero
+        /// trabaja una sola vez por día (como el mantenimiento de la bitácora).
+        /// Nunca corta el inicio de sesión: si algo falla, queda en la bitácora
+        /// y se vuelve a intentar una hora después.
+        public static void RevisarCobrosDelDia()
+        {
+            if (ultimaRevisionDeCobros == DateTime.Today || DateTime.Now < proximoIntentoDeCobros)
+            {
+                return;
+            }
+
+            // Si otro inicio de sesión ya está cobrando, no se lo espera.
+            if (!Monitor.TryEnter(candadoCobros))
+            {
+                return;
+            }
+
+            try
+            {
+                if (ultimaRevisionDeCobros == DateTime.Today)
+                {
+                    return;
+                }
+
+                ultimaRevisionDeCobros = DateTime.Today;
+                try
+                {
+                    new BLLSuscripcion().CobrarAbonosVencidos(DateTime.Today);
+                }
+                catch (Exception ex)
+                {
+                    ultimaRevisionDeCobros = DateTime.MinValue;
+                    proximoIntentoDeCobros = DateTime.Now.AddHours(1);
+                    new BLLEvento().Registrar(null, AccionCobro,
+                        "No se pudieron revisar los cobros mensuales de las suscripciones: " + ex.Message +
+                        " Se vuelve a intentar en una hora.", CriticidadEvento.Advertencia);
+                }
+            }
+            finally
+            {
+                Monitor.Exit(candadoCobros);
+            }
+        }
+
+        /// Cobra el abono de cada suscripción activa con tarjeta cuyo período
+        /// pagado ya venció (pagadoHasta igual a hoy o anterior): un mes por
+        /// cobro, con su factura. Si quedaron varios meses sin cobrar (nadie
+        /// entró al sistema), se cobra uno por uno. Si la pasarela rechaza un
+        /// cobro, esa suscripción se deja para el día siguiente. Devuelve
+        /// cuántos abonos se cobraron.
+        public int CobrarAbonosVencidos(DateTime hoy)
+        {
+            List<BESuscripcion> vencidas = dalSuscripcion.TraerSuscripciones().FindAll(delegate(BESuscripcion s)
+            {
+                return s.Activa && s.ConTarjeta && s.PagadoHasta != DateTime.MinValue && s.PagadoHasta <= hoy.Date;
+            });
+            if (vencidas.Count == 0)
+            {
+                return 0;
+            }
+
+            // R4: si la tabla Suscripcion no está íntegra no se cobra ninguna
+            // (la excepción la registra RevisarCobrosDelDia, que reintenta).
+            bllDV.VerificarAntesDeModificar(Tabla);
+
+            int cobrados = 0;
+            foreach (BESuscripcion suscripcion in vencidas)
+            {
+                try
+                {
+                    for (int mes = 0; mes < MesesMaximosPorRevision && suscripcion.PagadoHasta <= hoy.Date; mes++)
+                    {
+                        if (!CobrarUnMes(suscripcion))
+                        {
+                            break;
+                        }
+                        cobrados++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    bllEvento.Registrar(null, AccionCobro,
+                        "No se pudo cobrar el abono de la suscripción N° " + suscripcion.IdSuscripcion + ": " +
+                        ex.Message + " Se vuelve a intentar mañana.", CriticidadEvento.Advertencia);
+                }
+            }
+            return cobrados;
+        }
+
+        /// Cobra el abono del mes que empieza en suscripcion.PagadoHasta, lo
+        /// registra (R4 antes, R3 después) y emite la factura. Devuelve false si
+        /// no se cobró.
+        private bool CobrarUnMes(BESuscripcion suscripcion)
+        {
+            DateTime desde = suscripcion.PagadoHasta;
+            DateTime hasta = desde.AddMonths(1);
+            string periodo = "del " + desde.ToString("dd/MM/yyyy") + " al " + hasta.AddDays(-1).ToString("dd/MM/yyyy");
+
+            string token = TokenDesencriptado(suscripcion);
+            if (token == null)
+            {
+                bllEvento.Registrar(null, AccionCobro,
+                    "No se pudo cobrar el abono " + periodo + " de la suscripción N° " + suscripcion.IdSuscripcion +
+                    ": no se pudo desencriptar el token de pago (¿cambió la clave AES del Web.config?). " +
+                    "Hay que cobrarlo por otro medio.", CriticidadEvento.Grave);
+                return false;
+            }
+
+            // R4 antes de cobrar: si la tabla no está íntegra el cobro no se va
+            // a poder registrar, y no hay que cobrar.
+            bllDV.VerificarAntesDeModificar(Tabla);
+
+            BECompraPlan abono = Calcular(suscripcion.TipoPlan, 1);
+            abono.IdSuscripcion = suscripcion.IdSuscripcion;
+            abono.FechaInicio = desde;
+            abono.MedioPago = BECompraPlan.MedioTarjeta;
+            abono.EsAbonoMensual = true;
+
+            RespuestaPasarela respuesta = PasarelaPagos.Cobrar(token, abono.Total,
+                "IntelligentStock - plan " + abono.Plan + " - abono " + periodo);
+
+            // R9: la respuesta solo se da por buena si viene de un origen autorizado.
+            if (!AutenticadorSistemaExterno.EsOrigenAutorizado(respuesta.IpOrigen))
+            {
+                bllEvento.Registrar(null, AccionCobro,
+                    "No se cobró el abono " + periodo + " de la suscripción N° " + suscripcion.IdSuscripcion +
+                    ": la respuesta de la pasarela llegó desde la IP no autorizada " + respuesta.IpOrigen +
+                    ". Se vuelve a intentar mañana. [#ERR024]", CriticidadEvento.Advertencia);
+                return false;
+            }
+
+            BECompraPlan cliente = LeerDatosDeFacturacion(suscripcion.IdSuscripcion);
+            if (!respuesta.Aprobada)
+            {
+                bllEvento.Registrar(null, AccionCobro,
+                    "La pasarela rechazó el cobro del abono " + periodo + " de la suscripción N° " +
+                    suscripcion.IdSuscripcion + " (plan " + abono.Plan + ", " + abono.Total.ToString("C") + "): " +
+                    respuesta.Motivo + " Se vuelve a intentar mañana. [#ERR024]", CriticidadEvento.Advertencia);
+                AvisarRechazo(cliente, abono, periodo, respuesta.Motivo);
+                return false;
+            }
+
+            bool registrado = bllDV.EjecutarControlado(
+                () => dalSuscripcion.RegistrarCobro(suscripcion.IdSuscripcion, desde, hasta), Tabla);
+            if (!registrado)
+            {
+                // La dieron de baja o ya se registró ese mes mientras se cobraba.
+                bllEvento.Registrar(null, AccionCobro,
+                    "Se cobró el abono " + periodo + " de la suscripción N° " + suscripcion.IdSuscripcion +
+                    " (transacción " + respuesta.CodigoTransaccion + "), pero la suscripción ya no estaba activa o " +
+                    "ese mes ya figuraba cobrado: hay que pedirle a la pasarela que devuelva el cobro.",
+                    CriticidadEvento.Grave);
+                return false;
+            }
+
+            suscripcion.PagadoHasta = hasta;
+            bllEvento.Registrar(null, AccionCobro,
+                "Se cobró el abono " + periodo + " de la suscripción N° " + suscripcion.IdSuscripcion + " (plan " +
+                abono.Plan + "): " + abono.Total.ToString("C") + " con IVA, con la tarjeta guardada. Transacción de " +
+                "la pasarela: " + respuesta.CodigoTransaccion + ". Próximo cobro: " + hasta.ToString("dd/MM/yyyy") + ".");
+
+            // Factura del abono, con los datos de facturación de la compra.
+            if (cliente == null)
+            {
+                bllEvento.Registrar(null, AccionFactura,
+                    "No hay datos de facturación guardados para la suscripción N° " + suscripcion.IdSuscripcion +
+                    ": la factura del abono " + periodo + " hay que emitirla a mano.", CriticidadEvento.Advertencia);
+                return true;
+            }
+
+            abono.RazonSocial = cliente.RazonSocial;
+            abono.DocumentoCliente = cliente.DocumentoCliente;
+            abono.CondicionIva = cliente.CondicionIva;
+            abono.Domicilio = cliente.Domicilio;
+            abono.Correo = cliente.Correo;
+            abono.MarcaTarjeta = cliente.MarcaTarjeta;
+            abono.UltimosDigitos = cliente.UltimosDigitos;
+            abono.TitularTarjeta = cliente.TitularTarjeta;
+            abono.CodigoTransaccion = respuesta.CodigoTransaccion;
+
+            try
+            {
+                EmitirFactura(abono, null);
+                EnviarFactura(abono, null);
+            }
+            catch (ApplicationException)
+            {
+                // El abono ya está cobrado y registrado. EmitirFactura dejó en
+                // la bitácora que la factura hay que emitirla a mano.
+            }
+            return true;
+        }
+
+        private BECompraPlan LeerDatosDeFacturacion(int idSuscripcion)
+        {
+            try
+            {
+                return dalArchivoFactura.LeerDatosDeFacturacion(idSuscripcion);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// Le avisa al cliente, al correo de facturación, que no se pudo cobrar el
+        /// abono. Si no hay correo configurado, queda solo en la bitácora.
+        private void AvisarRechazo(BECompraPlan cliente, BECompraPlan abono, string periodo, string motivo)
+        {
+            if (cliente == null || string.IsNullOrEmpty(cliente.Correo) || !EnviadorCorreo.EstaConfigurado)
+            {
+                return;
+            }
+
+            try
+            {
+                EnviadorCorreo.Enviar(cliente.Correo,
+                    "IntelligentStock - No se pudo cobrar el abono del plan " + abono.Plan,
+                    "Hola, " + cliente.RazonSocial + ".\n\n" +
+                    "No pudimos cobrar el abono mensual del plan " + abono.Plan + " de IntelligentStock " + periodo +
+                    " (" + abono.Total.ToString("C") + " con IVA) con la tarjeta " + cliente.MarcaTarjeta +
+                    " terminada en " + cliente.UltimosDigitos + ": " + motivo + "\n\n" +
+                    "Vamos a volver a intentar el cobro mañana. El servicio sigue funcionando normalmente.\n\n" +
+                    "Este es un aviso simulado, generado para el trabajo final de ingeniería.");
+            }
+            catch (Exception ex)
+            {
+                bllEvento.Registrar(null, AccionCobro,
+                    "No se pudo avisar por correo a " + cliente.Correo + " que se rechazó el cobro del abono: " +
+                    ex.Message, CriticidadEvento.Advertencia);
+            }
+        }
+
+        #endregion
+
         #region Auxiliares
 
         private static void Completar(BESuscripcion suscripcion)
@@ -897,12 +1081,6 @@ namespace BLL
             suscripcion.AbonoMensual = PrecioDelPlan(suscripcion.TipoPlan);
 
             bool alContado = suscripcion.MedioPago == BECompraPlan.MedioContado;
-            if (suscripcion.Activa && !alContado && suscripcion.FechaInicio > DateTime.MinValue)
-            {
-                suscripcion.ProximoCobro = CalcularCierreDelPeriodo(suscripcion.FechaInicio, DateTime.Today,
-                                                                    suscripcion.MesesPagados);
-            }
-
             string token = TokenDesencriptado(suscripcion);
             suscripcion.TokenEnmascarado = alContado
                 ? "(contado)"
