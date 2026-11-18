@@ -169,7 +169,8 @@ public abstract class PaginaBase : Page
 
         if (usuario == null)
         {
-            Redirigir("~/IniciarSesion.aspx?motivo=sesion");
+            // Después de iniciar sesión se vuelve a esta pantalla.
+            Redirigir("~/IniciarSesion.aspx?motivo=sesion&volver=" + HttpUtility.UrlEncode(Request.RawUrl));
             return;
         }
 

@@ -85,7 +85,9 @@ public partial class IniciarSesion : PaginaBase
             SessionManager.ObtenerInstancia().UsuarioActual = resultado.Usuario;
             SessionManager.ObtenerInstancia().LimpiarInconsistencias();
 
-            Response.Redirect("~/IniciarSesion.aspx", false);
+            // Si llegó acá porque se le cerró la sesión (o quiso entrar a una
+            // pantalla sin haber iniciado sesión), vuelve a esa pantalla.
+            Response.Redirect(PantallaParaVolver() ?? "~/IniciarSesion.aspx", false);
             Context.ApplicationInstance.CompleteRequest();
         }
         catch (Exception ex)
@@ -93,6 +95,34 @@ public partial class IniciarSesion : PaginaBase
             txtClave.Text = string.Empty;
             MostrarMensaje(lblMensaje, ex.Message, true);
         }
+    }
+
+    /// La pantalla a la que se vuelve después de iniciar sesión (parámetro
+    /// "volver" que pone PaginaBase), o null. Solo se acepta una dirección de
+    /// este mismo sitio ("/IntelligentStock/ConsultarInsumo.aspx"): nunca otra
+    /// página web, para que nadie pueda usar el inicio de sesión para mandar al
+    /// usuario a un sitio suyo.
+    private string PantallaParaVolver()
+    {
+        string volver = Request.QueryString["volver"];
+        if (string.IsNullOrEmpty(volver) || volver.Length > 500)
+        {
+            return null;
+        }
+
+        string raiz = VirtualPathUtility.AppendTrailingSlash(Request.ApplicationPath ?? "/");
+        bool esDelSitio = volver.StartsWith(raiz, StringComparison.OrdinalIgnoreCase) &&
+                          !volver.StartsWith("//", StringComparison.Ordinal) &&
+                          volver.IndexOf('\\') < 0 &&
+                          volver.IndexOf("://", StringComparison.Ordinal) < 0 &&
+                          Uri.IsWellFormedUriString(volver, UriKind.Relative);
+        if (!esDelSitio ||
+            volver.IndexOf("IniciarSesion.aspx", StringComparison.OrdinalIgnoreCase) >= 0 ||
+            volver.IndexOf("CerrarSesion.aspx", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return null;
+        }
+        return volver;
     }
 
     // ---------------- Recuperacion de contraseña (autoservicio) ----------------

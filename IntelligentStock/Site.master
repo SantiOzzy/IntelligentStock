@@ -126,6 +126,32 @@
             </div>
         </div>
 
+        <%-- Aviso de cierre de sesión por inactividad (solo con un usuario
+             conectado). Como el diálogo de confirmación, está escrito acá para
+             que el Traductor también lo traduzca. --%>
+        <asp:PlaceHolder ID="phAvisoSesion" runat="server" Visible="false">
+            <div id="datosSesion" runat="server" ClientIDMode="Static" hidden="hidden"></div>
+            <div class="modal fade dialogo-confirmar" id="dialogoSesion" tabindex="-1" role="alertdialog"
+                 aria-labelledby="dialogoSesionTitulo" aria-describedby="dialogoSesionTexto">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <span class="dialogo-icono" aria-hidden="true"><span class="glyphicon glyphicon-time"></span></span>
+                            <h4 class="modal-title" id="dialogoSesionTitulo">Su sesión está por cerrarse</h4>
+                        </div>
+                        <div class="modal-body">
+                            <p id="dialogoSesionTexto">Por seguridad, la sesión se cierra cuando el sistema no se usa por un rato. Si quiere seguir trabajando, toque Seguir conectado.</p>
+                            <p><span>Se cierra en</span> <strong id="dialogoSesionCuenta">2:00</strong></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" id="dialogoSesionCerrar">Cerrar sesión</button>
+                            <button type="button" class="btn btn-primary" id="dialogoSesionSeguir">Seguir conectado</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </asp:PlaceHolder>
+
         <%-- Texto que toma el botón mientras el servidor procesa la operación. --%>
         <span id="textoProcesando" hidden="hidden">Procesando...</span>
     </form>
@@ -441,6 +467,127 @@
                 }
             });
         });
+    </script>
+
+    <script type="text/javascript">
+        // Cierre de sesión por inactividad. La sesión del servidor se cierra
+        // después de unos minutos sin pedidos (sessionState timeout del
+        // Web.config, en data-minutos). Dos minutos antes se avisa: "Seguir
+        // conectado" la renueva sin recargar la página (MantenerSesion.ashx)
+        // y, si no se toca, al vencer se cierra la sesión y se pasa al inicio
+        // de sesión, que después de ingresar trae de vuelta a esta pantalla.
+        // Lo que el usuario hace en otra pestaña también cuenta: cada página
+        // anota en localStorage cuándo se pidió. Y si está usando la página sin
+        // mandar nada al servidor (por ejemplo, escribiendo en un formulario
+        // largo), la sesión se renueva sola antes del aviso.
+        (function () {
+            var datos = document.getElementById("datosSesion");
+            if (!datos || !window.jQuery) {
+                return;
+            }
+
+            var duracion = parseInt(datos.getAttribute("data-minutos"), 10) * 60000;
+            var anticipacion = 2 * 60000;
+            var urlMantener = datos.getAttribute("data-mantener");
+            var urlInicio = datos.getAttribute("data-inicio");
+            var clave = "IntelligentStock.ultimaActividad";
+            var $dialogo = $("#dialogoSesion");
+            var ultimoPedido = Date.now(), visible = false, cerrando = false;
+            var huboUso = false, renovando = false;
+
+            $(document).on("keydown mousedown touchstart", function () { huboUso = true; });
+
+            function anotarActividad(momento) {
+                ultimoPedido = momento;
+                try { localStorage.setItem(clave, String(momento)); } catch (e) { }
+            }
+
+            function ultimaActividad() {
+                var momento = ultimoPedido;
+                try {
+                    var otraPestania = parseInt(localStorage.getItem(clave), 10);
+                    if (otraPestania > momento) { momento = otraPestania; }
+                } catch (e) { }
+                return momento;
+            }
+
+            function irAlInicio(volverAca) {
+                window.location.href = urlInicio + (volverAca
+                    ? "?motivo=sesion&volver=" + encodeURIComponent(window.location.pathname + window.location.search)
+                    : "");
+            }
+
+            function cerrarSesion(volverAca) {
+                if (cerrando) { return; }
+                cerrando = true;
+                $.ajax({ url: urlMantener, type: "POST", data: { accion: "cerrar" }, timeout: 5000 })
+                    .always(function () { irAlInicio(volverAca); });
+            }
+
+            // Renueva la sesión en el servidor. alTerminar recibe true si sigue
+            // iniciada, false si ya no existe y null si no hubo respuesta (sin
+            // conexión): en ese caso se deja todo como está.
+            function renovar(alTerminar) {
+                renovando = true;
+                $.ajax({ url: urlMantener, type: "POST", data: { accion: "renovar" }, dataType: "json", timeout: 10000 })
+                    .done(function (respuesta) {
+                        var activa = !!(respuesta && respuesta.activa);
+                        if (activa) { anotarActividad(Date.now()); }
+                        alTerminar(activa);
+                    })
+                    .fail(function () { alTerminar(null); })
+                    .always(function () { renovando = false; });
+            }
+
+            function revisar() {
+                var restante = ultimaActividad() + duracion - Date.now();
+                if (restante <= 0) {
+                    cerrarSesion(true);
+                    return;
+                }
+
+                // Está usando la página: se renueva sola, sin preguntar.
+                if (huboUso && !visible && !renovando && restante <= anticipacion + 60000) {
+                    huboUso = false;
+                    renovar(function (activa) { if (activa === false) { irAlInicio(true); } });
+                    return;
+                }
+
+                if (restante <= anticipacion) {
+                    var segundos = Math.ceil(restante / 1000);
+                    $("#dialogoSesionCuenta").text(Math.floor(segundos / 60) + ":" + ("0" + (segundos % 60)).slice(-2));
+                    if (!visible) {
+                        visible = true;
+                        $dialogo.modal({ backdrop: "static", keyboard: false });
+                    }
+                } else if (visible) {
+                    // Se siguió trabajando en otra pestaña.
+                    visible = false;
+                    $dialogo.modal("hide");
+                }
+            }
+
+            $("#dialogoSesionSeguir").on("click", function () {
+                var $boton = $(this).prop("disabled", true);
+                renovar(function (activa) {
+                    $boton.prop("disabled", false);
+                    if (activa) {
+                        huboUso = false;
+                        visible = false;
+                        $dialogo.modal("hide");
+                    } else if (activa === false) {
+                        // La sesión ya no existe (por ejemplo, se reinició el sitio).
+                        irAlInicio(true);
+                    }
+                });
+            });
+
+            $("#dialogoSesionCerrar").on("click", function () { cerrarSesion(false); });
+            $dialogo.on("shown.bs.modal", function () { $("#dialogoSesionSeguir").trigger("focus"); });
+
+            anotarActividad(ultimoPedido);
+            setInterval(revisar, 1000);
+        })();
     </script>
 
     <script type="text/javascript">

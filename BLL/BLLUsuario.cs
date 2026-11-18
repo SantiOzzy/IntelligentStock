@@ -280,6 +280,20 @@ namespace BLL
             SessionManager.ObtenerInstancia().CerrarSesion();
         }
 
+        /// Cierre de sesión automático: el usuario estuvo 'minutos' sin usar el
+        /// sistema y no pidió seguir conectado cuando se le avisó.
+        public void LogoutPorInactividad(BEUsuario usuario, int minutos)
+        {
+            if (usuario != null && !EsUsuarioDeContingencia(usuario))
+            {
+                bllEvento.Registrar(usuario.DNI, "Cierre de sesión",
+                    "Se cerró la sesión del usuario " + usuario.NombreUsuario + " por " + minutos +
+                    " minutos sin actividad.");
+            }
+
+            SessionManager.ObtenerInstancia().CerrarSesion();
+        }
+
         private void RegistrarIntentoFallido(BEUsuario usuario, bool baseConsistente)
         {
             // Si la base esta alterada no se escribe nada para no enmascarar la inconsistencia.

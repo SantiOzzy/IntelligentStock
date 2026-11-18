@@ -63,6 +63,23 @@ public partial class SiteMaster : MasterPage
     protected void Page_Load(object sender, EventArgs e)
     {
         ArmarMenu();
+        PrepararAvisoDeSesion();
+    }
+
+    /// Con un usuario conectado se dibuja el aviso de cierre de sesión por
+    /// inactividad. El script lo arma con los datos de datosSesion: los
+    /// minutos del Web.config (sessionState timeout) y las direcciones que usa.
+    private void PrepararAvisoDeSesion()
+    {
+        phAvisoSesion.Visible = Servicios.SessionManager.ObtenerInstancia().HaySesionActiva && Session != null;
+        if (!phAvisoSesion.Visible)
+        {
+            return;
+        }
+
+        datosSesion.Attributes["data-minutos"] = Session.Timeout.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        datosSesion.Attributes["data-mantener"] = ResolveUrl("~/MantenerSesion.ashx");
+        datosSesion.Attributes["data-inicio"] = ResolveUrl("~/IniciarSesion.aspx");
     }
 
     /// Clase del body: "con-menu" cuando hay un usuario con sesión (se ve el
