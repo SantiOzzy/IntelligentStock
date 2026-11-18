@@ -39,6 +39,7 @@
 
     <asp:Label ID="lblAvisoPrediccion" runat="server" CssClass="alert alert-warning" Visible="false" style="display: block;"></asp:Label>
 
+    <div class="table-responsive">
     <asp:GridView ID="gvDetalle" runat="server" AutoGenerateColumns="false" DataKeyNames="IdInsumo"
         CssClass="table table-bordered table-condensed table-striped" GridLines="None"
         ShowHeaderWhenEmpty="true" OnRowDataBound="gvDetalle_RowDataBound"
@@ -51,36 +52,41 @@
                 </ItemTemplate>
             </asp:TemplateField>
             <asp:BoundField DataField="NombreInsumo" HeaderText="Insumo" />
-            <asp:BoundField DataField="StockActualTexto" HeaderText="Stock actual" />
-            <asp:BoundField DataField="CantidadPendienteTexto" HeaderText="Ya pedido" />
-            <asp:BoundField DataField="ConsumoPrevistoPeriodoTexto" HeaderText="Consumo previsto" />
-            <asp:BoundField DataField="CantidadSugeridaTexto" HeaderText="Sugerido" ItemStyle-Font-Bold="true" />
-            <asp:TemplateField HeaderText="A pedir" ItemStyle-Width="150px">
+            <asp:TemplateField HeaderText="Stock actual" ItemStyle-Wrap="false">
                 <ItemTemplate>
-                    <div class="input-group input-group-sm">
+                    <%# HttpUtility.HtmlEncode(Eval("StockActualTexto")) %>
+                    <span class="campo-ayuda"><%# HttpUtility.HtmlEncode(Eval("YaPedidoTexto")) %></span>
+                </ItemTemplate>
+            </asp:TemplateField>
+            <asp:BoundField DataField="ConsumoPrevistoPeriodoTexto" HeaderText="Consumo previsto" />
+            <asp:TemplateField HeaderText="A pedir">
+                <ItemTemplate>
+                    <div class="input-group input-group-sm control-cantidad">
                         <asp:TextBox ID="txtCantidadPedir" runat="server" CssClass="form-control" TextMode="Number"
                             min="0.01" step="0.01" max="999999.99" AutoPostBack="true" OnTextChanged="Grilla_Cambio"
                             Text='<%# Numeros.ParaInput((decimal)Eval("CantidadAPedir")) %>'></asp:TextBox>
                         <span class="input-group-addon"><%# HttpUtility.HtmlEncode(Eval("UnidadDeMedida")) %></span>
                     </div>
+                    <span class="campo-ayuda"><%# HttpUtility.HtmlEncode(Eval("SugeridoTexto")) %></span>
                 </ItemTemplate>
             </asp:TemplateField>
-            <asp:TemplateField HeaderText="Proveedor" ItemStyle-Width="230px">
+            <asp:TemplateField HeaderText="Proveedor">
                 <ItemTemplate>
-                    <asp:DropDownList ID="ddlProveedorFila" runat="server" CssClass="form-control input-sm"
+                    <asp:DropDownList ID="ddlProveedorFila" runat="server" CssClass="form-control control-lista"
                         AutoPostBack="true" OnSelectedIndexChanged="Grilla_Cambio"></asp:DropDownList>
                     <span class="campo-ayuda"><%# HttpUtility.HtmlEncode(Eval("MotivoProveedor")) %></span>
                 </ItemTemplate>
             </asp:TemplateField>
-            <asp:TemplateField HeaderText="Precio unitario">
+            <asp:TemplateField HeaderText="Precio unitario" ItemStyle-CssClass="celda-precio">
                 <ItemTemplate>
-                    <%# HttpUtility.HtmlEncode(Eval("PrecioTexto")) %>
-                    <span class="campo-ayuda"><%# HttpUtility.HtmlEncode(Eval("OtrosPreciosTexto")) %></span>
+                    <span style="white-space: nowrap;"><%# HttpUtility.HtmlEncode(Eval("PrecioUnitarioTexto")) %></span>
+                    <span class="campo-ayuda"><%# HttpUtility.HtmlEncode(Eval("DetallePrecioTexto")) %></span>
                 </ItemTemplate>
             </asp:TemplateField>
-            <asp:BoundField DataField="ImporteEstimadoTexto" HeaderText="Importe estimado" />
+            <asp:BoundField DataField="ImporteEstimadoTexto" HeaderText="Importe" ItemStyle-Wrap="false" />
         </Columns>
     </asp:GridView>
+    </div>
 
     <asp:Label ID="lblPrediccion" runat="server" CssClass="help-block" Visible="false"></asp:Label>
 

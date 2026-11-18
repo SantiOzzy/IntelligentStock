@@ -977,6 +977,22 @@ div.alert::before {
     font-weight: 500;
 }
 
+/* Controles dentro de una grilla. Con el ancho automático de la tabla, un
+   control al 100 % se achica hasta que no se ve lo que tiene escrito: se les da
+   un ancho mínimo y, si la grilla no entra, se desplaza de costado
+   (table-responsive). */
+.table .control-cantidad {
+    min-width: 130px;
+}
+
+.table .control-lista {
+    min-width: 200px;
+}
+
+.table td.celda-precio {
+    min-width: 170px;
+}
+
 /* ---------------------------------------------------------------------------
    Paneles, pestañas y recuadros
    --------------------------------------------------------------------------- */

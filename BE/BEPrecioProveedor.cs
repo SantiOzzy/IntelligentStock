@@ -23,10 +23,10 @@ namespace BE
         /// solo los recientes compiten por el mejor precio.
         public bool Reciente { get; set; }
 
-        /// "Distribuidora Sur: $ 1.250,00 (02/11/2026)".
+        /// "Distribuidora Sur $ 1.250,00 (02/11/26)".
         public string Texto
         {
-            get { return NombreProveedor + ": " + PrecioUnitario.ToString("C") + " (" + Fecha.ToString("dd/MM/yyyy") + ")"; }
+            get { return NombreProveedor + " " + PrecioUnitario.ToString("C") + " (" + Fecha.ToString("dd/MM/yy") + ")"; }
         }
     }
 }

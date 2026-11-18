@@ -147,26 +147,21 @@ namespace BE
             get { return ConsumoPrevistoTexto + " en " + DiasCubiertosTexto; }
         }
 
-        /// "$ 1.250,00 (02/11/2026)", o "(precio de referencia)" si el proveedor
-        /// elegido nunca lo facturó.
-        public string PrecioTexto
+        public string PrecioUnitarioTexto
         {
-            get
-            {
-                if (!FechaPrecio.HasValue)
-                {
-                    return PrecioUnitario.ToString("C") + " (precio de referencia)";
-                }
-                return PrecioUnitario.ToString("C") + " (" + FechaPrecio.Value.ToString("dd/MM/yyyy") +
-                       (PrecioReciente ? ")" : ", desactualizado)");
-            }
+            get { return PrecioUnitario.ToString("C"); }
         }
 
-        /// Lo que cobraron los otros proveedores, para comparar.
-        public string OtrosPreciosTexto
+        /// De cuándo es el precio y lo que cobraron los otros proveedores, para
+        /// comparar: "Del 02/11/26. Otros: Distribuidora Sur $ 1.300,00 (19/10/26)".
+        public string DetallePrecioTexto
         {
             get
             {
+                string detalle = !FechaPrecio.HasValue
+                    ? "Precio de referencia (este proveedor todavía no lo facturó)."
+                    : "Del " + FechaPrecio.Value.ToString("dd/MM/yy") + (PrecioReciente ? "." : ", desactualizado.");
+
                 List<string> otros = new List<string>();
                 foreach (BEPrecioProveedor precio in precios)
                 {
@@ -175,8 +170,19 @@ namespace BE
                         otros.Add(precio.Texto);
                     }
                 }
-                return otros.Count == 0 ? string.Empty : "Otros: " + string.Join("; ", otros.ToArray());
+                return otros.Count == 0 ? detalle : detalle + " Otros: " + string.Join("; ", otros.ToArray());
             }
+        }
+
+        /// "Ya pedido: 12 kg", o vacío si no hay nada pedido.
+        public string YaPedidoTexto
+        {
+            get { return CantidadPendiente > 0 ? "Ya pedido: " + CantidadPendienteTexto : string.Empty; }
+        }
+
+        public string SugeridoTexto
+        {
+            get { return "Sugerido: " + CantidadSugeridaTexto; }
         }
     }
 }
