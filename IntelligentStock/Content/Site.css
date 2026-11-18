@@ -986,10 +986,11 @@ div.alert::before {
 }
 
 .table .control-lista {
-    min-width: 200px;
+    min-width: 280px;
 }
 
 .table td.celda-precio {
+    width: 190px;
     min-width: 170px;
 }
 
