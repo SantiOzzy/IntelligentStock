@@ -41,9 +41,8 @@ IntelligentStock/App_Data/*.ldf
 # Datos privados (contraseña del correo): ver el comentario de SMTP en Web.config
 IntelligentStock/Secretos.config
 
-# No van al repositorio: script de actualización, datos de prueba y documentación
+# No van al repositorio: script de actualización, datos de demostración y documentación
 bdscript_actualizacion.sql
-bdscript_datos_prueba_ventas.sql
-bdscript_datos_prueba_compras.sql
+bdscript_datos_demo.sql
 *.docx
 *.pdf
