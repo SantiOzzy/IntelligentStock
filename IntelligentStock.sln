@@ -1,0 +1,69 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BE", "BE\BE.csproj", "{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Servicios", "Servicios\Servicios.csproj", "{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0002}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL", "DAL\DAL.csproj", "{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BLL", "BLL\BLL.csproj", "{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0004}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "IntelligentStock", "IntelligentStock\", "{01E237EE-2F92-412E-ADCA-6DCE672C35F8}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.7.2"
+		ProjectReferences = "{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0001}|BE.dll;{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0002}|Servicios.dll;{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0003}|DAL.dll;{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0004}|BLL.dll;"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_51548"
+		Debug.AspNetCompiler.PhysicalPath = "IntelligentStock\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51548\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_51548"
+		Release.AspNetCompiler.PhysicalPath = "IntelligentStock\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51548\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "51548"
+		DefaultWebSiteLanguage = "Visual C#"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0002}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0002}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0002}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0002}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0004}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0004}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0004}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E1C0A21-1B44-4C31-9C71-0A5B7E4D0004}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01E237EE-2F92-412E-ADCA-6DCE672C35F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01E237EE-2F92-412E-ADCA-6DCE672C35F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01E237EE-2F92-412E-ADCA-6DCE672C35F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01E237EE-2F92-412E-ADCA-6DCE672C35F8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F4E70EE0-4E8D-4C7F-9D56-5D0E9752BFDF}
+	EndGlobalSection
+EndGlobal
