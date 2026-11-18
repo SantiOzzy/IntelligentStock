@@ -388,6 +388,37 @@ namespace BLL
             return dalVenta.TraerVentas(desde.Date, hasta.Date);
         }
 
+        /// Ventas registradas entre desde y hasta (inclusive), de una receta o
+        /// de todas (idReceta 0), de la más nueva a la más vieja, con lo que
+        /// descontó cada una. Es la consulta de la pestaña "Ventas registradas".
+        public List<BEVenta> ConsultarVentas(DateTime desde, DateTime hasta, int idReceta)
+        {
+            desde = desde.Date;
+            hasta = hasta.Date;
+            if (desde > hasta)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "La fecha desde no puede ser posterior a la fecha hasta."));
+            }
+            if ((hasta - desde).TotalDays >= DiasMaximosEstadisticas)
+            {
+                throw new ApplicationException(AdministradorErrores.Mensaje("ERR025",
+                    "El período no puede superar un año."));
+            }
+
+            List<BEVenta> ventas = dalVenta.TraerVentas(desde, hasta);
+            if (idReceta > 0)
+            {
+                ventas = ventas.FindAll(delegate(BEVenta v) { return v.IdReceta == idReceta; });
+            }
+            ventas.Sort(delegate(BEVenta a, BEVenta b)
+            {
+                int c = b.Fecha.CompareTo(a.Fecha);
+                return c != 0 ? c : b.IdVenta.CompareTo(a.IdVenta);
+            });
+            return ventas;
+        }
+
         /// Período máximo de las estadísticas de ventas.
         public const int DiasMaximosEstadisticas = 366;
 

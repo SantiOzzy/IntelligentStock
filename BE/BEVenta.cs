@@ -36,5 +36,11 @@ namespace BE
         {
             get { return Cantidad.ToString("0.##"); }
         }
+
+        /// De cuántos insumos se descontó stock.
+        public int CantidadInsumos
+        {
+            get { return consumos.Count; }
+        }
     }
 }

@@ -8,7 +8,7 @@
 
     <asp:Label ID="lblMensaje" runat="server" Visible="false"></asp:Label>
 
-    <p class="help-block">Acá se cargan las ventas para descontar del stock lo que lleva cada receta. Se pueden cargar por pedido, con una o varias recetas (por ejemplo, todo lo que pidió una mesa), o todas las del día juntas al cierre. Si el stock del sistema no alcanza, la venta igual se registra (ya ocurrió): el insumo queda en cero y conviene corregirlo con un ajuste de stock.</p>
+    <p class="help-block">Acá se cargan las ventas para descontar del stock lo que lleva cada receta. Se pueden cargar por pedido, con una o varias recetas (por ejemplo, todo lo que pidió una mesa), o todas las del día juntas al cierre. Si el stock del sistema no alcanza, la venta igual se registra (ya ocurrió): el insumo queda en cero y conviene corregirlo con un ajuste de stock. En "Ventas registradas" se consultan las ventas cargadas y lo que descontó cada una.</p>
 
     <ul class="nav nav-tabs" style="margin-bottom: 15px;">
         <li id="tabPedido" runat="server" class="active">
@@ -16,6 +16,9 @@
         </li>
         <li id="tabCierre" runat="server">
             <asp:LinkButton ID="lnkCierre" runat="server" CommandArgument="1" OnClick="lnkModo_Click" CausesValidation="false">Cierre del día</asp:LinkButton>
+        </li>
+        <li id="tabVentas" runat="server">
+            <asp:LinkButton ID="lnkVentas" runat="server" CommandArgument="2" OnClick="lnkModo_Click" CausesValidation="false">Ventas registradas</asp:LinkButton>
         </li>
     </ul>
 
@@ -136,8 +139,87 @@
                 CssClass="btn btn-default" OnClick="btnPrevisualizarCierre_Click" ValidationGroup="Cierre" />
         </asp:View>
 
+        <asp:View ID="vwVentas" runat="server">
+            <div class="row">
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group">
+                        <asp:Label ID="lblVentasDesde" runat="server" AssociatedControlID="txtVentasDesde"
+                            CssClass="control-label" Text="Fecha desde (*)"></asp:Label>
+                        <asp:TextBox ID="txtVentasDesde" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
+                        <asp:RequiredFieldValidator ID="rfvVentasDesde" runat="server" ControlToValidate="txtVentasDesde"
+                            ValidationGroup="Ventas" Display="Dynamic" CssClass="text-danger"
+                            ErrorMessage="Ingrese la fecha desde."></asp:RequiredFieldValidator>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <div class="form-group">
+                        <asp:Label ID="lblVentasHasta" runat="server" AssociatedControlID="txtVentasHasta"
+                            CssClass="control-label" Text="Fecha hasta (*)"></asp:Label>
+                        <asp:TextBox ID="txtVentasHasta" runat="server" CssClass="form-control" TextMode="Date"></asp:TextBox>
+                        <asp:RequiredFieldValidator ID="rfvVentasHasta" runat="server" ControlToValidate="txtVentasHasta"
+                            ValidationGroup="Ventas" Display="Dynamic" CssClass="text-danger"
+                            ErrorMessage="Ingrese la fecha hasta."></asp:RequiredFieldValidator>
+                        <asp:CompareValidator ID="cvVentasHasta" runat="server" ControlToValidate="txtVentasHasta"
+                            ControlToCompare="txtVentasDesde" Operator="GreaterThanEqual" Type="Date"
+                            ValidationGroup="Ventas" Display="Dynamic" CssClass="text-danger"
+                            ErrorMessage="La fecha hasta no puede ser anterior a la fecha desde."></asp:CompareValidator>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="form-group">
+                        <asp:Label ID="lblRecetaVentas" runat="server" AssociatedControlID="ddlRecetaVentas"
+                            CssClass="control-label" Text="Receta"></asp:Label>
+                        <asp:DropDownList ID="ddlRecetaVentas" runat="server" CssClass="form-control">
+                            <asp:ListItem Text="(todas)" Value="" />
+                        </asp:DropDownList>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <div class="form-group">
+                        <span class="control-label hidden-xs hidden-sm" style="display: block;">&nbsp;</span>
+                        <asp:Button ID="btnBuscarVentas" runat="server" Text="Buscar" CssClass="btn btn-default"
+                            OnClick="btnBuscarVentas_Click" ValidationGroup="Ventas" />
+                    </div>
+                </div>
+            </div>
+            <span class="campo-ayuda">Hasta un año. Con "Ver consumo" se muestra lo que descontó la venta de cada insumo.</span>
+
+            <asp:Literal ID="litIndicadoresVentas" runat="server" Mode="PassThrough"></asp:Literal>
+
+            <asp:GridView ID="gvVentas" runat="server" AutoGenerateColumns="false" DataKeyNames="IdVenta"
+                CssClass="table table-bordered table-condensed table-striped" GridLines="None"
+                ShowHeaderWhenEmpty="true" OnRowCommand="gvVentas_RowCommand"
+                AllowPaging="true" PageSize="25" OnPageIndexChanging="gvVentas_PageIndexChanging"
+                EmptyDataText="No hay ventas registradas en ese período.">
+                <SelectedRowStyle CssClass="info" />
+                <PagerStyle CssClass="text-center" />
+                <Columns>
+                    <asp:BoundField DataField="FechaTexto" HeaderText="Fecha" />
+                    <asp:BoundField DataField="NombreReceta" HeaderText="Receta" />
+                    <asp:BoundField DataField="CantidadTexto" HeaderText="Unidades" />
+                    <asp:BoundField DataField="CantidadInsumos" HeaderText="Insumos descontados" />
+                    <asp:ButtonField CommandName="Consumo" Text="Ver consumo" ButtonType="Button"
+                        ControlStyle-CssClass="btn btn-default btn-xs" />
+                </Columns>
+            </asp:GridView>
+
+            <asp:Panel ID="pnlConsumoVenta" runat="server" Visible="false">
+                <h3 class="seccion-titulo"><asp:Literal ID="litTituloConsumo" runat="server"></asp:Literal></h3>
+                <asp:GridView ID="gvConsumoVenta" runat="server" AutoGenerateColumns="false"
+                    CssClass="table table-bordered table-condensed table-striped" GridLines="None"
+                    ShowHeaderWhenEmpty="true"
+                    EmptyDataText="La venta no descontó insumos.">
+                    <Columns>
+                        <asp:BoundField DataField="NombreInsumo" HeaderText="Insumo" />
+                        <asp:BoundField DataField="ConsumoTotalTexto" HeaderText="Se descontó" />
+                    </Columns>
+                </asp:GridView>
+            </asp:Panel>
+        </asp:View>
+
     </asp:MultiView>
 
+    <asp:Panel ID="pnlStock" runat="server">
     <asp:Literal ID="litIndicadores" runat="server" Mode="PassThrough"></asp:Literal>
 
     <h3 class="seccion-titulo">Cómo queda el stock</h3>
@@ -154,6 +236,7 @@
             <asp:BoundField DataField="FaltanteTexto" HeaderText="Faltó" />
         </Columns>
     </asp:GridView>
+    </asp:Panel>
 
     <div class="acciones">
         <asp:Button ID="btnAceptar" runat="server" Text="Registrar la venta" CssClass="btn btn-primary"

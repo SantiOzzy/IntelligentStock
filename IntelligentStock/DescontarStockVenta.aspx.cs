@@ -14,19 +14,32 @@ using Servicios;
 //   - Venta: un pedido con una o varias recetas (por ejemplo, todo lo que pidió
 //     una mesa). Se agregan las recetas de a una y se registra todo junto.
 //   - Cierre del día: todas las recetas vendidas en un día, de una vez.
-// En las dos la grilla muestra antes de confirmar cuánto se descuenta de cada
+// En las dos, la grilla muestra antes de confirmar cuánto se descuenta de cada
 // insumo y cómo queda el stock. La BLL graba las ventas (tablas Venta y
 // ConsumoVenta) y descuenta todo en una sola transacción, recalcula el dígito
 // verificador y deja el registro en la bitácora. Si el stock del sistema no
 // alcanza, la venta igual se registra y el insumo queda en cero (se avisa para
 // corregirlo con un ajuste). Si un insumo queda en su mínimo, el
 // ControladorStock (Observer) avisa por correo.
+//
+// La tercera pestaña, "Ventas registradas", consulta las ventas cargadas en un
+// período y lo que descontó cada una. Solo consulta: no graba nada.
 public partial class DescontarStockVenta : PaginaBase
 {
     private const int ModoPedido = 0;
     private const int ModoCierre = 1;
+    private const int ModoVentas = 2;
 
     private const string ClavePedido = "Pedido";
+
+    /// Filtro de la última búsqueda de "Ventas registradas" (para paginar y
+    /// ver el consumo sin depender de lo que esté escrito en los filtros).
+    private const string ClaveVentasDesde = "VentasDesde";
+    private const string ClaveVentasHasta = "VentasHasta";
+    private const string ClaveVentasReceta = "VentasReceta";
+
+    /// Días hacia atrás que muestra la consulta al entrar.
+    private const int DiasConsultaInicial = 30;
 
     private BLLVenta bllVenta = new BLLVenta();
 
@@ -51,6 +64,8 @@ public partial class DescontarStockVenta : PaginaBase
         {
             txtFecha.Text = DateTime.Today.ToString("yyyy-MM-dd");
             txtFechaCierre.Text = DateTime.Today.ToString("yyyy-MM-dd");
+            txtVentasDesde.Text = DateTime.Today.AddDays(1 - DiasConsultaInicial).ToString("yyyy-MM-dd");
+            txtVentasHasta.Text = DateTime.Today.ToString("yyyy-MM-dd");
             CargarRecetas();
             CambiarModo(ModoPedido);
         }
@@ -166,6 +181,74 @@ public partial class DescontarStockVenta : PaginaBase
         }
     }
 
+    protected void btnBuscarVentas_Click(object sender, EventArgs e)
+    {
+        OcultarMensaje(lblMensaje);
+        if (!IsValid)
+        {
+            return;
+        }
+
+        DateTime? desde = LeerFecha(txtVentasDesde.Text);
+        DateTime? hasta = LeerFecha(txtVentasHasta.Text);
+        if (!desde.HasValue || !hasta.HasValue)
+        {
+            MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR025", "La fecha no es válida."), true);
+            return;
+        }
+
+        int idReceta;
+        int.TryParse(ddlRecetaVentas.SelectedValue, out idReceta);
+        ViewState[ClaveVentasDesde] = desde.Value;
+        ViewState[ClaveVentasHasta] = hasta.Value;
+        ViewState[ClaveVentasReceta] = idReceta;
+        gvVentas.PageIndex = 0;
+        MostrarVentas();
+    }
+
+    protected void gvVentas_PageIndexChanging(object sender, GridViewPageEventArgs e)
+    {
+        gvVentas.PageIndex = e.NewPageIndex;
+        MostrarVentas();
+    }
+
+    protected void gvVentas_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        if (e.CommandName != "Consumo")
+        {
+            return;
+        }
+
+        OcultarMensaje(lblMensaje);
+        int fila;
+        if (!int.TryParse(Convert.ToString(e.CommandArgument), out fila) || fila < 0 || fila >= gvVentas.DataKeys.Count)
+        {
+            return;
+        }
+
+        int idVenta = (int)gvVentas.DataKeys[fila].Value;
+        try
+        {
+            BEVenta venta = ConsultarVentas().Find(delegate(BEVenta v) { return v.IdVenta == idVenta; });
+            if (venta == null)
+            {
+                MostrarMensaje(lblMensaje, AdministradorErrores.Mensaje("ERR013"), true);
+                return;
+            }
+
+            gvVentas.SelectedIndex = fila;
+            litTituloConsumo.Text = HttpUtility.HtmlEncode("Consumo de la venta: " + venta.CantidadTexto + " x " +
+                                                           venta.NombreReceta + " del " + venta.FechaTexto);
+            gvConsumoVenta.DataSource = venta.Consumos;
+            gvConsumoVenta.DataBind();
+            pnlConsumoVenta.Visible = true;
+        }
+        catch (Exception ex)
+        {
+            MostrarMensaje(lblMensaje, ex.Message, true);
+        }
+    }
+
     protected void btnCancelar_Click(object sender, EventArgs e)
     {
         Response.Redirect("~/IniciarSesion.aspx", false);
@@ -179,12 +262,29 @@ public partial class DescontarStockVenta : PaginaBase
         mvModo.ActiveViewIndex = modo;
         tabPedido.Attributes["class"] = modo == ModoPedido ? "active" : string.Empty;
         tabCierre.Attributes["class"] = modo == ModoCierre ? "active" : string.Empty;
+        tabVentas.Attributes["class"] = modo == ModoVentas ? "active" : string.Empty;
 
+        // La consulta de ventas no registra nada: no se muestra la grilla de
+        // stock ni el botón de registrar.
+        pnlStock.Visible = modo != ModoVentas;
+        btnAceptar.Visible = modo != ModoVentas;
         btnAceptar.ValidationGroup = modo == ModoPedido ? "Venta" : "Cierre";
         btnAceptar.Text = modo == ModoPedido ? "Registrar la venta" : "Registrar el cierre del día";
 
         LimpiarDetalle();
-        if (modo == ModoPedido)
+        if (modo == ModoVentas)
+        {
+            // Al entrar se muestran las ventas de los últimos días (o la
+            // última búsqueda, si ya se hizo una).
+            if (ViewState[ClaveVentasDesde] == null)
+            {
+                ViewState[ClaveVentasDesde] = DateTime.Today.AddDays(1 - DiasConsultaInicial);
+                ViewState[ClaveVentasHasta] = DateTime.Today;
+                ViewState[ClaveVentasReceta] = 0;
+            }
+            MostrarVentas();
+        }
+        else if (modo == ModoPedido)
         {
             MostrarPedido();
         }
@@ -267,6 +367,7 @@ public partial class DescontarStockVenta : PaginaBase
             foreach (BEReceta receta in bllVenta.TraerRecetasVendibles())
             {
                 ddlReceta.Items.Add(new ListItem(receta.Nombre, receta.IdReceta.ToString()));
+                ddlRecetaVentas.Items.Add(new ListItem(receta.Nombre, receta.IdReceta.ToString()));
             }
 
             if (ddlReceta.Items.Count == 1)
@@ -402,6 +503,76 @@ public partial class DescontarStockVenta : PaginaBase
         }
         catch (Exception ex)
         {
+            MostrarMensaje(lblMensaje, ex.Message, true);
+        }
+    }
+
+    #endregion
+
+    #region Ventas registradas
+
+    /// Ventas de la última búsqueda.
+    private List<BEVenta> ConsultarVentas()
+    {
+        DateTime desde = (DateTime)ViewState[ClaveVentasDesde];
+        DateTime hasta = (DateTime)ViewState[ClaveVentasHasta];
+        int idReceta = ViewState[ClaveVentasReceta] == null ? 0 : (int)ViewState[ClaveVentasReceta];
+        return bllVenta.ConsultarVentas(desde, hasta, idReceta);
+    }
+
+    /// Muestra las ventas de la última búsqueda y sus indicadores.
+    private void MostrarVentas()
+    {
+        pnlConsumoVenta.Visible = false;
+        gvVentas.SelectedIndex = -1;
+        litIndicadoresVentas.Text = string.Empty;
+        try
+        {
+            List<BEVenta> ventas = ConsultarVentas();
+            if (gvVentas.PageIndex * gvVentas.PageSize >= ventas.Count)
+            {
+                gvVentas.PageIndex = 0;
+            }
+            gvVentas.DataSource = ventas;
+            gvVentas.DataBind();
+
+            decimal unidades = 0;
+            List<DateTime> dias = new List<DateTime>();
+            Dictionary<string, decimal> porReceta = new Dictionary<string, decimal>();
+            foreach (BEVenta venta in ventas)
+            {
+                unidades += venta.Cantidad;
+                if (!dias.Contains(venta.Fecha.Date))
+                {
+                    dias.Add(venta.Fecha.Date);
+                }
+                decimal acumulado;
+                porReceta.TryGetValue(venta.NombreReceta, out acumulado);
+                porReceta[venta.NombreReceta] = acumulado + venta.Cantidad;
+            }
+
+            string masVendida = "-";
+            decimal maximo = 0;
+            foreach (KeyValuePair<string, decimal> receta in porReceta)
+            {
+                if (receta.Value > maximo)
+                {
+                    maximo = receta.Value;
+                    masVendida = receta.Key + " (" + receta.Value.ToString("0.##") + " u.)";
+                }
+            }
+
+            litIndicadoresVentas.Text = new Indicadores()
+                .Agregar("Ventas", ventas.Count.ToString(), "destacado")
+                .Agregar("Unidades vendidas", unidades.ToString("0.##"))
+                .Agregar("Días con ventas", dias.Count.ToString())
+                .Agregar("Receta más vendida", masVendida)
+                .ToString();
+        }
+        catch (Exception ex)
+        {
+            gvVentas.DataSource = null;
+            gvVentas.DataBind();
             MostrarMensaje(lblMensaje, ex.Message, true);
         }
     }
