@@ -10,8 +10,9 @@ namespace DAL
     ///
     /// La tabla DV guarda el digito de cada tabla completa (DVH y DVV).
     /// La tabla auxiliar DVH_Fila guarda el digito horizontal de cada registro
-    /// y DVV_Columna el digito vertical de cada columna, lo que permite
-    /// determinar la fila y la columna exacta donde esta la inconsistencia.
+    /// (y, en DVCeldas, una huella corta de cada celda) y DVV_Columna el digito
+    /// vertical de cada columna. Con las huellas se determina la celda exacta
+    /// donde esta la inconsistencia.
     /// Las tablas controladas no tienen columnas de dígitos propias: todos los
     /// dígitos están en estas tres tablas.
     public class DALDigitoVerificador
@@ -90,28 +91,43 @@ namespace DAL
         /// Devuelve el DVH almacenado de cada fila, indexado por clave primaria.
         public Dictionary<string, string> ObtenerDVHFilas(string tabla)
         {
+            Dictionary<string, string> celdas;
+            return ObtenerDVHFilas(tabla, out celdas);
+        }
+
+        /// Devuelve el DVH almacenado de cada fila y, en celdas, la huella de
+        /// sus celdas (vacía en las filas que se grabaron antes de que
+        /// existiera la columna DVCeldas, hasta que se recalculen).
+        public Dictionary<string, string> ObtenerDVHFilas(string tabla, out Dictionary<string, string> celdas)
+        {
             SqlParameter[] parametros = new SqlParameter[]
             {
                 new SqlParameter("@Tabla", tabla)
             };
 
             DataTable resultado = dalCon.ConsultaProcAlmacenado("TraerDVHFilas", parametros);
+            bool conCeldas = resultado.Columns.Contains("DVCeldas");
 
             Dictionary<string, string> digitos = new Dictionary<string, string>(StringComparer.Ordinal);
+            celdas = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (DataRow fila in resultado.Rows)
             {
-                digitos[Convert.ToString(fila["clave"])] = Convert.ToString(fila["DVH"]);
+                string clave = Convert.ToString(fila["clave"]);
+                digitos[clave] = Convert.ToString(fila["DVH"]);
+                celdas[clave] = conCeldas ? Convert.ToString(fila["DVCeldas"]) : string.Empty;
             }
             return digitos;
         }
 
-        /// Deja guardados los digitos horizontales de una tabla. Solo se graban
-        /// las diferencias con lo que ya estaba (en un alta, una fila nueva; en
-        /// una modificación, la fila que cambió), en vez de borrar y volver a
-        /// insertar todas las filas en cada operación.
-        public void GuardarDVHFilas(string tabla, Dictionary<string, string> digitos)
+        /// Deja guardados los digitos horizontales de una tabla y la huella de
+        /// las celdas de cada fila. Solo se graban las diferencias con lo que
+        /// ya estaba (en un alta, una fila nueva; en una modificación, la fila
+        /// que cambió), en vez de borrar y volver a insertar todas las filas en
+        /// cada operación.
+        public void GuardarDVHFilas(string tabla, Dictionary<string, string> digitos, Dictionary<string, string> celdas)
         {
-            Dictionary<string, string> anteriores = ObtenerDVHFilas(tabla);
+            Dictionary<string, string> celdasAnteriores;
+            Dictionary<string, string> anteriores = ObtenerDVHFilas(tabla, out celdasAnteriores);
             List<KeyValuePair<string, SqlParameter[]>> cambios = new List<KeyValuePair<string, SqlParameter[]>>();
 
             // Primero las bajas, después las modificaciones y las altas.
@@ -126,20 +142,39 @@ namespace DAL
 
             foreach (KeyValuePair<string, string> par in digitos)
             {
+                string huella;
+                celdas.TryGetValue(par.Key, out huella);
+                huella = huella ?? string.Empty;
+
                 string anterior;
+                string huellaAnterior;
+                celdasAnteriores.TryGetValue(par.Key, out huellaAnterior);
                 if (!anteriores.TryGetValue(par.Key, out anterior))
                 {
-                    cambios.Add(Sentencia("INSERT INTO DVH_Fila (tabla, clave, DVH) VALUES (@Tabla, @Clave, @DVH)",
-                        tabla, "@Clave", par.Key, par.Value));
+                    cambios.Add(SentenciaFila("INSERT INTO DVH_Fila (tabla, clave, DVH, DVCeldas) " +
+                        "VALUES (@Tabla, @Clave, @DVH, @DVCeldas)", tabla, par.Key, par.Value, huella));
                 }
-                else if (anterior != par.Value)
+                else if (anterior != par.Value || (huellaAnterior ?? string.Empty) != huella)
                 {
-                    cambios.Add(Sentencia("UPDATE DVH_Fila SET DVH = @DVH WHERE tabla = @Tabla AND clave = @Clave",
-                        tabla, "@Clave", par.Key, par.Value));
+                    cambios.Add(SentenciaFila("UPDATE DVH_Fila SET DVH = @DVH, DVCeldas = @DVCeldas " +
+                        "WHERE tabla = @Tabla AND clave = @Clave", tabla, par.Key, par.Value, huella));
                 }
             }
 
             dalCon.EjecutarSentencias(cambios);
+        }
+
+        private static KeyValuePair<string, SqlParameter[]> SentenciaFila(string sql, string tabla, string clave,
+                                                                          string dvh, string celdas)
+        {
+            SqlParameter[] parametros = new SqlParameter[]
+            {
+                new SqlParameter("@Tabla", tabla),
+                new SqlParameter("@Clave", clave),
+                new SqlParameter("@DVH", dvh),
+                new SqlParameter("@DVCeldas", string.IsNullOrEmpty(celdas) ? (object)DBNull.Value : celdas)
+            };
+            return new KeyValuePair<string, SqlParameter[]>(sql, parametros);
         }
 
         #endregion

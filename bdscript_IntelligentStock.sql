@@ -96,16 +96,20 @@ GO
 -- DVH de cada registro. Ninguna tabla controlada tiene una columna DVH
 -- propia: el dígito de cada fila se guarda solamente acá.
 -- La columna "clave" guarda la PK del registro con formato "columna=valor".
+-- DVCeldas guarda una huella corta de cada celda de la fila (8 caracteres
+-- del SHA-256 de cada una, en el orden de las columnas): cuando el DVH de la
+-- fila no coincide, permite informar solo las celdas que cambiaron.
 CREATE TABLE DVH_Fila (
     tabla NVARCHAR(50) NOT NULL,
     clave NVARCHAR(400) NOT NULL,
     DVH VARCHAR(64) NULL,
+    DVCeldas VARCHAR(MAX) NULL,
     PRIMARY KEY (tabla, clave)
 )
 GO
 
--- DVV de cada columna. Cruzando las filas mal contra las columnas mal
--- se obtiene la celda exacta donde está la inconsistencia.
+-- DVV de cada columna: detecta en qué columnas cambió algún valor. La
+-- celda exacta se ubica con la huella de DVH_Fila.DVCeldas.
 CREATE TABLE DVV_Columna (
     tabla NVARCHAR(50) NOT NULL,
     columna NVARCHAR(128) NOT NULL,
@@ -452,7 +456,7 @@ CREATE PROCEDURE TraerDVHFilas
     @Tabla NVARCHAR(50)
 AS
 BEGIN
-    SELECT clave, DVH FROM DVH_Fila WHERE tabla = @Tabla
+    SELECT clave, DVH, DVCeldas FROM DVH_Fila WHERE tabla = @Tabla
 END
 GO
 

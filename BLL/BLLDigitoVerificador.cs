@@ -14,14 +14,24 @@ namespace BLL
     /// Esquema utilizado:
     ///   - DVH de fila: SHA-256 de la concatenacion de todas las columnas del
     ///     registro. Se guarda en DVH_Fila.
+    ///   - Huella de las celdas de la fila: los primeros 8 caracteres del
+    ///     SHA-256 de cada celda, uno detrás del otro en el orden de las
+    ///     columnas. Se guarda en DVH_Fila.DVCeldas.
     ///   - DVV de columna: SHA-256 de la concatenacion de todos los valores de
     ///     esa columna. Se guarda en DVV_Columna.
     ///   - DV de la tabla: DVH = SHA-256 de la concatenacion de los DVH de las
     ///     filas; DVV = SHA-256 de la concatenacion de los DVV de las columnas.
     ///     Se guardan en la tabla DV.
     ///
-    /// Cruzando las filas con DVH incorrecto contra las columnas con DVV
-    /// incorrecto se obtiene la celda exacta que fue alterada.
+    /// Los DVH y DVV detectan la alteración. Para ubicar la celda no alcanza
+    /// con cruzar filas mal contra columnas mal: si se alteran la fila 1 en la
+    /// columna 2 y la fila 2 en la columna 3, el cruce da cuatro celdas
+    /// (1-2, 1-3, 2-2 y 2-3) y solo dos cambiaron. Por eso, en cada fila con
+    /// el DVH mal se compara la huella de cada celda con la guardada, y se
+    /// informan solo las celdas que cambiaron. La huella sirve únicamente
+    /// para ubicar: la integridad la sigue controlando el DVH completo. Las
+    /// filas que todavía no tienen huella (grabadas antes de que existiera la
+    /// columna) se ubican con el cruce, hasta que se recalculen.
     ///
     /// Las tablas controladas no tienen columnas de dígitos propias: todo se
     /// guarda en DV, DVH_Fila y DVV_Columna. Así cada dígito está en un solo
@@ -99,9 +109,10 @@ namespace BLL
             List<string> clavePrimaria = dalDV.ObtenerClavePrimaria(tabla);
 
             Dictionary<string, string> dvhFilas = CalcularDVHFilas(contenido, clavePrimaria);
+            Dictionary<string, string> huellas = CalcularHuellasDeFilas(contenido, clavePrimaria);
             Dictionary<string, string> dvvColumnas = CalcularDVVColumnas(contenido);
 
-            dalDV.GuardarDVHFilas(tabla, dvhFilas);
+            dalDV.GuardarDVHFilas(tabla, dvhFilas, huellas);
             dalDV.GuardarDVVColumnas(tabla, dvvColumnas);
             dalDV.GuardarDVHTabla(tabla, ConsolidarDVH(dvhFilas));
             dalDV.GuardarDVVTabla(tabla, ConsolidarDVV(contenido, dvvColumnas));
@@ -318,7 +329,8 @@ namespace BLL
         private void AgregarDigitosDeFilasNuevas(string tabla, ICollection<string> filasAnteriores)
         {
             ObjetoDV dvAlmacenado = dalDV.ObtenerDV(tabla);
-            Dictionary<string, string> dvhAlmacenados = dalDV.ObtenerDVHFilas(tabla);
+            Dictionary<string, string> huellasAlmacenadas;
+            Dictionary<string, string> dvhAlmacenados = dalDV.ObtenerDVHFilas(tabla, out huellasAlmacenadas);
             if (SinCalcular(dvAlmacenado, dvhAlmacenados, dalDV.ObtenerDVVColumnas(tabla)))
             {
                 return;
@@ -328,17 +340,20 @@ namespace BLL
             List<string> clavePrimaria = dalDV.ObtenerClavePrimaria(tabla);
 
             Dictionary<string, string> dvhFilas = new Dictionary<string, string>(dvhAlmacenados, StringComparer.Ordinal);
+            Dictionary<string, string> huellas = new Dictionary<string, string>(huellasAlmacenadas, StringComparer.Ordinal);
+            Dictionary<string, DataRow> filasPorClave = FilasPorClave(contenido, clavePrimaria);
             foreach (KeyValuePair<string, string> par in CalcularDVHFilas(contenido, clavePrimaria))
             {
                 if (!filasAnteriores.Contains(par.Key) && !dvhFilas.ContainsKey(par.Key))
                 {
                     dvhFilas[par.Key] = par.Value;
+                    huellas[par.Key] = HuellaDeFila(contenido, filasPorClave[par.Key]);
                 }
             }
 
             Dictionary<string, string> dvvColumnas = CalcularDVVColumnas(contenido);
 
-            dalDV.GuardarDVHFilas(tabla, dvhFilas);
+            dalDV.GuardarDVHFilas(tabla, dvhFilas, huellas);
             dalDV.GuardarDVVColumnas(tabla, dvvColumnas);
             dalDV.GuardarDVVTabla(tabla, ConsolidarDVV(contenido, dvvColumnas));
         }
@@ -438,7 +453,8 @@ namespace BLL
                 return inconsistencias;
             }
 
-            Dictionary<string, string> dvhAlmacenados = dalDV.ObtenerDVHFilas(tabla);
+            Dictionary<string, string> huellasAlmacenadas;
+            Dictionary<string, string> dvhAlmacenados = dalDV.ObtenerDVHFilas(tabla, out huellasAlmacenadas);
             Dictionary<string, string> dvvAlmacenados = dalDV.ObtenerDVVColumnas(tabla);
 
             // No hay dígitos guardados: es una base recién creada (o recién
@@ -495,12 +511,22 @@ namespace BLL
                 }
             }
 
-            // Cruce fila x columna: la interseccion identifica la celda alterada.
+            Dictionary<string, DataRow> filasPorClave = FilasPorClave(contenido, clavePrimaria);
+
             foreach (string clave in filasAlteradas)
             {
-                if (columnasAlteradas.Count > 0)
+                // Celda exacta: se compara la huella de cada celda de la fila
+                // con la guardada. Si la fila no tiene huella (se grabó antes
+                // de que existiera) se usa el cruce fila x columna, que con
+                // varias filas y columnas alteradas puede incluir celdas de más.
+                string huellaAlmacenada;
+                huellasAlmacenadas.TryGetValue(clave, out huellaAlmacenada);
+                List<string> celdasAlteradas = ColumnasConHuellaDistinta(contenido, filasPorClave[clave], huellaAlmacenada);
+                List<string> columnasDeLaFila = celdasAlteradas ?? columnasAlteradas;
+
+                if (columnasDeLaFila.Count > 0)
                 {
-                    foreach (string columna in columnasAlteradas)
+                    foreach (string columna in columnasDeLaFila)
                     {
                         inconsistencias.Add(new Inconsistencia
                         {
@@ -595,6 +621,64 @@ namespace BLL
             }
 
             return Encriptacion.EncriptarSHA256(datos.ToString());
+        }
+
+        /// Huella de las celdas de cada fila, indexada por clave primaria.
+        private Dictionary<string, string> CalcularHuellasDeFilas(DataTable contenido, List<string> clavePrimaria)
+        {
+            Dictionary<string, string> huellas = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            int indice = 0;
+            foreach (DataRow fila in contenido.Rows)
+            {
+                indice++;
+                huellas[ConstruirClave(contenido, fila, clavePrimaria, indice)] = HuellaDeFila(contenido, fila);
+            }
+
+            return huellas;
+        }
+
+        /// Largo de la huella de cada celda (caracteres hexadecimales del SHA-256).
+        private const int LargoHuellaCelda = 8;
+
+        private static string HuellaDeFila(DataTable contenido, DataRow fila)
+        {
+            StringBuilder huella = new StringBuilder();
+            foreach (DataColumn columna in contenido.Columns)
+            {
+                huella.Append(HuellaDeCelda(columna, fila));
+            }
+            return huella.ToString();
+        }
+
+        private static string HuellaDeCelda(DataColumn columna, DataRow fila)
+        {
+            return Encriptacion.EncriptarSHA256(columna.ColumnName + "=" + Normalizar(fila[columna]))
+                .Substring(0, LargoHuellaCelda);
+        }
+
+        /// Columnas de la fila cuya celda no coincide con la huella guardada.
+        /// Devuelve null si no hay una huella que sirva para comparar (fila
+        /// grabada antes de que existiera, o con otra cantidad de columnas).
+        private static List<string> ColumnasConHuellaDistinta(DataTable contenido, DataRow fila, string huellaAlmacenada)
+        {
+            if (string.IsNullOrEmpty(huellaAlmacenada) ||
+                huellaAlmacenada.Length != contenido.Columns.Count * LargoHuellaCelda)
+            {
+                return null;
+            }
+
+            List<string> columnas = new List<string>();
+            for (int i = 0; i < contenido.Columns.Count; i++)
+            {
+                DataColumn columna = contenido.Columns[i];
+                string guardada = huellaAlmacenada.Substring(i * LargoHuellaCelda, LargoHuellaCelda);
+                if (!string.Equals(guardada, HuellaDeCelda(columna, fila), StringComparison.OrdinalIgnoreCase))
+                {
+                    columnas.Add(columna.ColumnName);
+                }
+            }
+            return columnas;
         }
 
         private Dictionary<string, string> CalcularDVVColumnas(DataTable contenido)
@@ -724,6 +808,20 @@ namespace BLL
             }
 
             return numeros;
+        }
+
+        private static Dictionary<string, DataRow> FilasPorClave(DataTable contenido, List<string> clavePrimaria)
+        {
+            Dictionary<string, DataRow> filas = new Dictionary<string, DataRow>(StringComparer.Ordinal);
+
+            int indice = 0;
+            foreach (DataRow fila in contenido.Rows)
+            {
+                indice++;
+                filas[ConstruirClave(contenido, fila, clavePrimaria, indice)] = fila;
+            }
+
+            return filas;
         }
 
         private static int ObtenerNumero(Dictionary<string, int> numeros, string clave)
